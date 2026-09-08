@@ -1,0 +1,98 @@
+@import "tailwindcss";
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* Custom scrollbars for warm editorial background */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f7f3ec;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d8c8b6;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #b59f8a;
+}
+
+/* Floating animation for cart and badges */
+@keyframes floatGentle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+.animate-float-gentle {
+  animation: floatGentle 3s ease-in-out infinite;
+}
+
+/* ==========================================================================
+   Google Translate Complete Bar & Banner Suppression
+   ========================================================================== */
+
+/* Hide any top banner, iframe, toolbar, tooltip or skiptranslate injected by Google */
+body > .skiptranslate,
+.skiptranslate:not(#google_translate_element *),
+.goog-te-banner-frame,
+.goog-te-banner-frame.skiptranslate,
+iframe.goog-te-banner-frame,
+iframe.skiptranslate,
+.goog-te-gadget,
+.goog-te-gadget-simple,
+.VIpgJd-ZVi9od-aZ2wEe-wOHMyf,
+.VIpgJd-ZVi9od-OR95-psKmfa,
+.VIpgJd-ZVi9od-O27K3e,
+.VIpgJd-y6Aal-PfaGhd,
+#goog-gt-tt,
+.goog-tooltip,
+.goog-tooltip:hover {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  width: 0 !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  z-index: -9999 !important;
+  position: absolute !important;
+  left: -9999px !important;
+  top: -9999px !important;
+}
+
+/* Prevent body from being pushed down by Google Translate (40px top gap) */
+body {
+  top: 0px !important;
+  position: static !important;
+}
+
+/* Container is kept in DOM off-screen solely for Google Translate programmatic combo */
+#google_translate_element {
+  position: fixed !important;
+  left: -9999px !important;
+  top: -9999px !important;
+  width: 1px !important;
+  height: 1px !important;
+  opacity: 0.01 !important;
+  pointer-events: none !important;
+  overflow: hidden !important;
+  z-index: -9999 !important;
+}
+
+.goog-text-highlight {
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+font[style] {
+  background: transparent !important;
+}
+

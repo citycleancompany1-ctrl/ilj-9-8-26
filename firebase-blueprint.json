@@ -1,0 +1,90 @@
+{
+  "entities": {
+    "shops": {
+      "title": "Vendor Shops & Stores",
+      "description": "Multi-vendor store records, products, services, inquiries, backups, and credentials",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "shopId": { "type": "string" },
+        "vendorId": { "type": "string" },
+        "vendorEmail": { "type": "string" },
+        "vendorName": { "type": "string" },
+        "passwordHash": { "type": "string" },
+        "businessName": { "type": "string" },
+        "tagline": { "type": "string" },
+        "category": { "type": "string" },
+        "phone": { "type": "string" },
+        "whatsapp": { "type": "string" },
+        "upiId": { "type": "string" },
+        "customDomain": { "type": "string" },
+        "domainConnectStatus": { "type": "string" },
+        "products": { "type": "array" },
+        "inquiries": { "type": "array" },
+        "backups": { "type": "array" }
+      },
+      "required": ["id", "shopId", "businessName", "phone"]
+    },
+    "platform_config": {
+      "title": "Global Platform Configuration",
+      "description": "Platform-wide ads, tutorial videos, pricing plans, themes, and backups",
+      "type": "object",
+      "properties": {
+        "ads": { "type": "array" },
+        "tutorials": { "type": "array" },
+        "pricing": { "type": "array" },
+        "leads": { "type": "array" },
+        "themes": { "type": "array" },
+        "saasBackups": { "type": "array" }
+      }
+    },
+    "themes": {
+      "title": "Centralized Layout Themes & Templates",
+      "description": "System and custom themes manageable by Super Admin and accessible by Vendors",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "hindiName": { "type": "string" },
+        "categoryFit": { "type": "string" },
+        "primaryColor": { "type": "string" },
+        "secondaryColor": { "type": "string" },
+        "accentColor": { "type": "string" },
+        "isActive": { "type": "boolean" },
+        "isCustom": { "type": "boolean" }
+      },
+      "required": ["id", "name", "primaryColor"]
+    },
+    "backups": {
+      "title": "Isolated Website Backups",
+      "description": "Point-in-time snapshot backups of vendor stores and full SaaS data",
+      "type": "object",
+      "properties": {
+        "backupId": { "type": "string" },
+        "shopId": { "type": "string" },
+        "businessName": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "version": { "type": "string" }
+      },
+      "required": ["backupId", "createdAt", "version"]
+    }
+  },
+  "firestore": {
+    "/shops/{shopId}": {
+      "schema": "shops",
+      "description": "Individual vendor shop documents"
+    },
+    "/platform_config/{configId}": {
+      "schema": "platform_config",
+      "description": "Global SaaS configuration, themes, popups, and pricing"
+    },
+    "/themes/{themeId}": {
+      "schema": "themes",
+      "description": "Centralized themes and templates collection"
+    },
+    "/backups/{backupId}": {
+      "schema": "backups",
+      "description": "Website backup records"
+    }
+  }
+}

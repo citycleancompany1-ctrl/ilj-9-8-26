@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>IndianLalaJi.com — 2 Minute Mein Website Live Karo</title>
+    <meta name="description" content="Multi-Vendor Digital Catalogue SaaS - Indian businesses and local vendors apni professional digital store website mobile se banayein." />
+    <meta property="og:title" content="IndianLalaJi.com — 2 Minute Mein Website Live Karo" />
+    <meta property="og:description" content="Multi-Vendor Digital Catalogue SaaS - Indian businesses and local vendors apni professional digital store website mobile se banayein." />
+    <meta property="og:image" content="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1200&h=630&fit=crop" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="IndianLalaJi.com" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="IndianLalaJi.com — 2 Minute Mein Website Live Karo" />
+    <meta name="twitter:description" content="Multi-Vendor Digital Catalogue SaaS - Indian businesses and local vendors apni professional digital store website mobile se banayein." />
+    <meta name="twitter:image" content="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1200&h=630&fit=crop" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&family=Rozha+One&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+      (function() {
+        try {
+          var searchParams = new URLSearchParams(window.location.search);
+          var sid = searchParams.get('shop') || searchParams.get('shopId') || searchParams.get('id');
+          if (!sid) {
+            var hashMatch = window.location.hash.match(/#\/?shop[=\/]([a-zA-Z0-9_-]+)/i);
+            var pathMatch = window.location.pathname.match(/^\/shop\/([a-zA-Z0-9_-]+)/i);
+            if (hashMatch) sid = hashMatch[1];
+            else if (pathMatch) sid = pathMatch[1];
+          }
+          if (sid) {
+            var raw = localStorage.getItem('INDIANLALAJI_SAAS_STATE_V1');
+            if (raw) {
+              var parsed = JSON.parse(raw);
+              if (parsed && Array.isArray(parsed.shops)) {
+                var shop = parsed.shops.find(function(item) {
+                  return (item.shopId && item.shopId.toLowerCase() === sid.toLowerCase()) || 
+                         (item.id && item.id.toLowerCase() === sid.toLowerCase());
+                });
+                if (shop) {
+                  var shopName = shop.businessName || 'Official Store';
+                  var desc = shop.tagline || shop.bannerSubtitle || shop.bannerTitle || shop.aboutStory || (shopName + ' ki official online digital dukaan.');
+                  var img = shop.logoUrl || (shop.banners && shop.banners[0]) || shop.aboutPhotoUrl;
+                  var exactUrl = window.location.origin + '/?shop=' + encodeURIComponent(shop.shopId);
+                  
+                  document.title = shop.tagline ? (shopName + ' — ' + shop.tagline) : shopName;
+                  
+                  function setMeta(key, attr, val) {
+                    if (!val) return;
+                    var el = document.querySelector('meta[' + attr + '="' + key + '"]');
+                    if (!el) {
+                      el = document.createElement('meta');
+                      el.setAttribute(attr, key);
+                      document.head.appendChild(el);
+                    }
+                    el.setAttribute('content', val);
+                  }
+
+                  setMeta('description', 'name', desc);
+                  setMeta('og:title', 'property', shopName);
+                  setMeta('og:description', 'property', desc);
+                  if (img) setMeta('og:image', 'property', img);
+                  setMeta('og:url', 'property', exactUrl);
+                  setMeta('og:type', 'property', 'website');
+                  setMeta('twitter:title', 'name', shopName);
+                  setMeta('twitter:description', 'name', desc);
+                  if (img) setMeta('twitter:image', 'name', img);
+                }
+              }
+            }
+          }
+        } catch(e) {}
+      })();
+    </script>
+  </head>
+  <body class="bg-[#FCF9F5] text-[#1A1A1A] font-['Plus_Jakarta_Sans',sans-serif] antialiased selection:bg-orange-500 selection:text-white">
+    <div id="google_translate_element" style="position:fixed;left:-9999px;top:-9999px;width:1px;height:1px;opacity:0.01;pointer-events:none;overflow:hidden;z-index:-9999;"></div>
+    <script type="text/javascript">
+      window.googleTranslateElementInit = function() {
+        try {
+          if (window.google && window.google.translate && window.google.translate.TranslateElement) {
+            new window.google.translate.TranslateElement({
+              pageLanguage: 'en',
+              includedLanguages: 'en,hi,gu,mr,bn,ta,te',
+              autoDisplay: false
+            }, 'google_translate_element');
+            window.__googleTranslateInitialized = true;
+          }
+        } catch (e) {
+          console.warn('Google Translate init catch:', e);
+        }
+      };
+    </script>
+    <script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" async defer></script>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+
