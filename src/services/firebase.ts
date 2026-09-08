@@ -9,7 +9,8 @@ import {
   deleteDoc,
   onSnapshot,
   Firestore,
-  writeBatch
+  writeBatch,
+  getDocFromServer
 } from 'firebase/firestore';
 import { Shop, PlatformState } from '../types';
 import firebaseConfigRaw from '../../firebase-applet-config.json';
@@ -34,6 +35,18 @@ export const db: Firestore =
   firebaseConfigRaw.firestoreDatabaseId && firebaseConfigRaw.firestoreDatabaseId !== '(default)'
     ? getFirestore(app, firebaseConfigRaw.firestoreDatabaseId)
     : getFirestore(app);
+
+// Connection test on boot
+async function testConnection() {
+  try {
+    await getDocFromServer(doc(db, 'test', 'connection'));
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('the client is offline')) {
+      console.error("Please check your Firebase configuration.");
+    }
+  }
+}
+testConnection();
 
 const SHOPS_COLLECTION = 'shops';
 const PLATFORM_CONFIG_COLLECTION = 'platform_config';
