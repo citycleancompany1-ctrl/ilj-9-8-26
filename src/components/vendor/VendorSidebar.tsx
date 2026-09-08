@@ -53,6 +53,8 @@ export interface VendorSidebarProps {
   onLogout: () => void;
   onVisitStore: () => void;
   unreadInquiriesCount?: number;
+  allShops?: Shop[];
+  onSwitchShop?: (shopId: string) => void;
 }
 
 interface MenuItem {
@@ -78,6 +80,8 @@ export const VendorSidebar: React.FC<VendorSidebarProps> = ({
   onLogout,
   onVisitStore,
   unreadInquiriesCount = 0,
+  allShops,
+  onSwitchShop,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({
@@ -97,7 +101,9 @@ export const VendorSidebar: React.FC<VendorSidebarProps> = ({
     }));
   };
 
-  const isCatalog = (shop as any).websiteMode === 'CATALOG' || shop.isCatalogOnly;
+  const isCatalog = Boolean(
+    (shop as any).websiteMode === 'CATALOG' || shop.isCatalogOnly || shop.hideAllPrices
+  );
   const productsCount = (shop.products || []).filter((p) => p.type !== 'SERVICE').length;
   const servicesCount = (shop.products || []).filter((p) => p.type === 'SERVICE').length;
 
@@ -390,6 +396,35 @@ export const VendorSidebar: React.FC<VendorSidebarProps> = ({
             <span>Visit</span>
           </button>
         </div>
+
+        {/* Website Switcher Dropdown (when multiple websites exist) */}
+        {allShops && allShops.length > 1 && (
+          <div className="mt-2.5 pt-2.5 border-t border-slate-800/60">
+            <div className="flex items-center justify-between gap-1 mb-1">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
+                <Globe className="w-3 h-3 text-orange-400" />
+                <span>Switch Website:</span>
+              </span>
+              <span className="text-[9px] font-mono text-slate-500">
+                {allShops.length} Available
+              </span>
+            </div>
+            <select
+              value={shop.shopId}
+              onChange={(e) => {
+                if (onSwitchShop) onSwitchShop(e.target.value);
+              }}
+              className="w-full bg-[#1F2937] text-slate-200 border border-slate-700/80 rounded-lg px-2 py-1.5 text-xs font-semibold focus:outline-none focus:border-orange-500 cursor-pointer"
+              title="Switch to another website"
+            >
+              {allShops.map((s) => (
+                <option key={s.shopId} value={s.shopId}>
+                  {s.businessName} ({s.shopId})
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
       {/* 2. Search Menu Input */}

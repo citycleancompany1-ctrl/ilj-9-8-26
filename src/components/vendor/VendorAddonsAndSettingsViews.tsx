@@ -53,6 +53,7 @@ interface VendorSubViewProps {
   onNavigateTab?: (tab: string) => void;
   onOpenStandeeModal?: () => void;
   onOpenInvoiceModal?: () => void;
+  onNavigateToShop?: () => void;
   adminPaymentQrUrl?: string;
   adminUpiId?: string;
   adminPhone?: string;
@@ -723,22 +724,29 @@ export const WebsiteSwitchView: React.FC<VendorSubViewProps> = ({
   shop,
   onUpdateShop,
   onMarkDirty,
-  showToast
+  showToast,
+  onNavigateToShop,
 }) => {
-  const isCatalog = shop.isCatalogOnly === true;
+  const isCatalog = Boolean(
+    shop.isCatalogOnly === true ||
+    shop.hideAllPrices === true ||
+    (shop as any).websiteMode === 'CATALOG'
+  );
 
   const handleSetMode = (catalogMode: boolean) => {
     const updated: Shop = {
       ...shop,
       isCatalogOnly: catalogMode,
+      hideAllPrices: catalogMode,
+      websiteMode: catalogMode ? 'CATALOG' : 'ECOMMERCE',
       updatedAt: new Date().toISOString()
-    };
+    } as any;
     onUpdateShop(updated);
-    onMarkDirty();
+    if (onMarkDirty) onMarkDirty();
     showToast(
       catalogMode
-        ? 'Catalogue Mode activated! All prices will be hidden from public view. Click "Save Changes" to publish.'
-        : 'E-Commerce Mode activated! Prices and direct order buttons will be displayed. Click "Save Changes" to publish.'
+        ? 'Catalogue Mode activated! All prices are hidden and quote buttons are active. 👁️❌'
+        : 'E-Commerce Mode activated! Product prices and direct order buttons are now live. 👁️✅'
     );
   };
 
@@ -748,15 +756,71 @@ export const WebsiteSwitchView: React.FC<VendorSubViewProps> = ({
         <div>
           <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-bold uppercase tracking-wider mb-2">
             <Sliders className="w-3.5 h-3.5" />
-            <span>Storefront Mode</span>
+            <span>Storefront Mode Switcher</span>
           </div>
           <h2 className="text-xl sm:text-2xl font-black text-slate-900 font-['Outfit',sans-serif]">
             Website Switch: E-Commerce vs Catalogue
           </h2>
           <p className="text-xs text-gray-500 mt-1">
-            Apne business model ke hisaab se tay karein ki prices public dikhane hain ya price hide karke sirf inquiries leni hain.
+            Apne business model ke hisaab se switch karein ki website par price dikhane hain ya price hide karke sirf inquiries leni hain.
           </p>
         </div>
+
+        {onNavigateToShop && (
+          <button
+            type="button"
+            onClick={onNavigateToShop}
+            className="self-start sm:self-auto px-4 py-2 bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-colors cursor-pointer"
+          >
+            <ExternalLink className="w-3.5 h-3.5" />
+            <span>View Live Website</span>
+          </button>
+        )}
+      </div>
+
+      {/* Real-time Status Banner */}
+      <div className={`p-4 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+        isCatalog 
+          ? 'bg-purple-50 border-purple-200 text-purple-950' 
+          : 'bg-emerald-50 border-emerald-200 text-emerald-950'
+      }`}>
+        <div className="flex items-center gap-3">
+          <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+            isCatalog ? 'bg-purple-600 text-white' : 'bg-emerald-600 text-white'
+          }`}>
+            {isCatalog ? <Sliders className="w-5 h-5" /> : <ShoppingBag className="w-5 h-5" />}
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-extrabold uppercase tracking-wider">
+                Current Active Mode:
+              </span>
+              <span className={`px-2.5 py-0.5 rounded-full text-xs font-black uppercase ${
+                isCatalog ? 'bg-purple-200 text-purple-900' : 'bg-emerald-200 text-emerald-900'
+              }`}>
+                {isCatalog ? 'Catalogue Mode (Prices Hidden)' : 'E-Commerce Mode (Prices Shown)'}
+              </span>
+            </div>
+            <p className="text-xs text-slate-600 mt-0.5">
+              {isCatalog
+                ? 'All products are displaying "Price on Request" with inquiry quotation buttons.'
+                : 'All products are displaying standard prices with instant WhatsApp ordering buttons.'}
+            </p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => handleSetMode(!isCatalog)}
+          className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer shrink-0 ${
+            isCatalog
+              ? 'bg-orange-600 hover:bg-orange-700 text-white shadow-sm'
+              : 'bg-purple-700 hover:bg-purple-800 text-white shadow-sm'
+          }`}
+        >
+          <RefreshCw className="w-3.5 h-3.5" />
+          <span>Switch to {isCatalog ? 'E-Commerce Mode' : 'Catalogue Mode'}</span>
+        </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -807,7 +871,7 @@ export const WebsiteSwitchView: React.FC<VendorSubViewProps> = ({
               e.stopPropagation();
               handleSetMode(false);
             }}
-            className={`w-full py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
+            className={`w-full py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
               !isCatalog
                 ? 'bg-orange-600 text-white shadow-sm'
                 : 'bg-gray-100 text-slate-700 hover:bg-gray-200'
@@ -864,7 +928,7 @@ export const WebsiteSwitchView: React.FC<VendorSubViewProps> = ({
               e.stopPropagation();
               handleSetMode(true);
             }}
-            className={`w-full py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
+            className={`w-full py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
               isCatalog
                 ? 'bg-indigo-600 text-white shadow-sm'
                 : 'bg-gray-100 text-slate-700 hover:bg-gray-200'

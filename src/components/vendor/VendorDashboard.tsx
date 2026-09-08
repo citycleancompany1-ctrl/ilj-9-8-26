@@ -103,6 +103,8 @@ interface VendorDashboardProps {
   adminAccountHolder?: string;
   adminPhone?: string;
   adminWhatsapp?: string;
+  allShops?: Shop[];
+  onSwitchShop?: (shopId: string) => void;
 }
 
 export const VendorDashboard: React.FC<VendorDashboardProps> = ({
@@ -118,6 +120,8 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
   adminAccountHolder = 'IndianLalaJi Platform (R. K. Mehra)',
   adminPhone = '7087033009',
   adminWhatsapp = '7087033009',
+  allShops,
+  onSwitchShop,
 }) => {
   // Sidebar and mobile drawer states
   const [activeNav, setActiveNav] = useState<string>('dashboard');
@@ -503,14 +507,16 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
     const updated: Shop = {
       ...currentShop,
       hideAllPrices: val,
+      isCatalogOnly: val,
+      websiteMode: val ? 'CATALOG' : 'ECOMMERCE',
       updatedAt: new Date().toISOString(),
-    };
+    } as any;
     setCurrentShop(updated);
     handleSaveAll(updated);
     showToast(
       val
-        ? 'Sabhi items ke prices hide ho gaye! (Price on Request mode active) 👁️❌'
-        : 'Sabhi items ke prices ab website par dikhai denge! 👁️✅'
+        ? 'Catalogue Mode Active: Sabhi items ke prices hide ho gaye! (Price on Request active) 👁️❌'
+        : 'E-Commerce Mode Active: Sabhi items ke prices ab website par dikhai denge! 👁️✅'
     );
   };
 
@@ -719,6 +725,8 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
         onLogout={onLogout}
         onVisitStore={() => onNavigateToShop(currentShop.shopId)}
         unreadInquiriesCount={filteredInquiries.filter((i) => i.status === 'UNREAD').length}
+        allShops={allShops}
+        onSwitchShop={onSwitchShop}
       />
 
       {/* 2. RIGHT MAIN CONTENT AREA: Remaining screen width */}
@@ -727,7 +735,7 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
         {/* Top Header Bar with Mobile Hamburger, Breadcrumbs, & Quick Actions */}
         <header className="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-gray-200 px-4 sm:px-6 py-3 shadow-2xs">
           <div className="flex items-center justify-between gap-3">
-            {/* Left: Hamburger (Mobile) + Breadcrumb */}
+            {/* Left: Hamburger (Mobile) + Breadcrumb + Website Switcher */}
             <div className="flex items-center gap-3 min-w-0">
               <button
                 type="button"
@@ -739,7 +747,7 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
                 <Menu className="w-5 h-5 text-slate-800" />
               </button>
 
-              <div className="flex items-center gap-2 min-w-0">
+              <div className="flex items-center gap-2 min-w-0 flex-wrap">
                 <span className="font-black text-xs sm:text-sm tracking-tight text-slate-900 font-['Outfit',sans-serif] uppercase truncate flex items-center gap-1.5">
                   <span className="hidden sm:inline text-orange-600">INDIANLALAJI</span>
                   <span className="hidden sm:inline text-gray-300">/</span>
@@ -750,6 +758,34 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
                 <span className="hidden sm:inline-flex text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-bold shrink-0">
                   ID: {currentShop.shopId}
                 </span>
+
+                {/* Topbar Website Switcher Dropdown */}
+                {allShops && allShops.length > 1 && (
+                  <div className="flex items-center gap-1.5 bg-orange-50/70 hover:bg-orange-100/70 border border-orange-200 rounded-xl px-2.5 py-1 text-xs transition-colors shrink-0">
+                    <Globe className="w-3.5 h-3.5 text-orange-600 shrink-0" />
+                    <label htmlFor="vendor-top-website-switcher" className="text-[10px] font-extrabold uppercase tracking-wider text-orange-800 hidden md:inline shrink-0">
+                      Website Switcher:
+                    </label>
+                    <select
+                      id="vendor-top-website-switcher"
+                      value={currentShop.shopId}
+                      onChange={(e) => {
+                        if (onSwitchShop) {
+                          onSwitchShop(e.target.value);
+                          showToast(`Website switched: ${allShops.find((s) => s.shopId === e.target.value)?.businessName || e.target.value}`);
+                        }
+                      }}
+                      className="bg-transparent font-black text-slate-900 text-xs focus:outline-none cursor-pointer pr-1"
+                      title="Switch active website"
+                    >
+                      {allShops.map((s) => (
+                        <option key={s.shopId} value={s.shopId}>
+                          {s.businessName} ({s.shopId})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -4401,11 +4437,11 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
           shop={currentShop}
           onUpdateShop={(updated) => {
             setCurrentShop(updated);
-            setHasUnsavedChanges(true);
-            onUpdateShop(updated);
+            handleSaveAll(updated);
           }}
           onMarkDirty={() => setHasUnsavedChanges(true)}
           showToast={showToast}
+          onNavigateToShop={() => onNavigateToShop(currentShop.shopId)}
         />
       )}
 

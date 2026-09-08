@@ -942,7 +942,7 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5 w-full">
             {filteredProducts.map((prod) => {
               const inCart = cart.find((item) => item.product.id === prod.id);
-              const isPriceHidden = Boolean(shop.hideAllPrices || prod.hidePrice);
+              const isPriceHidden = Boolean(shop.hideAllPrices || shop.isCatalogOnly || (shop as any).websiteMode === 'CATALOG' || prod.hidePrice);
               const hasDiscount = !isPriceHidden && prod.originalPrice && prod.originalPrice > prod.price;
               const discountPercent = hasDiscount
                 ? Math.round(((prod.originalPrice! - prod.price) / prod.originalPrice!) * 100)

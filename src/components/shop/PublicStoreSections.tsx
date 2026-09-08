@@ -487,7 +487,7 @@ export const ServicesSectionRenderer: React.FC<{
         {list.map((service, idx) => {
           const serviceImg = service.imageUrl;
           const inCart = cart.find((item) => item.product.id === service.id);
-          const isPriceHidden = Boolean(shop.hideAllPrices || service.product.hidePrice);
+          const isPriceHidden = Boolean(shop.hideAllPrices || shop.isCatalogOnly || (shop as any).websiteMode === 'CATALOG' || service.product.hidePrice);
           const whatsappMsg = isPriceHidden
             ? `Namaste ${shop.businessName}! I want to book/inquire about your service: "${service.title}".`
             : `Namaste ${shop.businessName}! I want to book/inquire about your service: "${service.title}" (${service.formattedPrice}).`;

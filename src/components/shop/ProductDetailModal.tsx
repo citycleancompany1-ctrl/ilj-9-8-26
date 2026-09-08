@@ -43,7 +43,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
   const inCart = cart.find((item) => item.product.id === product.id);
   const isService = product.type === 'SERVICE';
-  const isPriceHidden = Boolean(shop.hideAllPrices || product.hidePrice);
+  const isPriceHidden = Boolean(shop.hideAllPrices || shop.isCatalogOnly || (shop as any).websiteMode === 'CATALOG' || product.hidePrice);
   const hasDiscount = !isPriceHidden && product.originalPrice && product.originalPrice > product.price;
   const discountPercent = hasDiscount
     ? Math.round(((product.originalPrice! - product.price) / product.originalPrice!) * 100)

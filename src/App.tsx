@@ -345,6 +345,23 @@ export default function App() {
     handleUpdateState({ ...platformState, shops: updatedShops });
   };
 
+  // Switch active vendor website
+  const handleVendorSwitchShop = (newShopId: string) => {
+    const targetShop = platformState.shops.find(
+      (s) => s.shopId.toLowerCase() === newShopId.toLowerCase() || s.id.toLowerCase() === newShopId.toLowerCase()
+    );
+    if (targetShop) {
+      setLoggedVendorShopId(targetShop.shopId);
+      const session = loadUserSession();
+      saveUserSession({
+        ...session,
+        shopId: targetShop.shopId,
+        vendorName: targetShop.vendorName || session.vendorName,
+        email: targetShop.vendorEmail || session.email,
+      });
+    }
+  };
+
   // Inquiry submission from Public Store
   const handleSubmitShopInquiry = (inquiryData: Omit<ShopInquiry, 'id' | 'date' | 'status'>) => {
     const newInquiry: ShopInquiry = {
@@ -516,6 +533,8 @@ export default function App() {
               adminAccountHolder={platformState.adminAccountHolder}
               adminPhone={platformState.customerCarePhone}
               adminWhatsapp={platformState.customerCareWhatsapp}
+              allShops={platformState.shops}
+              onSwitchShop={handleVendorSwitchShop}
             />
           ) : (
             <ProtectedAccessBanner

@@ -792,7 +792,7 @@ export const ThemedProductCatalogue: React.FC<ThemedProductCatalogueProps> = ({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {products.map((prod) => {
           const inCart = cart.find((c) => c.product.id === prod.id);
-          const isPriceHidden = Boolean(shop.hideAllPrices || prod.hidePrice);
+          const isPriceHidden = Boolean(shop.hideAllPrices || shop.isCatalogOnly || (shop as any).websiteMode === 'CATALOG' || prod.hidePrice);
           const whatsappInquiryUrl = getWhatsAppDirectUrl(
             shop.whatsapp || shop.phone,
             `Namaste ${shop.businessName}! Mujhe "${prod.name}" ki price aur details janni hai.`
@@ -923,7 +923,7 @@ export const ThemedProductCatalogue: React.FC<ThemedProductCatalogueProps> = ({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {products.map((prod) => {
           const inCart = cart.find((c) => c.product.id === prod.id);
-          const isPriceHidden = Boolean(shop.hideAllPrices || prod.hidePrice);
+          const isPriceHidden = Boolean(shop.hideAllPrices || shop.isCatalogOnly || (shop as any).websiteMode === 'CATALOG' || prod.hidePrice);
           const whatsappInquiryUrl = getWhatsAppDirectUrl(
             shop.whatsapp || shop.phone,
             `Namaste ${shop.businessName}! Mujhe "${prod.name}" ki price aur details janni hai.`
@@ -1029,7 +1029,7 @@ export const ThemedProductCatalogue: React.FC<ThemedProductCatalogueProps> = ({
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
         {products.map((prod) => {
           const inCart = cart.find((c) => c.product.id === prod.id);
-          const isPriceHidden = Boolean(shop.hideAllPrices || prod.hidePrice);
+          const isPriceHidden = Boolean(shop.hideAllPrices || shop.isCatalogOnly || (shop as any).websiteMode === 'CATALOG' || prod.hidePrice);
           const whatsappInquiryUrl = getWhatsAppDirectUrl(
             shop.whatsapp || shop.phone,
             `Namaste ${shop.businessName}! Mujhe "${prod.name}" ki price aur details janni hai.`
@@ -1131,7 +1131,7 @@ export const ThemedProductCatalogue: React.FC<ThemedProductCatalogueProps> = ({
       <div className="space-y-3">
         {products.map((prod) => {
           const inCart = cart.find((c) => c.product.id === prod.id);
-          const isPriceHidden = Boolean(shop.hideAllPrices || prod.hidePrice);
+          const isPriceHidden = Boolean(shop.hideAllPrices || shop.isCatalogOnly || (shop as any).websiteMode === 'CATALOG' || prod.hidePrice);
           const whatsappInquiryUrl = getWhatsAppDirectUrl(
             shop.whatsapp || shop.phone,
             `Namaste ${shop.businessName}! Mujhe "${prod.name}" ki price aur details janni hai.`
@@ -1228,7 +1228,7 @@ export const ThemedProductCatalogue: React.FC<ThemedProductCatalogueProps> = ({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 font-mono">
         {products.map((prod) => {
           const inCart = cart.find((c) => c.product.id === prod.id);
-          const isPriceHidden = Boolean(shop.hideAllPrices || prod.hidePrice);
+          const isPriceHidden = Boolean(shop.hideAllPrices || shop.isCatalogOnly || (shop as any).websiteMode === 'CATALOG' || prod.hidePrice);
           const whatsappInquiryUrl = getWhatsAppDirectUrl(
             shop.whatsapp || shop.phone,
             `Namaste ${shop.businessName}! Mujhe "${prod.name}" ki price aur details janni hai.`
@@ -1325,7 +1325,7 @@ export const ThemedProductCatalogue: React.FC<ThemedProductCatalogueProps> = ({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {products.map((prod) => {
           const inCart = cart.find((c) => c.product.id === prod.id);
-          const isPriceHidden = Boolean(shop.hideAllPrices || prod.hidePrice);
+          const isPriceHidden = Boolean(shop.hideAllPrices || shop.isCatalogOnly || (shop as any).websiteMode === 'CATALOG' || prod.hidePrice);
           const whatsappInquiryUrl = getWhatsAppDirectUrl(
             shop.whatsapp || shop.phone,
             `Namaste ${shop.businessName}! Mujhe "${prod.name}" ki price aur details janni hai.`
