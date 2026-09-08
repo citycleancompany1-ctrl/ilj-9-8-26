@@ -738,32 +738,6 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
               {/* Expanded Edit Form */}
               {isExpanded && (
                 <div className="p-5 sm:p-6 bg-[#FCFBF9] border-t border-gray-100 animate-in fade-in duration-150 space-y-5">
-                  {/* Section Live Status Banner inside Edit Form */}
-                  <div className={`p-3 rounded-lg border flex items-center justify-between gap-3 ${
-                    isEnabled ? 'bg-emerald-50/80 border-emerald-200 text-emerald-950' : 'bg-amber-50/80 border-amber-200 text-amber-950'
-                  }`}>
-                    <div className="flex items-center gap-2">
-                      <span className={`w-2.5 h-2.5 rounded-full ${isEnabled ? 'bg-emerald-500 animate-pulse' : 'bg-gray-400'}`} />
-                      <div className="text-xs">
-                        <span className="font-black">Status: </span>
-                        <span className={isEnabled ? 'text-emerald-800 font-bold' : 'text-amber-900 font-bold'}>
-                          {isEnabled ? 'Live on Storefront (Customers can see this section)' : 'Hidden (Customers cannot see this section)'}
-                        </span>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handleToggleSection(meta.key)}
-                      className={`px-3 py-1 text-xs font-black uppercase tracking-wider rounded-md transition-colors cursor-pointer shadow-2xs ${
-                        isEnabled
-                          ? 'bg-white hover:bg-red-50 text-red-700 border border-red-200'
-                          : 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                      }`}
-                    >
-                      {isEnabled ? 'Turn OFF' : 'Turn ON'}
-                    </button>
-                  </div>
-
                   {renderSectionEditor(meta.key, config, setConfig, showToast, shop, {
                     onOpenAddItem: openAddItem,
                     onOpenEditItem: openEditItem,

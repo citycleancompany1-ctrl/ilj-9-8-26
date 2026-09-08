@@ -98,11 +98,6 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenAuth }) => {
                 </button>
               </li>
               <li>
-                <button onClick={() => onNavigate('templates')} className="hover:text-orange-400 transition-colors">
-                  Templates & Layouts
-                </button>
-              </li>
-              <li>
                 <button onClick={() => onNavigate('how-it-works')} className="hover:text-orange-400 transition-colors">
                   How It Works (4 Videos)
                 </button>

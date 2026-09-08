@@ -197,7 +197,12 @@ export default function App() {
         return;
       }
 
-      if (['home', 'stores', 'templates', 'how-it-works', 'pricing', 'contact'].includes(cleanPath)) {
+      if (cleanPath === 'templates') {
+        setCurrentView('stores');
+        return;
+      }
+
+      if (['home', 'stores', 'how-it-works', 'pricing', 'contact'].includes(cleanPath)) {
         setCurrentView(cleanPath);
       }
     };
@@ -493,7 +498,8 @@ export default function App() {
         )}
 
         {currentView === 'templates' && (
-          <TemplatesPage
+          <LiveStoresPage
+            shops={platformState.shops}
             onNavigate={handleNavigate}
             onOpenAuth={handleOpenAuth}
           />

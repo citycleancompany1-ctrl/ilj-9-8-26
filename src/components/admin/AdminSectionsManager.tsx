@@ -161,7 +161,7 @@ export const AdminSectionsManager: React.FC<AdminSectionsManagerProps> = ({
     },
     {
       key: 'whyChooseUs' as keyof MainWebsiteSectionsConfig,
-      title: '6. Store Templates by Business Category',
+      title: '6. Store Categories by Business Type',
       subtitle: 'Showcases customized card designs for Kirana, Fashion, Restaurants, Electronics, and Beauty.',
       icon: Layers,
       color: 'text-purple-600 bg-purple-50 border-purple-200',

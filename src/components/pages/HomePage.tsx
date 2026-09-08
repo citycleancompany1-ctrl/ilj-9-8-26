@@ -657,18 +657,18 @@ export const HomePage: React.FC<HomePageProps> = ({
       </section>
       )}
 
-      {/* 6. TEMPLATES BY CATEGORIES */}
+      {/* 6. BUSINESS CATEGORIES */}
       {sections.whyChooseUs && (
         <section className="max-w-7xl mx-auto px-4 sm:px-8">
         <div className="text-center max-w-2xl mx-auto mb-8 space-y-2">
           <div className="inline-flex items-center gap-1 text-[10px] font-black text-orange-700 bg-orange-100 px-3 py-1 rounded-sm uppercase tracking-[0.2em]">
-            <Layers className="w-3.5 h-3.5" /> Templates by Category
+            <Layers className="w-3.5 h-3.5" /> Supported Categories
           </div>
           <h2 className="text-2xl sm:text-3xl font-black text-slate-900 font-['Outfit',sans-serif] tracking-tight uppercase">
-            Text Card Style <span className="text-orange-600">Store Templates</span>
+            Stores by <span className="text-orange-600">Business Category</span>
           </h2>
           <p className="text-gray-600 text-xs sm:text-sm">
-            Choose your business type. Har template ka alag visual design, font style aur responsive layout hai.
+            Choose your business type. Har category ke hisaab se customized layout, product cards aur direct WhatsApp ordering uplabdh hai.
           </p>
         </div>
 
@@ -681,9 +681,9 @@ export const HomePage: React.FC<HomePageProps> = ({
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-black text-orange-700 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded uppercase tracking-wider">
-                    Template #{idx + 1}
+                    Category #{idx + 1}
                   </span>
-                  <span className="text-xs text-gray-400 font-medium">Ready to Deploy</span>
+                  <span className="text-xs text-gray-400 font-medium">Ready to Launch</span>
                 </div>
                 
                 <h3 className="text-base font-bold text-slate-900 leading-snug">
@@ -698,10 +698,10 @@ export const HomePage: React.FC<HomePageProps> = ({
               {/* Action Buttons */}
               <div className="grid grid-cols-2 gap-2 pt-2 border-t border-gray-100">
                 <button
-                  onClick={() => onNavigate('templates')}
+                  onClick={() => onNavigate('stores')}
                   className="py-2 px-3 text-center text-xs font-bold uppercase tracking-wider text-slate-700 bg-gray-100 hover:bg-gray-200 rounded transition-colors"
                 >
-                  View Template
+                  Explore Stores
                 </button>
                 <button
                   onClick={() => onOpenAuth('REGISTER')}

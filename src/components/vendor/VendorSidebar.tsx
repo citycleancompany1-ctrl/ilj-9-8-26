@@ -189,13 +189,6 @@ export const VendorSidebar: React.FC<VendorSidebarProps> = ({
             badgeColor: 'bg-blue-500/20 text-blue-300 border border-blue-500/30',
           },
           {
-            id: 'addon_templates',
-            label: 'Templates',
-            icon: Palette,
-            badge: '10 Themes',
-            badgeColor: 'bg-purple-500/20 text-purple-300 border border-purple-500/30',
-          },
-          {
             id: 'addon_shop_standee',
             label: 'Shop Standee',
             icon: Printer,

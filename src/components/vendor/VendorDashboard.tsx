@@ -2503,7 +2503,6 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
         'addon_email',
         'addon_payment_qr',
         'addon_custom_domain',
-        'addon_templates',
         'addon_shop_standee',
         'addon_website_switch',
         'billing_plan',

@@ -65,6 +65,7 @@ import {
   CtaSectionRenderer,
   BlogSectionRenderer,
 } from './PublicStoreSections';
+import { StoreItemsCarouselSection } from './StoreItemsCarouselSection';
 import { ProductDetailModal } from './ProductDetailModal';
 
 interface PublicShopPageProps {
@@ -854,261 +855,130 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
 
       {/* 5. PRODUCTS CATALOGUE SECTION */}
       {(!sectionsConfig || sectionsConfig.products.enabled) && (
-      <section id="products" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 space-y-6">
-        
-        {/* Header, Search & Filter Bar */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 bg-white p-5 sm:p-6 rounded-2xl border border-gray-200/90 shadow-sm">
-          <div>
-            <div className="inline-flex items-center gap-1.5 bg-orange-100 text-orange-800 text-[10px] font-black px-2.5 py-1 rounded-md uppercase tracking-wider">
-              <ShoppingBag className="w-3.5 h-3.5 text-orange-700" /> Products Catalogue
-            </div>
-            <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-slate-900 font-['Outfit',sans-serif] mt-1.5">
-              Store Products ({filteredProducts.length})
-            </h2>
-            <p className="text-xs text-gray-500 mt-1">
-              Direct store prices with zero platform commission and instant WhatsApp delivery.
-            </p>
-          </div>
+        filteredProducts.length === 0 ? (
+          <section id="products" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 space-y-4">
+            {/* Search Box & Filters Bar */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 bg-white p-3.5 sm:p-4 rounded-2xl border border-gray-200/90 shadow-2xs">
+              <div className="relative flex-1 max-w-md">
+                <Search className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
+                <input
+                  type="text"
+                  placeholder={getTranslation('search.placeholder', currentLanguage, 'Search products...')}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9 pr-8 py-2 text-xs rounded-xl border border-gray-300 w-full focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-gray-50/80 transition-all"
+                />
+                {searchQuery && (
+                  <button 
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-2.5 top-2.5 text-gray-400 hover:text-slate-700 cursor-pointer"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
 
-          {/* Search Box & Filters */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
-            
-            {/* Search Input */}
-            <div className="relative">
-              <Search className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
-              <input
-                type="text"
-                placeholder={getTranslation('search.placeholder', currentLanguage, 'Search products...')}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 pr-8 py-2 text-xs rounded-xl border border-gray-300 w-full sm:w-60 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-gray-50/80 transition-all"
-              />
-              {searchQuery && (
-                <button 
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-2.5 top-2.5 text-gray-400 hover:text-slate-700 cursor-pointer"
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+                <button
+                  onClick={() => setProductTypeFilter('ALL')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all cursor-pointer ${
+                    productTypeFilter === 'ALL'
+                      ? 'bg-slate-900 text-white shadow-xs'
+                      : 'bg-gray-100 text-slate-700 hover:bg-gray-200'
+                  }`}
                 >
-                  <X className="w-3.5 h-3.5" />
+                  {getTranslation('filter.all', currentLanguage, 'All')} ({shop.products?.filter(p => p.type !== 'SERVICE').length || 0})
                 </button>
-              )}
-            </div>
-
-            {/* Filter Pills */}
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
-              <button
-                onClick={() => setProductTypeFilter('ALL')}
-                className={`px-3 py-2 rounded-xl text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all cursor-pointer ${
-                  productTypeFilter === 'ALL'
-                    ? 'bg-slate-900 text-white shadow-xs'
-                    : 'bg-gray-100 text-slate-700 hover:bg-gray-200'
-                }`}
-              >
-                {getTranslation('filter.all', currentLanguage, 'All')} ({shop.products?.length || 0})
-              </button>
-              <button
-                onClick={() => setProductTypeFilter('IN_STOCK')}
-                className={`px-3 py-2 rounded-xl text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all cursor-pointer ${
-                  productTypeFilter === 'IN_STOCK'
-                    ? 'bg-emerald-700 text-white shadow-xs'
-                    : 'bg-gray-100 text-slate-700 hover:bg-gray-200'
-                }`}
-              >
-                {getTranslation('filter.inStock', currentLanguage, 'In Stock')}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Empty State */}
-        {filteredProducts.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center space-y-3 shadow-xs">
-            <ShoppingBag className="w-12 h-12 text-gray-300 mx-auto" />
-            <h3 className="text-base font-bold text-slate-800">Koi Product Nahi Mila</h3>
-            <p className="text-xs text-gray-500">
-              Aapki search query ya filter ke mutabiq koi product uplabdh nahi hai.
-            </p>
-            <button
-              onClick={() => {
-                setSearchQuery('');
-                setProductTypeFilter('ALL');
-              }}
-              className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white font-bold uppercase tracking-wider text-xs rounded-xl cursor-pointer transition-colors"
-            >
-              Reset Filters
-            </button>
-          </div>
-        ) : (
-          /* Standard Responsive Products Grid - Desktop 4 cols, Tablet 3 cols, Mobile 2 cols */
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5 w-full">
-            {filteredProducts.map((prod) => {
-              const inCart = cart.find((item) => item.product.id === prod.id);
-              const isPriceHidden = Boolean(shop.hideAllPrices || shop.isCatalogOnly || (shop as any).websiteMode === 'CATALOG' || prod.hidePrice);
-              const hasDiscount = !isPriceHidden && prod.originalPrice && prod.originalPrice > prod.price;
-              const discountPercent = hasDiscount
-                ? Math.round(((prod.originalPrice! - prod.price) / prod.originalPrice!) * 100)
-                : 0;
-
-              return (
-                <div
-                  key={prod.id}
-                  id={`product-card-${prod.id}`}
-                  onClick={() => setSelectedProduct(prod)}
-                  className="bg-white rounded-xl sm:rounded-2xl border border-gray-200/90 hover:border-orange-500/60 overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col justify-between group cursor-pointer h-full"
+                <button
+                  onClick={() => setProductTypeFilter('IN_STOCK')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all cursor-pointer ${
+                    productTypeFilter === 'IN_STOCK'
+                      ? 'bg-emerald-700 text-white shadow-xs'
+                      : 'bg-gray-100 text-slate-700 hover:bg-gray-200'
+                  }`}
                 >
-                  {/* Product Image */}
-                  <div className="relative aspect-square bg-gray-50 overflow-hidden">
-                    <img
-                      src={prod.imageUrl || 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=500'}
-                      alt={prod.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      loading="lazy"
-                    />
-                    
-                    {/* Top Badges */}
-                    <div className="absolute top-2 left-2 right-2 flex items-center justify-between pointer-events-none">
-                      {hasDiscount ? (
-                        <span className="bg-red-600 text-white text-[9px] sm:text-[10px] font-black px-1.5 sm:px-2 py-0.5 rounded shadow-xs uppercase tracking-wider">
-                          {discountPercent}% OFF
-                        </span>
-                      ) : <span />}
+                  {getTranslation('filter.inStock', currentLanguage, 'In Stock')}
+                </button>
+              </div>
+            </div>
 
-                      {prod.inStock ? (
-                        <span className="bg-emerald-600/90 text-white text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded shadow-xs">
-                          In Stock
-                        </span>
-                      ) : (
-                        <span className="bg-red-600 text-white text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded shadow-xs">
-                          Out of Stock
-                        </span>
-                      )}
-                    </div>
-
-                    {prod.unit && (
-                      <span className="absolute bottom-2 left-2 bg-black/60 backdrop-blur-xs text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded">
-                        {prod.unit}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Product Details (Clean: Name + Price with Cart Button) */}
-                  <div className="p-2.5 sm:p-3.5 flex-1 flex flex-col justify-between gap-2 sm:gap-3">
-                    <h3 className="font-bold text-slate-900 text-xs sm:text-sm line-clamp-2 leading-snug group-hover:text-orange-600 transition-colors font-['Outfit',sans-serif]">
-                      {prod.name}
-                    </h3>
-
-                    {/* Price with Cart Button */}
-                    <div className="pt-2 border-t border-gray-100 flex items-center justify-between gap-1.5">
-                      {isPriceHidden ? (
-                        <div className="min-w-0">
-                          <span className="inline-block px-1.5 sm:px-2 py-0.5 rounded bg-amber-50 border border-amber-200 text-amber-900 font-bold text-[10px] sm:text-xs">
-                            Price on Request
-                          </span>
-                          <span className="text-[10px] text-amber-700/80 font-medium block mt-0.5">
-                            कीमत पूछें
-                          </span>
-                        </div>
-                      ) : (
-                        <div className="min-w-0">
-                          <span className="text-sm sm:text-base md:text-lg font-black text-slate-900 truncate block">
-                            {formatINR(prod.price)}
-                          </span>
-                          {hasDiscount && (
-                            <span className="text-[10px] sm:text-xs text-gray-400 line-through block">
-                              {formatINR(prod.originalPrice!)}
-                            </span>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Cart Action Button */}
-                      <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
-                        {isPriceHidden ? (
-                          <a
-                            href={getWhatsAppDirectUrl(
-                              shop.whatsapp || shop.phone,
-                              `Namaste ${shop.businessName}! Mujhe "${prod.name}" ki price aur details janni hai.`
-                            )}
-                            onClick={(e) => e.stopPropagation()}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="h-8 px-2 sm:px-2.5 rounded-lg sm:rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] sm:text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1 shadow-xs transition-all active:scale-95"
-                            title="Ask Price on WhatsApp"
-                          >
-                            <MessageSquare className="w-3.5 h-3.5" />
-                            <span className="hidden sm:inline">Ask</span>
-                          </a>
-                        ) : shop.ecommerceEnabled ? (
-                          inCart ? (
-                            <div className="flex items-center gap-1 bg-orange-50 border border-orange-200 rounded-lg p-0.5 sm:p-1">
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  removeFromCart(prod.id);
-                                }}
-                                className="w-6 h-6 sm:w-7 sm:h-7 rounded-md bg-white text-orange-700 font-bold flex items-center justify-center hover:bg-orange-100 cursor-pointer shadow-xs"
-                                title="Kam karein"
-                              >
-                                <Minus className="w-3 h-3" />
-                              </button>
-                              <span className="font-bold text-xs px-1 text-slate-900">{inCart.quantity}</span>
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  addToCart(prod);
-                                }}
-                                className="w-6 h-6 sm:w-7 sm:h-7 rounded-md bg-orange-600 text-white font-bold flex items-center justify-center hover:bg-orange-700 cursor-pointer shadow-xs"
-                                title="Badhayein"
-                              >
-                                <Plus className="w-3 h-3" />
-                              </button>
-                            </div>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                addToCart(prod);
-                              }}
-                              disabled={!prod.inStock}
-                              aria-label="Add to cart"
-                              title="Add to cart"
-                              className={`w-8 h-8 rounded-lg sm:rounded-xl font-bold flex items-center justify-center transition-all cursor-pointer shadow-xs ${
-                                prod.inStock
-                                  ? 'bg-orange-600 hover:bg-orange-700 text-white active:scale-95'
-                                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                              }`}
-                            >
-                              <Plus className="w-4 h-4" />
-                            </button>
-                          )
-                        ) : (
-                          <a
-                            href={getWhatsAppDirectUrl(
-                              shop.whatsapp || shop.phone,
-                              `Namaste! Mujhe "${prod.name}" (${formatINR(prod.price)}) order karna hai.`
-                            )}
-                            onClick={(e) => e.stopPropagation()}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="h-8 px-2 sm:px-3 rounded-lg sm:rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] sm:text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-xs transition-all active:scale-95"
-                            title={getTranslation('common.orderWhatsApp', currentLanguage, 'Order on WhatsApp')}
-                          >
-                            <PhoneCall className="w-3.5 h-3.5" />
-                            <span className="hidden sm:inline">{getTranslation('common.orderWhatsApp', currentLanguage, 'Order')}</span>
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+            <div className="bg-white rounded-2xl border border-gray-200 p-10 sm:p-12 text-center space-y-3 shadow-2xs">
+              <ShoppingBag className="w-12 h-12 text-gray-300 mx-auto" />
+              <h3 className="text-base font-bold text-slate-800">Koi Product Nahi Mila</h3>
+              <p className="text-xs text-gray-500">
+                Aapki search query ya filter ke mutabiq koi product uplabdh nahi hai.
+              </p>
+              <button
+                onClick={() => {
+                  setSearchQuery('');
+                  setProductTypeFilter('ALL');
+                }}
+                className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white font-bold uppercase tracking-wider text-xs rounded-xl cursor-pointer transition-colors"
+              >
+                Reset Filters
+              </button>
+            </div>
+          </section>
+        ) : (
+          <StoreItemsCarouselSection
+            id="products"
+            title={getTranslation('nav.products', currentLanguage, 'Store Products')}
+            subtitle="Direct store prices with zero platform commission and instant WhatsApp delivery."
+            badgeText="Products Catalogue"
+            isService={false}
+            items={filteredProducts}
+            shop={shop}
+            cart={cart}
+            onAddToCart={addToCart}
+            onRemoveFromCart={removeFromCart}
+            onSelectItem={(prod) => setSelectedProduct(prod)}
+            filterToolbar={
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 bg-white p-3 sm:p-3.5 rounded-xl border border-gray-200/90 shadow-2xs">
+                <div className="relative flex-1 max-w-md">
+                  <Search className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
+                  <input
+                    type="text"
+                    placeholder={getTranslation('search.placeholder', currentLanguage, 'Search products...')}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9 pr-8 py-2 text-xs rounded-xl border border-gray-300 w-full focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-gray-50/80 transition-all"
+                  />
+                  {searchQuery && (
+                    <button 
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-2.5 top-2.5 text-gray-400 hover:text-slate-700 cursor-pointer"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                 </div>
-              );
-            })}
-          </div>
-        )}
 
-      </section>
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+                  <button
+                    onClick={() => setProductTypeFilter('ALL')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all cursor-pointer ${
+                      productTypeFilter === 'ALL'
+                        ? 'bg-slate-900 text-white shadow-xs'
+                        : 'bg-gray-100 text-slate-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {getTranslation('filter.all', currentLanguage, 'All')} ({shop.products?.filter(p => p.type !== 'SERVICE').length || 0})
+                  </button>
+                  <button
+                    onClick={() => setProductTypeFilter('IN_STOCK')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all cursor-pointer ${
+                      productTypeFilter === 'IN_STOCK'
+                        ? 'bg-emerald-700 text-white shadow-xs'
+                        : 'bg-gray-100 text-slate-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {getTranslation('filter.inStock', currentLanguage, 'In Stock')}
+                  </button>
+                </div>
+              </div>
+            }
+          />
+        )
       )}
 
       {/* STORE DEMO VIDEOS (Up to 8 Videos) */}
