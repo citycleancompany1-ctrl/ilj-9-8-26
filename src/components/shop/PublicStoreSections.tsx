@@ -75,7 +75,7 @@ import {
   ProductItem,
   CartItem,
 } from '../../types';
-import { getWhatsAppDirectUrl, formatINR, getYouTubeEmbedUrl } from '../../utils/mediaUpload';
+import { getWhatsAppDirectUrl, formatINR, getYouTubeEmbedUrl, getYouTubeThumbnail } from '../../utils/mediaUpload';
 import { StoreItemsCarouselSection } from './StoreItemsCarouselSection';
 
 // ==========================================
@@ -1327,15 +1327,11 @@ export const GallerySectionRenderer: React.FC<{
     'https://images.unsplash.com/photo-1580828343064-fde4fc206bc6?w=800',
   ];
 
-  // Resolve gallery photos: combine shop gallery images or fallback
-  const rawPhotos = shop.galleryImages && shop.galleryImages.filter(Boolean).length > 0
-    ? shop.galleryImages.filter(Boolean)
-    : fallbackPhotos;
-
-  // Ensure rich visual variety (at least 8 photos)
-  const allPhotos = rawPhotos.length < 8
-    ? [...rawPhotos, ...fallbackPhotos.slice(0, 8 - rawPhotos.length)]
-    : rawPhotos;
+  // Resolve gallery photos: check custom items in config or shop, else fallback
+  const configItems = (config?.items && Array.isArray(config.items)) ? config.items.filter(Boolean) : [];
+  const shopImages = (shop.galleryImages && Array.isArray(shop.galleryImages)) ? shop.galleryImages.filter(Boolean) : [];
+  const customPhotos = configItems.length > 0 ? configItems : shopImages;
+  const allPhotos = customPhotos.length > 0 ? customPhotos : fallbackPhotos;
 
   const totalPhotos = allPhotos.length;
   const displayedPhotos = isExpanded ? allPhotos : allPhotos.slice(0, 8);
@@ -1414,6 +1410,9 @@ export const GallerySectionRenderer: React.FC<{
                   alt={`${shop.businessName} Gallery Photo ${idx + 1}`}
                   loading="lazy"
                   className="w-full h-full object-cover object-center group-hover:scale-108 transition-transform duration-700 ease-out"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800';
+                  }}
                 />
 
                 {/* Gradient Overlay & Hover Controls */}
@@ -1502,6 +1501,9 @@ export const GallerySectionRenderer: React.FC<{
               src={allPhotos[lightboxIndex]}
               alt={`Photo ${lightboxIndex + 1}`}
               className="max-h-[72vh] max-w-full object-contain rounded-xl shadow-2xl border border-white/10 select-none animate-in zoom-in-95 duration-200"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800';
+              }}
             />
 
             <button
@@ -1549,6 +1551,8 @@ export const VideoSectionRenderer: React.FC<{
 }> = ({ shop, config }) => {
   const [mobileSlideIndex, setMobileSlideIndex] = useState(0);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [activeVideoModal, setActiveVideoModal] = useState<VideoItem | null>(null);
+  const [playingInlineId, setPlayingInlineId] = useState<string | null>(null);
 
   const fallbackVideos: VideoItem[] = [
     {
@@ -1577,14 +1581,12 @@ export const VideoSectionRenderer: React.FC<{
     },
   ];
 
-  const rawVideos = shop.videos && shop.videos.length > 0 ? shop.videos : fallbackVideos;
-  // Ensure we have 4 videos for the desktop 4-column layout
-  const allVideos = rawVideos.length < 4
-    ? [...rawVideos, ...fallbackVideos.slice(0, 4 - rawVideos.length)]
-    : rawVideos;
+  const rawVideos = (shop.videos && shop.videos.length > 0) ? shop.videos : [];
+  // Use vendor videos if added; only fallback to demo videos if vendor has none
+  const allVideos: VideoItem[] = rawVideos.length > 0 ? rawVideos : fallbackVideos;
 
-  // Desktop takes 4 videos in collapsed state
-  const desktopVideos = allVideos.slice(0, 4);
+  // Desktop takes up to 4 videos in collapsed state
+  const desktopVideos = isExpanded ? allVideos : allVideos.slice(0, 4);
 
   const handlePrevMobile = (e?: React.MouseEvent) => {
     e?.stopPropagation();
@@ -1595,6 +1597,16 @@ export const VideoSectionRenderer: React.FC<{
     e?.stopPropagation();
     setMobileSlideIndex((prev) => (prev + 1) % allVideos.length);
   };
+
+  // Keyboard support for theater modal
+  useEffect(() => {
+    if (!activeVideoModal) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setActiveVideoModal(null);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeVideoModal]);
 
   return (
     <section id="videos" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16">
@@ -1611,36 +1623,58 @@ export const VideoSectionRenderer: React.FC<{
         </p>
       </div>
 
-      {isExpanded ? (
-        /* INLINE EXPANDED VIEW: ALL VIDEOS IN RESPONSIVE GRID */
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 animate-in fade-in duration-300">
-          {allVideos.map((vid, idx) => {
-            const embedUrl = getYouTubeEmbedUrl(vid.youtubeUrl) || vid.youtubeUrl;
-            return (
-              <div
-                key={`expanded-video-${vid.id || idx}`}
-                className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-xs hover:shadow-lg hover:border-red-300 transition-all flex flex-col justify-between"
-              >
-                <div className="aspect-16/9 bg-slate-900 overflow-hidden relative">
-                  {embedUrl.includes('youtube.com') || embedUrl.includes('youtu.be') ? (
-                    <iframe
-                      src={embedUrl}
-                      title={vid.title}
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                      className="w-full h-full border-0"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-slate-900 text-white">
-                      <Play className="w-10 h-10 text-red-500 fill-red-500" />
-                    </div>
-                  )}
-                </div>
+      {/* 1. DESKTOP VIEW: RESPONSIVE GRID (1, 2, 3, or 4 columns) */}
+      <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-5">
+        {desktopVideos.map((vid, idx) => {
+          const thumb = vid.thumbnailUrl || getYouTubeThumbnail(vid.youtubeUrl);
+          const embedUrl = getYouTubeEmbedUrl(vid.youtubeUrl, true) || vid.youtubeUrl;
+          const isInlinePlaying = playingInlineId === vid.id;
 
-                <div className="p-4 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded">
+          return (
+            <div
+              key={`desktop-video-${vid.id || idx}`}
+              className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-xs hover:shadow-lg hover:border-red-300 transition-all flex flex-col justify-between group"
+            >
+              <div className="aspect-16/9 bg-slate-950 overflow-hidden relative">
+                {isInlinePlaying ? (
+                  <iframe
+                    src={embedUrl}
+                    title={vid.title}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    className="w-full h-full border-0"
+                  />
+                ) : (
+                  <div 
+                    onClick={() => setActiveVideoModal(vid)}
+                    className="w-full h-full relative cursor-pointer group/thumb"
+                  >
+                    <img
+                      src={thumb}
+                      alt={vid.title}
+                      loading="lazy"
+                      className="w-full h-full object-cover group-hover/thumb:scale-105 transition-transform duration-300"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=800';
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-black/35 group-hover/thumb:bg-black/50 transition-colors flex items-center justify-center">
+                      <div className="w-13 h-13 rounded-full bg-red-600/90 text-white flex items-center justify-center shadow-xl transform group-hover/thumb:scale-110 transition-transform">
+                        <Play className="w-6 h-6 fill-white ml-0.5" />
+                      </div>
+                    </div>
+                    <span className="absolute bottom-2 left-2 bg-black/75 text-white text-[9px] font-bold px-2 py-0.5 rounded">
                       Video #{idx + 1}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              <div className="p-4 space-y-2 flex-1 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-[10px] font-bold text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded">
+                      YouTube Reel
                     </span>
                     <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">
                       Verified Store
@@ -1650,96 +1684,126 @@ export const VideoSectionRenderer: React.FC<{
                     {vid.title}
                   </h3>
                 </div>
-              </div>
-            );
-          })}
-        </div>
-      ) : (
-        <>
-          {/* 1. DESKTOP VIEW: EXACTLY 4 VIDEOS GRID */}
-          <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-5">
-            {desktopVideos.map((vid, idx) => {
-              const embedUrl = getYouTubeEmbedUrl(vid.youtubeUrl) || vid.youtubeUrl;
-              return (
-                <div
-                  key={`desktop-video-${vid.id || idx}`}
-                  className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-xs hover:shadow-lg hover:border-red-300 transition-all flex flex-col justify-between"
-                >
-                  <div className="aspect-16/9 bg-slate-900 overflow-hidden relative">
-                    {embedUrl.includes('youtube.com') || embedUrl.includes('youtu.be') ? (
-                      <iframe
-                        src={embedUrl}
-                        title={vid.title}
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                        className="w-full h-full border-0"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-slate-900 text-white">
-                        <Play className="w-10 h-10 text-red-500 fill-red-500" />
-                      </div>
-                    )}
-                  </div>
 
-                  <div className="p-4 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-bold text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded">
-                        Video #{idx + 1}
-                      </span>
-                      <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">
-                        Verified Store
-                      </span>
-                    </div>
-                    <h3 className="text-xs sm:text-sm font-black uppercase text-slate-900 line-clamp-2">
-                      {vid.title}
-                    </h3>
-                  </div>
+                <div className="pt-2 border-t border-gray-100 flex items-center justify-between gap-2">
+                  {isInlinePlaying ? (
+                    <button
+                      type="button"
+                      onClick={() => setPlayingInlineId(null)}
+                      className="text-xs font-bold text-gray-500 hover:text-slate-800 transition-colors cursor-pointer"
+                    >
+                      Close Player
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setActiveVideoModal(vid)}
+                      className="text-xs font-bold text-red-600 hover:text-red-700 flex items-center gap-1.5 transition-colors cursor-pointer"
+                    >
+                      <Play className="w-3.5 h-3.5 fill-red-600" />
+                      <span>Watch Video</span>
+                    </button>
+                  )}
+
+                  <a
+                    href={vid.youtubeUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[11px] font-medium text-gray-400 hover:text-red-600 flex items-center gap-1 transition-colors"
+                    title="Open on YouTube"
+                  >
+                    <span>YouTube</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
                 </div>
-              );
-            })}
-          </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
 
-          {/* 2. MOBILE VIEW: INTERACTIVE VIDEO CAROUSEL */}
-          <div className="block md:hidden">
-            <div className="relative bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-md">
-              {/* Active Video Player */}
-              {(() => {
-                const currentVid = allVideos[mobileSlideIndex % allVideos.length];
-                const embedUrl = getYouTubeEmbedUrl(currentVid.youtubeUrl) || currentVid.youtubeUrl;
-                return (
-                  <div>
-                    <div className="aspect-16/9 bg-slate-900 overflow-hidden relative">
-                      {embedUrl.includes('youtube.com') || embedUrl.includes('youtu.be') ? (
-                        <iframe
-                          src={embedUrl}
-                          title={currentVid.title}
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                          allowFullScreen
-                          className="w-full h-full border-0"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-slate-900 text-white">
-                          <Play className="w-12 h-12 text-red-500 fill-red-500" />
-                        </div>
-                      )}
-                    </div>
+      {/* 2. MOBILE VIEW: INTERACTIVE VIDEO CAROUSEL */}
+      <div className="block md:hidden">
+        {(() => {
+          const currentVid = allVideos[mobileSlideIndex % allVideos.length];
+          const thumb = currentVid.thumbnailUrl || getYouTubeThumbnail(currentVid.youtubeUrl);
+          const embedUrl = getYouTubeEmbedUrl(currentVid.youtubeUrl, true) || currentVid.youtubeUrl;
+          const isInlinePlaying = playingInlineId === currentVid.id;
 
-                    <div className="p-4 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-bold text-red-700 bg-red-50 border border-red-200 px-2.5 py-0.5 rounded-full">
-                          Video {(mobileSlideIndex % allVideos.length) + 1} of {allVideos.length}
-                        </span>
-                        <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
-                          Verified Store
-                        </span>
+          return (
+            <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-md">
+              <div className="aspect-16/9 bg-slate-950 overflow-hidden relative">
+                {isInlinePlaying ? (
+                  <iframe
+                    src={embedUrl}
+                    title={currentVid.title}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    className="w-full h-full border-0"
+                  />
+                ) : (
+                  <div
+                    onClick={() => setActiveVideoModal(currentVid)}
+                    className="w-full h-full relative cursor-pointer"
+                  >
+                    <img
+                      src={thumb}
+                      alt={currentVid.title}
+                      loading="lazy"
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=800';
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-black/35 flex items-center justify-center">
+                      <div className="w-14 h-14 rounded-full bg-red-600/90 text-white flex items-center justify-center shadow-xl">
+                        <Play className="w-7 h-7 fill-white ml-0.5" />
                       </div>
-                      <h3 className="text-sm font-black uppercase text-slate-900">
-                        {currentVid.title}
-                      </h3>
                     </div>
                   </div>
-                );
-              })()}
+                )}
+              </div>
+
+              <div className="p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold text-red-700 bg-red-50 border border-red-200 px-2.5 py-0.5 rounded-full">
+                    Video {(mobileSlideIndex % allVideos.length) + 1} of {allVideos.length}
+                  </span>
+                  <a
+                    href={currentVid.youtubeUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs font-bold text-red-600 hover:text-red-700 flex items-center gap-1"
+                  >
+                    <span>Open YouTube</span>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                </div>
+
+                <h3 className="text-sm font-black uppercase text-slate-900">
+                  {currentVid.title}
+                </h3>
+
+                <div className="pt-2 flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setActiveVideoModal(currentVid)}
+                    className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs transition-colors cursor-pointer"
+                  >
+                    <Play className="w-4 h-4 fill-white" />
+                    <span>Watch Fullscreen</span>
+                  </button>
+                  {isInlinePlaying && (
+                    <button
+                      type="button"
+                      onClick={() => setPlayingInlineId(null)}
+                      className="px-3 py-2.5 bg-gray-100 hover:bg-gray-200 text-slate-800 rounded-xl text-xs font-bold cursor-pointer"
+                    >
+                      Stop
+                    </button>
+                  )}
+                </div>
+              </div>
 
               {/* Carousel Arrows */}
               <div className="px-4 pb-4 flex items-center justify-between gap-3 pt-2 border-t border-gray-100">
@@ -1749,42 +1813,42 @@ export const VideoSectionRenderer: React.FC<{
                   className="flex-1 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-slate-800 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                 >
                   <ChevronLeft className="w-4 h-4" />
-                  <span>Previous Video</span>
+                  <span>Previous</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={handleNextMobile}
-                  className="flex-1 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+                  className="flex-1 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-xs"
                 >
                   <span>Next Video</span>
                   <ChevronRight className="w-4 h-4" />
                 </button>
               </div>
             </div>
+          );
+        })()}
 
-            {/* Carousel Pagination Dots */}
-            <div className="flex items-center justify-center gap-1.5 mt-4">
-              {allVideos.map((_, dotIdx) => (
-                <button
-                  key={`mob-vid-dot-${dotIdx}`}
-                  type="button"
-                  onClick={() => setMobileSlideIndex(dotIdx)}
-                  className={`transition-all rounded-full cursor-pointer ${
-                    dotIdx === (mobileSlideIndex % allVideos.length)
-                      ? 'w-6 h-2 bg-red-600'
-                      : 'w-2 h-2 bg-gray-300'
-                  }`}
-                  aria-label={`Go to video ${dotIdx + 1}`}
-                />
-              ))}
-            </div>
-          </div>
-        </>
-      )}
+        {/* Carousel Pagination Dots */}
+        <div className="flex items-center justify-center gap-1.5 mt-4">
+          {allVideos.map((_, dotIdx) => (
+            <button
+              key={`mob-vid-dot-${dotIdx}`}
+              type="button"
+              onClick={() => setMobileSlideIndex(dotIdx)}
+              className={`transition-all rounded-full cursor-pointer ${
+                dotIdx === (mobileSlideIndex % allVideos.length)
+                  ? 'w-6 h-2 bg-red-600'
+                  : 'w-2 h-2 bg-gray-300'
+              }`}
+              aria-label={`Go to video ${dotIdx + 1}`}
+            />
+          ))}
+        </div>
+      </div>
 
-      {/* VIEW ALL BUTTON - Only shown when total videos > 4 or if currently expanded */}
-      {(allVideos.length > 4 || isExpanded) && (
+      {/* VIEW ALL BUTTON - Only shown when total videos > 4 */}
+      {allVideos.length > 4 && (
         <div className="text-center pt-8">
           <button
             type="button"
@@ -1795,6 +1859,70 @@ export const VideoSectionRenderer: React.FC<{
             <span>{isExpanded ? 'Show Less Videos' : `View All Videos & Tutorials (${allVideos.length})`}</span>
             {isExpanded ? <ChevronUp className="w-4 h-4 text-red-600" /> : <ArrowRight className="w-4 h-4 text-red-600" />}
           </button>
+        </div>
+      )}
+
+      {/* FULLSCREEN THEATER MODAL */}
+      {activeVideoModal && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex flex-col items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200"
+          onClick={() => setActiveVideoModal(null)}
+        >
+          <div
+            className="w-full max-w-4xl bg-slate-900 rounded-2xl overflow-hidden border border-slate-700 shadow-2xl flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-950 text-white">
+              <div className="flex items-center gap-2.5 truncate">
+                <span className="p-1.5 bg-red-600 rounded-lg shrink-0">
+                  <Play className="w-4 h-4 fill-white" />
+                </span>
+                <h3 className="text-sm sm:text-base font-bold truncate">
+                  {activeVideoModal.title}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveVideoModal(null)}
+                className="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-gray-300 hover:text-white flex items-center justify-center transition-colors cursor-pointer shrink-0 ml-2"
+                title="Close (Esc)"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Video Iframe Viewport */}
+            <div className="aspect-16/9 w-full bg-black">
+              <iframe
+                src={getYouTubeEmbedUrl(activeVideoModal.youtubeUrl, true) || activeVideoModal.youtubeUrl}
+                title={activeVideoModal.title}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="w-full h-full border-0"
+              />
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-3.5 sm:p-4 bg-slate-950 border-t border-slate-800 flex items-center justify-between gap-3 text-white">
+              <span className="text-xs text-gray-400 truncate">
+                {shop.businessName} • Verified Video
+              </span>
+              <div className="flex items-center gap-2">
+                <a
+                  href={activeVideoModal.youtubeUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg flex items-center gap-1.5 transition-colors shadow-xs"
+                >
+                  <span>Watch on YouTube</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </section>

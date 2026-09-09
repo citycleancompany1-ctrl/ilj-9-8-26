@@ -42,6 +42,46 @@ import { ProtectedAccessBanner } from './components/common/ProtectedAccessBanner
 import { updateShopSeoMeta, resetPlatformSeoMeta } from './utils/seo';
 import { initGoogleTranslate } from './utils/googleTranslate';
 
+// Custom Domain resolver helper
+export const resolveShopFromDomain = (shops: Shop[], rawHostOrDomain?: string | null): Shop | null => {
+  if (!rawHostOrDomain) return null;
+  const clean = (d: string) =>
+    d
+      .toLowerCase()
+      .trim()
+      .replace(/^https?:\/\//i, '')
+      .replace(/^www\./i, '')
+      .replace(/\/.*$/, '')
+      .replace(/:\d+$/, '');
+
+  const target = clean(rawHostOrDomain);
+  if (!target) return null;
+
+  // Standard platform hostnames and dev environments
+  const ignoredHosts = [
+    'localhost',
+    '127.0.0.1',
+    '0.0.0.0',
+    'indianlalaji.com',
+  ];
+  if (
+    ignoredHosts.includes(target) ||
+    target.endsWith('.run.app') ||
+    target.endsWith('.web.app') ||
+    target.endsWith('.firebaseapp.com') ||
+    target.endsWith('.vercel.app')
+  ) {
+    return null;
+  }
+
+  return (
+    shops.find((s) => {
+      if (!s.customDomain) return false;
+      return clean(s.customDomain) === target;
+    }) || null
+  );
+};
+
 export default function App() {
   // Global platform state from localStorage with Firestore real-time sync
   const [platformState, setPlatformState] = useState<PlatformState>(() => loadPlatformState());
@@ -80,7 +120,11 @@ export default function App() {
     const unsubShops = subscribeToShops((cloudShops) => {
       if (cloudShops && cloudShops.length > 0) {
         setPlatformState((prev) => {
-          const updatedState = { ...prev, shops: cloudShops };
+          // Cloud shops are primary, but keep any local shops not yet synced to prevent dropping newly registered shops
+          const cloudMap = new Map(cloudShops.map((s) => [s.shopId, s]));
+          const localOnly = prev.shops.filter((s) => !cloudMap.has(s.shopId));
+          const mergedShops = [...localOnly, ...cloudShops];
+          const updatedState = { ...prev, shops: mergedShops };
           savePlatformState(updatedState);
           return updatedState;
         });
@@ -134,6 +178,15 @@ export default function App() {
           setPrefilledShopId(directShopId);
         }
         setIsAuthOpen(true);
+      }
+
+      // 0. Check Custom Domain routing (via URL simulation ?domain=... / ?customDomain=... OR real window.location.hostname)
+      const domainParam = searchParams.get('domain') || searchParams.get('customDomain');
+      const customDomainShop = resolveShopFromDomain(platformState.shops, domainParam || window.location.hostname);
+      if (customDomainShop && !isLoginAction && !path.startsWith('/admin') && !path.startsWith('/vendor-dashboard')) {
+        setCurrentView('shop');
+        setActiveShopId(customDomainShop.shopId);
+        return;
       }
 
       const shopParam = searchParams.get('shop') || (!isLoginAction ? searchParams.get('shopId') : null) || searchParams.get('id');
@@ -236,7 +289,20 @@ export default function App() {
       window.removeEventListener('hashchange', handleUrlChange);
       window.removeEventListener('storage', handleStorageSync);
     };
-  }, []);
+  }, [platformState.shops]);
+
+  // Auto-resolve custom domain when shops finish syncing from cloud
+  useEffect(() => {
+    if (platformState.shops.length > 0 && currentView === 'home' && !activeShopId) {
+      const searchParams = new URLSearchParams(window.location.search);
+      const domainParam = searchParams.get('domain') || searchParams.get('customDomain');
+      const customDomainShop = resolveShopFromDomain(platformState.shops, domainParam || window.location.hostname);
+      if (customDomainShop) {
+        setCurrentView('shop');
+        setActiveShopId(customDomainShop.shopId);
+      }
+    }
+  }, [platformState.shops, currentView, activeShopId]);
 
   // Navigation handler
   const handleNavigate = (view: string, shopIdParam?: string) => {
@@ -462,8 +528,13 @@ export default function App() {
     }
   }, [currentView, currentPublicShop]);
 
+  const isCustomDomainHost = Boolean(
+    resolveShopFromDomain(platformState.shops, window.location.hostname)
+  );
+
   const isPublicShopView =
     currentView === 'shop' ||
+    isCustomDomainHost ||
     (currentView === 'vendor-dashboard' && currentRole === 'VENDOR' && Boolean(currentVendorShop));
 
   return (
@@ -589,7 +660,13 @@ export default function App() {
             shopId={activeShopId || undefined}
             popups={platformState.popups}
             globalPopupEnabled={platformState.globalPopupEnabled}
-            onNavigateHome={() => handleNavigate('home')}
+            onNavigateHome={() => {
+              if (isCustomDomainHost) {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              } else {
+                handleNavigate('home');
+              }
+            }}
             onOpenVendorLogin={() => handleOpenAuth('LOGIN')}
             onSubmitInquiry={handleSubmitShopInquiry}
             isVendorOrAdminPreview={
@@ -621,9 +698,13 @@ export default function App() {
         prefilledShopId={prefilledShopId}
         shops={platformState.shops}
         onRegisterShop={(newShop) => {
-          handleUpdateState({
-            ...platformState,
-            shops: [newShop, ...platformState.shops],
+          setPlatformState((prev) => {
+            const updated = {
+              ...prev,
+              shops: [newShop, ...prev.shops.filter((s) => s.shopId !== newShop.shopId)],
+            };
+            savePlatformState(updated);
+            return updated;
           });
         }}
         onVendorLoginSuccess={handleVendorLoginSuccess}

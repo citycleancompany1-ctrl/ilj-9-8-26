@@ -154,8 +154,10 @@ export const AddWebsiteModal: React.FC<AddWebsiteModalProps> = ({
         updatedAt: new Date().toISOString(),
       };
 
-      saveShopToFirestore(newShop);
       onAddShop(newShop);
+      saveShopToFirestore(newShop).catch((err) => {
+        console.warn('[Firestore] Background cloud save warning:', err);
+      });
       showToast(`Website "${newShop.businessName}" created successfully with ID: ${newShop.shopId}!`);
       onClose();
     } catch (err) {

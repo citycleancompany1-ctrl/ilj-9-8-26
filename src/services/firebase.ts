@@ -52,6 +52,16 @@ const SHOPS_COLLECTION = 'shops';
 const PLATFORM_CONFIG_COLLECTION = 'platform_config';
 const GLOBAL_CONFIG_DOC = 'global_settings';
 
+// Helper for resilient Firestore operations with timeout
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number = 4000): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(`Firestore operation timed out after ${timeoutMs}ms`)), timeoutMs)
+    ),
+  ]);
+}
+
 /**
  * Save a single shop to Firestore (called when vendor or admin edits a shop)
  */
@@ -61,17 +71,20 @@ export async function saveShopToFirestore(shop: Shop): Promise<void> {
     const docRef = doc(db, SHOPS_COLLECTION, shop.shopId);
     // Sanitize shop object to prevent undefined values in Firestore
     const sanitized = JSON.parse(JSON.stringify(shop));
-    await setDoc(
-      docRef,
-      {
-        ...sanitized,
-        updatedAt: new Date().toISOString(),
-      },
-      { merge: true }
+    await withTimeout(
+      setDoc(
+        docRef,
+        {
+          ...sanitized,
+          updatedAt: new Date().toISOString(),
+        },
+        { merge: true }
+      ),
+      5000
     );
     console.log(`[Firestore] Shop ${shop.shopId} synced to cloud successfully.`);
   } catch (error) {
-    console.error(`[Firestore] Error saving shop ${shop.shopId}:`, error);
+    console.warn(`[Firestore] Warning saving shop ${shop.shopId} to cloud (will remain stored in local persistence):`, error);
   }
 }
 
@@ -82,10 +95,10 @@ export async function deleteShopFromFirestore(shopId: string): Promise<void> {
   if (!shopId) return;
   try {
     const docRef = doc(db, SHOPS_COLLECTION, shopId);
-    await deleteDoc(docRef);
+    await withTimeout(deleteDoc(docRef), 5000);
     console.log(`[Firestore] Shop ${shopId} deleted from cloud.`);
   } catch (error) {
-    console.error(`[Firestore] Error deleting shop ${shopId}:`, error);
+    console.warn(`[Firestore] Warning deleting shop ${shopId} from cloud:`, error);
   }
 }
 
@@ -168,35 +181,21 @@ export async function savePlatformConfigToFirestore(state: Partial<PlatformState
     if (state.saasBackups !== undefined) payload.saasBackups = state.saasBackups;
 
     const sanitized = JSON.parse(JSON.stringify(payload));
-    await setDoc(configRef, sanitized, { merge: true });
+    await withTimeout(setDoc(configRef, sanitized, { merge: true }), 5000);
     console.log('[Firestore] Global platform settings synced to cloud.');
   } catch (error) {
-    console.error('[Firestore] Error saving global platform config:', error);
+    console.warn('[Firestore] Warning saving global platform config to cloud:', error);
   }
 }
 
 /**
- * Save the entire platform state to Firestore
+ * Save platform config to Firestore (without repeatedly mass-writing all shops)
  */
 export async function savePlatformStateToFirestore(state: PlatformState): Promise<void> {
   try {
     await savePlatformConfigToFirestore(state);
-
-    // Save each shop
-    if (state.shops && state.shops.length > 0) {
-      const batch = writeBatch(db);
-      for (const shop of state.shops) {
-        if (shop && shop.shopId) {
-          const shopRef = doc(db, SHOPS_COLLECTION, shop.shopId);
-          const sanitized = JSON.parse(JSON.stringify(shop));
-          batch.set(shopRef, sanitized, { merge: true });
-        }
-      }
-      await batch.commit();
-      console.log(`[Firestore] ${state.shops.length} shops synced to cloud.`);
-    }
   } catch (error) {
-    console.error('[Firestore] Error saving platform state to Firestore:', error);
+    console.warn('[Firestore] Warning in savePlatformStateToFirestore:', error);
   }
 }
 

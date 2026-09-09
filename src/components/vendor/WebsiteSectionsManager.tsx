@@ -72,11 +72,13 @@ import {
   BlogSectionConfig,
   FooterSectionConfig,
   FloatingButtonsConfig,
-  ShopCategory
+  ShopCategory,
+  VideoItem
 } from '../../types';
 import { getDefaultSectionsConfig } from '../../utils/sectionDefaults';
-import { fileToBase64 } from '../../utils/mediaUpload';
+import { fileToBase64, getYouTubeThumbnail, getYouTubeEmbedUrl, getYouTubeVideoId } from '../../utils/mediaUpload';
 import { getAvailableCategoriesForShop, getCategoryImageByName } from '../../utils/categoryUtils';
+import { saveShopToFirestore } from '../../services/firebase';
 
 interface WebsiteSectionsManagerProps {
   shop: Shop;
@@ -315,6 +317,51 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
     } finally {
       setIsUploadingPhoto(false);
     }
+  };
+
+  // Video section and Gallery handlers
+  const [previewVideoItem, setPreviewVideoItem] = useState<VideoItem | null>(null);
+
+  const handleAddVideo = (newVid: VideoItem) => {
+    if ((shop.videos || []).length >= 8) {
+      showToast('Aap maximum 8 videos add kar sakte hain.');
+      return;
+    }
+    const updatedVideos = [...(shop.videos || []), newVid];
+    const updatedShop: Shop = {
+      ...shop,
+      videos: updatedVideos,
+      updatedAt: new Date().toISOString(),
+    };
+    onUpdateShop(updatedShop);
+    saveShopToFirestore(updatedShop);
+    if (onAnyChange) onAnyChange();
+    showToast('YouTube Video safalta-poorvak add ho gaya!');
+  };
+
+  const handleDeleteVideo = (vidId: string) => {
+    if (!window.confirm('Kya aap is video ko store se hatana chahte hain?')) return;
+    const updatedVideos = (shop.videos || []).filter((v) => v.id !== vidId);
+    const updatedShop: Shop = {
+      ...shop,
+      videos: updatedVideos,
+      updatedAt: new Date().toISOString(),
+    };
+    onUpdateShop(updatedShop);
+    saveShopToFirestore(updatedShop);
+    if (onAnyChange) onAnyChange();
+    showToast('Video delete ho gaya.');
+  };
+
+  const handleUpdateGallery = (photos: string[]) => {
+    const updatedShop: Shop = {
+      ...shop,
+      galleryImages: photos,
+      updatedAt: new Date().toISOString(),
+    };
+    onUpdateShop(updatedShop);
+    saveShopToFirestore(updatedShop);
+    if (onAnyChange) onAnyChange();
   };
 
   // Sync if shop changes
@@ -582,17 +629,6 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5 shrink-0 w-full md:w-auto">
-          {/* Quick Category Manager Action */}
-          <button
-            type="button"
-            onClick={onOpenCreateCategory || onOpenCategories}
-            className="flex-1 md:flex-initial px-3.5 py-2 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white text-xs font-bold uppercase tracking-wider rounded-sm flex items-center justify-center gap-1.5 shadow-sm transition-all cursor-pointer"
-            title="Create and Manage Categories"
-          >
-            <FolderTree className="w-3.5 h-3.5 text-amber-100" />
-            <span>+ Create Category ({shop.customCategories?.length || 0})</span>
-          </button>
-
           {onOpenThemes && (
             <button
               type="button"
@@ -884,6 +920,10 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
                     onDeleteItem: handleDeleteItem,
                     onToggleStock: handleToggleStock,
                     onToggleHidePrice: handleToggleHidePrice,
+                    onAddVideo: handleAddVideo,
+                    onDeleteVideo: handleDeleteVideo,
+                    onPreviewVideo: (vid) => setPreviewVideoItem(vid),
+                    onUpdateGallery: handleUpdateGallery,
                   })}
                   
                   {/* Bottom Save Bar for this section */}
@@ -1232,6 +1272,48 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
         </div>
       )}
 
+      {/* PREVIEW VIDEO TEST MODAL */}
+      {previewVideoItem && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-slate-900 text-white rounded-2xl max-w-2xl w-full overflow-hidden border border-slate-700 shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="p-4 border-b border-slate-800 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Play className="w-5 h-5 text-red-500 fill-red-500" />
+                <h3 className="text-sm font-bold truncate max-w-md">{previewVideoItem.title}</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPreviewVideoItem(null)}
+                className="p-1.5 text-gray-400 hover:text-white rounded-lg hover:bg-slate-800 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="aspect-16/9 w-full bg-black">
+              <iframe
+                src={getYouTubeEmbedUrl(previewVideoItem.youtubeUrl, true) || previewVideoItem.youtubeUrl}
+                title={previewVideoItem.title}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="w-full h-full border-0"
+              />
+            </div>
+            <div className="p-4 bg-slate-950 flex items-center justify-between">
+              <span className="text-xs text-gray-400">Store Video Live Preview</span>
+              <a
+                href={previewVideoItem.youtubeUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg flex items-center gap-1.5"
+              >
+                <span>Open on YouTube</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
@@ -1249,6 +1331,10 @@ function renderSectionEditor(
     onDeleteItem: (itemId: string, name: string) => void;
     onToggleStock: (itemId: string) => void;
     onToggleHidePrice: (itemId: string) => void;
+    onAddVideo?: (vid: VideoItem) => void;
+    onDeleteVideo?: (vidId: string) => void;
+    onPreviewVideo?: (vid: VideoItem) => void;
+    onUpdateGallery?: (photos: string[]) => void;
   }
 ) {
   switch (key) {
@@ -2200,7 +2286,7 @@ function renderSectionEditor(
       );
     }
 
-    // 9. STORE VIDEOS & REELS
+    // 7. STORE VIDEOS & REELS
     case 'videos': {
       const data = config.videos || {
         enabled: true,
@@ -2213,8 +2299,12 @@ function renderSectionEditor(
           videos: { ...(prev.videos || data), ...patch },
         }));
       };
+
+      const currentVideos = (shop.videos && shop.videos.length > 0) ? shop.videos : [];
+
       return (
-        <div className="space-y-4">
+        <div className="space-y-5">
+          {/* Section Titles */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
@@ -2225,6 +2315,7 @@ function renderSectionEditor(
                 value={data.title}
                 onChange={(e) => update({ title: e.target.value })}
                 className="w-full px-3 py-2 text-xs rounded-sm border border-gray-300 bg-white"
+                placeholder="e.g. Store Videos & Demos"
               />
             </div>
             <div>
@@ -2236,29 +2327,206 @@ function renderSectionEditor(
                 value={data.subtitle}
                 onChange={(e) => update({ subtitle: e.target.value })}
                 className="w-full px-3 py-2 text-xs rounded-sm border border-gray-300 bg-white"
+                placeholder="e.g. Dukaan ki video dekhein aur taaza stock samjhein"
               />
             </div>
           </div>
 
-          <div className="p-4 bg-red-50/60 rounded-xl border border-red-200 flex items-start gap-3">
-            <div className="w-8 h-8 rounded-lg bg-red-100 text-red-600 flex items-center justify-center shrink-0">
-              <Play className="w-4 h-4 fill-red-600" />
+          {/* Add New Video Bar */}
+          <div className="p-4 bg-red-50/70 border border-red-200 rounded-xl space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="p-1.5 bg-red-600 text-white rounded-lg">
+                  <Play className="w-4 h-4 fill-white" />
+                </span>
+                <div>
+                  <h4 className="text-xs font-bold text-slate-900">Add YouTube Video or Short</h4>
+                  <p className="text-[10px] text-gray-500">Paste any YouTube URL, Shorts or watch link (Max 8 videos)</p>
+                </div>
+              </div>
+              <span className="text-xs font-black text-red-700 bg-red-100 px-2.5 py-0.5 rounded-full">
+                {currentVideos.length} / 8 Live Videos
+              </span>
             </div>
-            <div className="space-y-1">
-              <h4 className="text-xs font-bold text-slate-900">
-                Active Store Videos ({shop.videos?.length || 0})
-              </h4>
-              <p className="text-[11px] text-gray-600 leading-relaxed">
-                Aapki store ke YouTube videos aur product demos is section mein responsive player mein play honge.
-                Videos ko add ya delete karne ke liye dashboard ke <strong>Shop Videos & YouTube Reels</strong> section ka upyog karein.
-              </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-12 gap-2">
+              <div className="sm:col-span-4">
+                <input
+                  type="text"
+                  id="new-video-title-input"
+                  placeholder="Video Title (e.g. Store Tour / Demo)"
+                  className="w-full px-3 py-2 text-xs rounded border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-red-500"
+                />
+              </div>
+              <div className="sm:col-span-6">
+                <input
+                  type="url"
+                  id="new-video-url-input"
+                  placeholder="https://youtube.com/watch?v=... or https://youtu.be/..."
+                  className="w-full px-3 py-2 text-xs rounded border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-red-500 font-mono text-[11px]"
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const titleEl = document.getElementById('new-video-title-input') as HTMLInputElement;
+                    const urlEl = document.getElementById('new-video-url-input') as HTMLInputElement;
+                    const title = titleEl ? titleEl.value : '';
+                    const url = urlEl ? urlEl.value : '';
+                    if (!url.trim()) {
+                      showToast('Kripya valid YouTube video link enter karein.');
+                      return;
+                    }
+                    if (actions?.onAddVideo) {
+                      actions.onAddVideo({
+                        id: `v_${Date.now()}`,
+                        title: title.trim() || 'Store Demo Video',
+                        youtubeUrl: url.trim(),
+                        thumbnailUrl: getYouTubeThumbnail(url.trim()),
+                      });
+                      if (titleEl) titleEl.value = '';
+                      if (urlEl) urlEl.value = '';
+                    }
+                  }}
+                  className="w-full px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold uppercase rounded shadow-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add Video</span>
+                </button>
+              </div>
             </div>
+          </div>
+
+          {/* Videos Grid */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-800">
+                Current Store Videos ({currentVideos.length})
+              </span>
+              {currentVideos.length === 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (actions?.onAddVideo) {
+                      actions.onAddVideo({
+                        id: `v_${Date.now()}`,
+                        title: `${shop.businessName} Store Tour & Live Stock`,
+                        youtubeUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+                        thumbnailUrl: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800',
+                      });
+                    }
+                  }}
+                  className="text-xs font-bold text-red-600 hover:text-red-700 underline flex items-center gap-1 cursor-pointer"
+                >
+                  <Sparkles className="w-3.5 h-3.5" /> Add Sample Demo Video
+                </button>
+              )}
+            </div>
+
+            {currentVideos.length === 0 ? (
+              <div className="p-8 text-center rounded-xl border border-dashed border-gray-300 bg-gray-50/50 space-y-3">
+                <div className="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto">
+                  <Play className="w-6 h-6 fill-red-600" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-slate-800">Abhi tak koi video add nahi kiya gaya hai</h4>
+                  <p className="text-xs text-gray-500 max-w-md mx-auto mt-1">
+                    YouTube par aapki dukaan ka walkthrough ya product reel ka link upar paste karke add karein. Grahak website par direct video dekh kar order karenge.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (actions?.onAddVideo) {
+                      actions.onAddVideo({
+                        id: `v_${Date.now()}`,
+                        title: `${shop.businessName} Store Tour & Stock Demo`,
+                        youtubeUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+                        thumbnailUrl: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800',
+                      });
+                    }
+                  }}
+                  className="px-4 py-2 bg-white hover:bg-red-50 text-red-700 border border-red-300 rounded-lg text-xs font-bold inline-flex items-center gap-2 shadow-xs transition-colors cursor-pointer"
+                >
+                  <Plus className="w-4 h-4 text-red-600" />
+                  <span>Add 1 Sample Demo Video</span>
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {currentVideos.map((vid, idx) => {
+                  const thumb = vid.thumbnailUrl || getYouTubeThumbnail(vid.youtubeUrl);
+                  return (
+                    <div
+                      key={vid.id || idx}
+                      className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col justify-between group"
+                    >
+                      <div className="relative aspect-video bg-black overflow-hidden">
+                        <img
+                          src={thumb}
+                          alt={vid.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=800';
+                          }}
+                        />
+                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                          <button
+                            type="button"
+                            onClick={() => actions?.onPreviewVideo && actions.onPreviewVideo(vid)}
+                            className="w-10 h-10 rounded-full bg-red-600/90 hover:bg-red-600 text-white flex items-center justify-center shadow-lg transform transition-transform hover:scale-110 cursor-pointer"
+                            title="Test Play Video"
+                          >
+                            <Play className="w-4 h-4 fill-white ml-0.5" />
+                          </button>
+                        </div>
+                        <span className="absolute bottom-2 left-2 bg-black/70 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
+                          Video #{idx + 1}
+                        </span>
+                      </div>
+
+                      <div className="p-3 space-y-2 flex-1 flex flex-col justify-between">
+                        <div>
+                          <h5 className="text-xs font-bold text-slate-900 line-clamp-2" title={vid.title}>
+                            {vid.title}
+                          </h5>
+                          <p className="text-[10px] text-gray-400 truncate mt-0.5" title={vid.youtubeUrl}>
+                            {vid.youtubeUrl}
+                          </p>
+                        </div>
+
+                        <div className="flex items-center justify-between pt-2 border-t border-gray-100 gap-2">
+                          <button
+                            type="button"
+                            onClick={() => actions?.onPreviewVideo && actions.onPreviewVideo(vid)}
+                            className="text-[11px] font-bold text-red-600 hover:text-red-700 flex items-center gap-1 cursor-pointer"
+                          >
+                            <Play className="w-3 h-3 fill-red-600" />
+                            <span>Play Test</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => actions?.onDeleteVideo && actions.onDeleteVideo(vid.id)}
+                            className="p-1 text-gray-400 hover:text-red-600 rounded transition-colors cursor-pointer"
+                            title="Delete Video"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       );
     }
 
-    // 9. PHOTO GALLERY
+    // 8. PHOTO GALLERY
     case 'gallery': {
       const data: GallerySectionConfig = config.gallery || {
         enabled: true,
@@ -2273,7 +2541,7 @@ function renderSectionEditor(
         }));
       };
 
-      const galleryPhotos = (data.items && data.items.length > 0)
+      const rawPhotos = (data.items && data.items.length > 0)
         ? data.items
         : (shop.galleryImages && shop.galleryImages.length > 0 ? shop.galleryImages : [
             'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800',
@@ -2282,14 +2550,19 @@ function renderSectionEditor(
             'https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=800',
           ]);
 
+      const galleryPhotos = rawPhotos.filter(Boolean);
+
       const handleAddGalleryImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
         try {
           const base64 = await fileToBase64(file);
-          const currentList = data.items && data.items.length > 0 ? data.items : galleryPhotos;
+          const currentList = galleryPhotos;
           const updatedPhotos = [...currentList, base64];
           update({ items: updatedPhotos });
+          if (actions?.onUpdateGallery) {
+            actions.onUpdateGallery(updatedPhotos);
+          }
           showToast('New photo added to gallery!');
         } catch {
           showToast('Photo upload failed. Kripya doosri image try karein.');
@@ -2297,9 +2570,12 @@ function renderSectionEditor(
       };
 
       const handleRemoveGalleryImage = (idx: number) => {
-        const currentList = data.items && data.items.length > 0 ? data.items : galleryPhotos;
+        const currentList = galleryPhotos;
         const updatedPhotos = currentList.filter((_, i) => i !== idx);
         update({ items: updatedPhotos });
+        if (actions?.onUpdateGallery) {
+          actions.onUpdateGallery(updatedPhotos);
+        }
         showToast('Photo gallery se remove ho gayi.');
       };
 
@@ -2359,6 +2635,9 @@ function renderSectionEditor(
                     src={photoUrl}
                     alt={`Gallery ${idx + 1}`}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800';
+                    }}
                   />
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <button

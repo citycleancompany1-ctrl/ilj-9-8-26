@@ -22,6 +22,7 @@ import { BUSINESS_CATEGORIES, SUPER_ADMIN_CREDENTIALS } from '../data/initialDat
 import { generateShopId, getOneYearExpiryDate } from '../utils/mediaUpload';
 import { hashPassword, verifyPassword } from '../utils/security';
 import { saveShopToFirestore, fetchShopFromFirestore } from '../services/firebase';
+import { getDefaultSectionsConfig } from '../utils/sectionDefaults';
 import { getRememberedShopId } from '../services/authSession';
 import { Shop } from '../types';
 
@@ -277,25 +278,44 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           },
         ],
         reviews: [],
+        sectionsConfig: getDefaultSectionsConfig({
+          businessName: businessName.trim(),
+          vendorName: ownerName.trim(),
+          category: businessCategory,
+          city: 'Local City',
+          phone: cleanPhone,
+          email: regEmail.trim(),
+          address: `Shop No. 1, Main Market, ${state}`,
+        }),
       };
 
-      // Save directly to Firestore cloud database
-      await saveShopToFirestore(newShop);
+      // 1. Immediately update platform state & localStorage so the store is live on this device without delay
+      onRegisterShop?.(newShop);
+      onVendorRegisterSuccess?.(newShop);
+
+      // 2. Asynchronously sync to Firestore cloud (quota or network delays won't block store creation)
+      saveShopToFirestore(newShop).catch((cloudErr) => {
+        console.warn('[Firestore] Background cloud save warning:', cloudErr);
+      });
 
       if (sendWhatsApp) {
-        // WhatsApp message with Username/ID, Mobile, Password, Login URL
-        const whatsappMsg = `*Namaste ${ownerName.trim()} ji!* 🙏\n\n` +
-          `Aapka *IndianLalaJi Digital Store* account successfully create ho gaya hai!\n\n` +
-          `🏪 *Shop Name:* ${businessName.trim()}\n` +
-          `🆔 *Username / Shop ID:* ${newShopId}\n` +
-          `📱 *Registered Mobile:* ${cleanPhone}\n` +
-          `🔑 *Password:* ${rawPass}\n` +
-          `🌐 *System Generated Login URL:* ${loginUrl}\n\n` +
-          `👉 *Login Link:* Is link ko click karne par Login Window direct khulegi aur aapka Shop ID pehle se bhara milega. Sirf apna Password darj karein.\n\n` +
-          `_IndianLalaJi Platform Network - 2 Minute Mein Website Live_`;
+        try {
+          // WhatsApp message with Username/ID, Mobile, Password, Login URL
+          const whatsappMsg = `*Namaste ${ownerName.trim()} ji!* 🙏\n\n` +
+            `Aapka *IndianLalaJi Digital Store* account successfully create ho gaya hai!\n\n` +
+            `🏪 *Shop Name:* ${businessName.trim()}\n` +
+            `🆔 *Username / Shop ID:* ${newShopId}\n` +
+            `📱 *Registered Mobile:* ${cleanPhone}\n` +
+            `🔑 *Password:* ${rawPass}\n` +
+            `🌐 *System Generated Login URL:* ${loginUrl}\n\n` +
+            `👉 *Login Link:* Is link ko click karne par Login Window direct khulegi aur aapka Shop ID pehle se bhara milega. Sirf apna Password darj karein.\n\n` +
+            `_IndianLalaJi Platform Network - 2 Minute Mein Website Live_`;
 
-        const whatsappUrl = `https://api.whatsapp.com/send?phone=91${cleanPhone}&text=${encodeURIComponent(whatsappMsg)}`;
-        window.open(whatsappUrl, '_blank');
+          const whatsappUrl = `https://api.whatsapp.com/send?phone=91${cleanPhone}&text=${encodeURIComponent(whatsappMsg)}`;
+          window.open(whatsappUrl, '_blank');
+        } catch (e) {
+          console.warn('Popup blocked or WhatsApp open warning:', e);
+        }
       }
 
       setSuccessMsg(
@@ -305,11 +325,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       );
 
       setTimeout(() => {
-        onRegisterShop?.(newShop);
-        onVendorRegisterSuccess?.(newShop);
         onVendorLoginSuccess(newShop, newShop.vendorName, newShop.shopId);
         onClose();
-      }, 1000);
+      }, 700);
     } catch (err) {
       console.error(err);
       setErrorMsg('Store create karne mein error aaya. Kripya dobara koshish karein.');

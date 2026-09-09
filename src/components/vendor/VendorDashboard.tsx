@@ -1072,7 +1072,7 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
           { id: 'courses', label: 'Courses', icon: GraduationCap, badge: catalogCourses.length },
           { id: 'gallery', label: 'Gallery', icon: ImageIcon },
           { id: 'sections', label: 'All Sections', icon: Layout },
-          { id: 'categories', label: '+ Create Category', icon: FolderTree, badge: currentShop.customCategories?.length || 0 },
+          { id: 'categories', label: 'Categories', icon: FolderTree, badge: currentShop.customCategories?.length || 0 },
           { id: 'themes', label: 'Themes (10)', icon: Palette, badge: '10' },
           { id: 'standee', label: 'QR Standee', icon: QrCode },
           { id: 'orders', label: 'Orders', icon: MessageSquare, badge: filteredInquiries.filter(i => i.status === 'UNREAD').length || undefined },
@@ -5270,55 +5270,15 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
 
         {/* CUSTOM DOMAIN SETUP VIEW */}
         {activeNav === 'settings_domain' && (
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-xs overflow-hidden p-6 space-y-6 animate-in fade-in duration-200">
-            <div className="pb-5 border-b border-gray-100">
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-800 text-xs font-bold uppercase tracking-wider mb-2">
-                <Globe className="w-3.5 h-3.5" />
-                <span>Custom Domain Setup</span>
-              </div>
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 font-['Outfit',sans-serif]">
-                Apna Custom Domain Lagayein (e.g. www.meridukaan.com)
-              </h2>
-              <p className="text-xs text-gray-500 mt-1">
-                Agar aapke paas Godaddy, Namecheap ya Google se liya hua apna domain hai, to use apni IndianLalaJi website se jod sakte hain.
-              </p>
-            </div>
-
-            <div className="max-w-xl space-y-4">
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                  Aapka Domain Name (Domain Name Darj Karein)
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    placeholder="e.g. myshopname.com"
-                    className="flex-1 px-3.5 py-2.5 rounded-sm border border-gray-300 text-xs focus:ring-2 focus:ring-orange-500 font-mono"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      alert('Aapka custom domain request darj ho gaya hai. Humari team 24 ghante me DNS verify karke connect kar degi.');
-                    }}
-                    className="px-5 py-2.5 rounded-sm bg-orange-600 hover:bg-orange-700 text-white font-bold uppercase tracking-wider text-xs shadow-xs cursor-pointer"
-                  >
-                    Connect Domain
-                  </button>
-                </div>
-              </div>
-
-              <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 text-xs space-y-2">
-                <div className="font-bold text-slate-900">DNS Configuration Instructions:</div>
-                <div className="font-mono text-[11px] text-gray-600 bg-white p-2.5 rounded border border-gray-200">
-                  Type: CNAME | Name: www | Value: cname.indianlalaji.com<br />
-                  Type: A | Name: @ | Value: 76.76.21.21
-                </div>
-                <div className="text-[11px] text-gray-500">
-                  Domain connect karne me koi pareshani aaye to LalaJi Support WhatsApp par sampark karein.
-                </div>
-              </div>
-            </div>
-          </div>
+          <VendorCustomDomainManager
+            shop={currentShop}
+            onUpdateShop={(updated) => {
+              setCurrentShop(updated);
+              setHasUnsavedChanges(true);
+              onUpdateShop(updated);
+            }}
+            showToast={showToast}
+          />
         )}
 
         {/* STORE DATA BACKUPS VIEW */}
