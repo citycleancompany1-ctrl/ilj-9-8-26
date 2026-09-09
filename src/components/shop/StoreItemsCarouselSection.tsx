@@ -19,6 +19,8 @@ import {
 } from 'lucide-react';
 import { ProductItem, Shop, CartItem, ProductType } from '../../types';
 import { formatINR, getWhatsAppDirectUrl } from '../../utils/mediaUpload';
+import { StoreCategoryBar, CategoryBarItem } from './StoreCategoryBar';
+import { extractStoreCategories } from '../../utils/categoryUtils';
 
 export interface StoreItemsCarouselSectionProps {
   id: string; // 'products', 'services', or 'courses'
@@ -37,6 +39,8 @@ export interface StoreItemsCarouselSectionProps {
   searchPlaceholder?: string;
   searchQuery?: string;
   onSearchChange?: (query: string) => void;
+  selectedCategory?: string;
+  onSelectCategory?: (category: string) => void;
   extraHeaderAction?: React.ReactNode;
   filterToolbar?: React.ReactNode;
 }
@@ -300,6 +304,8 @@ export const StoreItemsCarouselSection: React.FC<StoreItemsCarouselSectionProps>
   searchPlaceholder,
   searchQuery,
   onSearchChange,
+  selectedCategory: controlledCategory,
+  onSelectCategory: controlledOnSelectCategory,
   extraHeaderAction,
   filterToolbar,
 }) => {
@@ -321,17 +327,53 @@ export const StoreItemsCarouselSection: React.FC<StoreItemsCarouselSectionProps>
     }
   };
 
-  // Filter items matching search
+  // Category state (supports internal or controlled category selection)
+  const [internalCategory, setInternalCategory] = useState('ALL');
+  const isControlledCategory = controlledCategory !== undefined;
+  const activeCategory = isControlledCategory ? controlledCategory : internalCategory;
+
+  const handleSelectCategory = (cat: string) => {
+    if (isControlledCategory) {
+      if (controlledOnSelectCategory) controlledOnSelectCategory(cat);
+    } else {
+      setInternalCategory(cat);
+    }
+  };
+
+  // Extract all unique categories with (Category Name + Image)
+  const categories = useMemo(() => {
+    return extractStoreCategories(items);
+  }, [items]);
+
+  // Filter items matching selected category AND search
   const filteredItems = useMemo(() => {
+    let list = items;
+
+    // 1. Filter by category
+    if (activeCategory && activeCategory !== 'ALL') {
+      list = list.filter((p) => {
+        const cat = (
+          p.category || (isCourse ? 'Courses & Training' : isService ? 'Services' : 'General Products')
+        )
+          .trim()
+          .toLowerCase();
+        return cat === activeCategory.trim().toLowerCase();
+      });
+    }
+
+    // 2. Filter by search query
     const q = currentSearch.trim().toLowerCase();
-    if (!q) return items;
-    return items.filter((p) => {
-      const matchName = p.name?.toLowerCase().includes(q);
-      const matchDesc = p.description?.toLowerCase().includes(q);
-      const matchCat = p.category?.toLowerCase().includes(q);
-      return matchName || matchDesc || matchCat;
-    });
-  }, [items, currentSearch]);
+    if (q) {
+      list = list.filter((p) => {
+        const matchName = p.name?.toLowerCase().includes(q);
+        const matchDesc = p.description?.toLowerCase().includes(q);
+        const matchCat = p.category?.toLowerCase().includes(q);
+        return matchName || matchDesc || matchCat;
+      });
+    }
+
+    return list;
+  }, [items, activeCategory, currentSearch, isCourse, isService]);
 
   // Content threshold: View All button only appears when items quantity exceeds initial visible design capacity
   // (2-row carousel: 4 items on mobile [2 cols], 8 items on desktop [4 cols])
@@ -484,7 +526,20 @@ export const StoreItemsCarouselSection: React.FC<StoreItemsCarouselSectionProps>
       {/* Optional Toolbar (if passed) */}
       {filterToolbar && <div>{filterToolbar}</div>}
 
-      {/* 2. Content: Empty Search Result OR 2-Row Horizontal Carousel OR Expanded Grid */}
+      {/* 1.5 Category Bar: Category Name + Image (Desktop: 10 per line / Carousel if > 10, Mobile: 5 per line / Carousel if > 5) */}
+      {categories.length > 0 && (
+        <StoreCategoryBar
+          categories={categories}
+          selectedCategory={activeCategory}
+          onSelectCategory={handleSelectCategory}
+          accentColor={isCourse ? 'indigo' : isService ? 'blue' : 'orange'}
+          allLabel={isCourse ? 'All Courses' : isService ? 'All Services' : 'All Products'}
+          totalCount={items.length}
+          sectionTitle={badgeText || title}
+        />
+      )}
+
+      {/* 2. Content: Empty Search/Category Result OR 2-Row Horizontal Carousel OR Expanded Grid */}
       {filteredItems.length === 0 ? (
         <div className="bg-white rounded-2xl border border-gray-200/90 p-8 sm:p-12 text-center space-y-3 shadow-2xs">
           <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto text-gray-400">
@@ -494,15 +549,33 @@ export const StoreItemsCarouselSection: React.FC<StoreItemsCarouselSectionProps>
             Koi item nahi mila
           </h3>
           <p className="text-xs text-gray-500 max-w-sm mx-auto">
-            &quot;{currentSearch}&quot; ke liye koi match nahi mila. Kripya dusra naam ya keyword try karein.
+            {activeCategory !== 'ALL' && currentSearch
+              ? `Category "${activeCategory}" mein "${currentSearch}" se milta julta koi item nahi mila.`
+              : activeCategory !== 'ALL'
+              ? `Category "${activeCategory}" mein koi item uplabdh nahi hai.`
+              : `"${currentSearch}" ke liye koi match nahi mila. Kripya dusra naam ya keyword try karein.`}
           </p>
-          <button
-            type="button"
-            onClick={() => handleSearchChange('')}
-            className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white font-bold uppercase tracking-wider text-xs rounded-xl cursor-pointer transition-colors"
-          >
-            Clear Search
-          </button>
+          <div className="flex items-center justify-center gap-2 pt-1">
+            {currentSearch && (
+              <button
+                type="button"
+                onClick={() => handleSearchChange('')}
+                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-slate-800 font-bold uppercase tracking-wider text-xs rounded-xl cursor-pointer transition-colors"
+              >
+                Clear Search
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => {
+                handleSearchChange('');
+                handleSelectCategory('ALL');
+              }}
+              className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white font-bold uppercase tracking-wider text-xs rounded-xl cursor-pointer transition-colors"
+            >
+              Show All Items ({items.length})
+            </button>
+          </div>
         </div>
       ) : isViewAllExpanded ? (
         /* Expanded Full Grid View (in-place on page, without popup) */
