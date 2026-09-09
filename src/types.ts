@@ -7,6 +7,15 @@ export type ShopStatus = 'DRAFT' | 'PENDING_APPROVAL' | 'PUBLISHED' | 'HOLD' | '
 
 export type ProductType = 'PRODUCT' | 'SERVICE' | 'COURSE';
 
+export interface ShopCategory {
+  id: string;
+  name: string;
+  imageUrl: string;
+  type?: 'ALL' | 'PRODUCT' | 'SERVICE' | 'COURSE';
+  description?: string;
+  itemCount?: number;
+}
+
 export interface ProductItem {
   id: string;
   name: string;
@@ -115,6 +124,7 @@ export interface Shop {
   // Rich content
   videos: VideoItem[]; // up to 8
   products: ProductItem[];
+  customCategories?: ShopCategory[]; // Vendor created categories with Image + Name (Products, Services, Courses)
   reviews: ReviewItem[];
   socialLinks?: {
     instagram?: string;

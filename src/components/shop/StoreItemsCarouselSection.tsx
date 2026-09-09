@@ -342,8 +342,12 @@ export const StoreItemsCarouselSection: React.FC<StoreItemsCarouselSectionProps>
 
   // Extract all unique categories with (Category Name + Image)
   const categories = useMemo(() => {
-    return extractStoreCategories(items);
-  }, [items]);
+    return extractStoreCategories(
+      items,
+      shop?.customCategories,
+      isCourse ? 'COURSE' : isService ? 'SERVICE' : 'PRODUCT'
+    );
+  }, [items, shop?.customCategories, isCourse, isService]);
 
   // Filter items matching selected category AND search
   const filteredItems = useMemo(() => {

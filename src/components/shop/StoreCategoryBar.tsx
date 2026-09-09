@@ -61,7 +61,7 @@ export const StoreCategoryBar: React.FC<StoreCategoryBarProps> = ({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const isCarousel = isDesktop ? totalItemsCount > 10 : totalItemsCount > 5;
+  const isCarousel = isDesktop ? categories.length > 10 : categories.length > 5;
 
   // Check scroll position to show/hide left & right arrows
   const checkScroll = () => {
@@ -73,7 +73,7 @@ export const StoreCategoryBar: React.FC<StoreCategoryBarProps> = ({
 
   useEffect(() => {
     checkScroll();
-  }, [totalItemsCount, isDesktop]);
+  }, [categories.length, isDesktop]);
 
   const handleScroll = (direction: 'left' | 'right') => {
     if (!scrollRef.current) return;
@@ -126,12 +126,27 @@ export const StoreCategoryBar: React.FC<StoreCategoryBarProps> = ({
 
   return (
     <div className="w-full bg-white rounded-2xl border border-gray-200/90 p-3 sm:p-4 shadow-2xs space-y-2.5">
-      {/* Category Header Label */}
-      <div className="flex items-center justify-between px-1">
-        <div className="flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-slate-800">
-          <Layers className="w-3.5 h-3.5 text-orange-600 shrink-0" />
-          <span>Browse by Category {sectionTitle ? `(${sectionTitle})` : ''}</span>
-          <span className="text-[10px] text-gray-400 font-bold">({categories.length} Categories)</span>
+      {/* Category Header Label with All items quick filter */}
+      <div className="flex items-center justify-between px-1 flex-wrap gap-2">
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-slate-800">
+            <Layers className="w-3.5 h-3.5 text-orange-600 shrink-0" />
+            <span>Browse by Category {sectionTitle ? `(${sectionTitle})` : ''}</span>
+            <span className="text-[10px] text-gray-400 font-bold">({categories.length} Categories)</span>
+          </div>
+
+          {/* Quick "All" Pill Toggle */}
+          <button
+            type="button"
+            onClick={() => onSelectCategory('ALL')}
+            className={`px-2.5 py-1 rounded-full text-[11px] font-black transition-all cursor-pointer ${
+              selectedCategory === 'ALL'
+                ? `${colorStyles.badge} shadow-xs`
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            {allLabel} ({totalCount})
+          </button>
         </div>
 
         {selectedCategory !== 'ALL' && (
@@ -140,7 +155,7 @@ export const StoreCategoryBar: React.FC<StoreCategoryBarProps> = ({
             onClick={() => onSelectCategory('ALL')}
             className="text-[11px] font-bold text-orange-600 hover:text-orange-700 hover:underline cursor-pointer"
           >
-            Show All Items ({totalCount})
+            Show All Items ({totalCount}) ✕
           </button>
         )}
       </div>
@@ -168,28 +183,19 @@ export const StoreCategoryBar: React.FC<StoreCategoryBarProps> = ({
           onScroll={checkScroll}
           className={
             isCarousel
-              ? 'flex items-start gap-3 sm:gap-4 overflow-x-auto scroll-smooth scrollbar-none py-1.5 px-0.5 snap-x'
-              : `grid gap-2 sm:gap-3 py-1 ${
-                  // Mobile: if <= 5, grid-cols-5. Desktop: up to grid-cols-10
-                  totalItemsCount <= 5
-                    ? 'grid-cols-5'
-                    : totalItemsCount <= 8
-                    ? 'grid-cols-4 sm:grid-cols-6 lg:grid-cols-8'
-                    : 'grid-cols-5 sm:grid-cols-8 lg:grid-cols-10'
-                }`
+              ? 'flex items-start gap-2.5 sm:gap-4 overflow-x-auto scroll-smooth scrollbar-none py-1.5 px-0.5 snap-x'
+              : 'grid grid-cols-5 sm:grid-cols-8 lg:grid-cols-10 gap-2 sm:gap-3 py-1'
           }
         >
-          {allItemsList.map((item, idx) => {
-            const isAll = idx === 0;
-            const isSelected = isAll
-              ? selectedCategory === 'ALL'
-              : selectedCategory.trim().toLowerCase() === item.name.trim().toLowerCase();
+          {categories.map((item) => {
+            const isSelected =
+              selectedCategory.trim().toLowerCase() === item.name.trim().toLowerCase();
 
             return (
               <button
                 key={item.id || item.name}
                 type="button"
-                onClick={() => onSelectCategory(isAll ? 'ALL' : item.name)}
+                onClick={() => onSelectCategory(isSelected ? 'ALL' : item.name)}
                 className={`flex flex-col items-center justify-start group cursor-pointer text-center select-none transition-all active:scale-95 ${
                   isCarousel ? 'shrink-0 snap-start w-[64px] sm:w-[76px] lg:w-[84px]' : 'w-full'
                 }`}
@@ -197,7 +203,7 @@ export const StoreCategoryBar: React.FC<StoreCategoryBarProps> = ({
               >
                 {/* Category Image Circle */}
                 <div
-                  className={`relative w-13 h-13 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-full p-0.5 transition-all duration-200 ${
+                  className={`relative w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-full p-0.5 transition-all duration-200 ${
                     isSelected
                       ? `${colorStyles.activeRing} shadow-sm scale-105`
                       : `border-2 border-gray-200/90 ${colorStyles.hoverBorder} hover:scale-105 bg-white`
@@ -209,7 +215,6 @@ export const StoreCategoryBar: React.FC<StoreCategoryBarProps> = ({
                     className="w-full h-full object-cover rounded-full bg-gray-100"
                     loading="lazy"
                     onError={(e) => {
-                      // Fallback image if broken
                       (e.currentTarget as HTMLImageElement).src =
                         'https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=200&q=80';
                     }}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
   Store, 
   Eye, 
@@ -64,9 +64,11 @@ import {
   MessageCircle,
   RefreshCw
 } from 'lucide-react';
-import { Shop, ProductItem, VideoItem, ShopInquiry, ProductType, FloatingButtonsConfig } from '../../types';
+import { Shop, ProductItem, VideoItem, ShopInquiry, ProductType, FloatingButtonsConfig, ShopCategory } from '../../types';
 import { fileToBase64, formatINR, getWhatsAppDirectUrl, getYouTubeEmbedUrl, formatDisplayDate, calculateDaysRemaining, getOneYearExpiryDate } from '../../utils/mediaUpload';
 import { BUSINESS_CATEGORIES } from '../../data/initialData';
+import { getCategoryImageByName, getAvailableCategoriesForShop, ensureCustomCategoriesSynced } from '../../utils/categoryUtils';
+import { VendorCategoryManager } from './VendorCategoryManager';
 import { SubscriptionInvoiceModal } from '../modals/SubscriptionInvoiceModal';
 import { DukaanQrStandeeModal } from '../modals/DukaanQrStandeeModal';
 import { ShopShareModal } from '../modals/ShopShareModal';
@@ -133,14 +135,30 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
   const [copiedUpi, setCopiedUpi] = useState<boolean>(false);
 
   // Local editing state for shop
-  const [currentShop, setCurrentShop] = useState<Shop>(shop ? { ...shop } : ({} as Shop));
+  const [currentShop, setCurrentShop] = useState<Shop>(() => {
+    return shop ? ensureCustomCategoriesSynced(shop) : ({} as Shop);
+  });
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
   const [isGlobalSaving, setIsGlobalSaving] = useState<boolean>(false);
   const [lastSavedTime, setLastSavedTime] = useState<string | null>(null);
 
   React.useEffect(() => {
     if (shop && (shop.id !== currentShop?.id || shop.updatedAt !== currentShop?.updatedAt)) {
-      setCurrentShop({ ...shop });
+      const syncedShop = ensureCustomCategoriesSynced(shop);
+      setCurrentShop((prev) => {
+        const incomingCats = syncedShop.customCategories || [];
+        const prevCats = prev.customCategories || [];
+        const mergedCats = [...incomingCats];
+        prevCats.forEach((pc) => {
+          if (!mergedCats.some((c) => c.name.toLowerCase() === pc.name.toLowerCase())) {
+            mergedCats.push(pc);
+          }
+        });
+        return {
+          ...syncedShop,
+          customCategories: mergedCats,
+        };
+      });
     }
   }, [shop]);
 
@@ -151,6 +169,7 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
 
   // Dedicated Product addition state
   const [newProductName, setNewProductName] = useState('');
+  const [newProductCategory, setNewProductCategory] = useState('');
   const [newProductPrice, setNewProductPrice] = useState<number | string>(199);
   const [newProductOriginalPrice, setNewProductOriginalPrice] = useState<number | string>(299);
   const [newProductDesc, setNewProductDesc] = useState('');
@@ -160,6 +179,7 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
 
   // Dedicated Service addition state
   const [newServiceName, setNewServiceName] = useState('');
+  const [newServiceCategory, setNewServiceCategory] = useState('');
   const [newServicePrice, setNewServicePrice] = useState<number | string>(499);
   const [newServiceOriginalPrice, setNewServiceOriginalPrice] = useState<number | string>(799);
   const [newServiceDesc, setNewServiceDesc] = useState('');
@@ -173,9 +193,34 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
   const [newCourseOriginalPrice, setNewCourseOriginalPrice] = useState<number | string>(1999);
   const [newCourseDesc, setNewCourseDesc] = useState('');
   const [newCourseDuration, setNewCourseDuration] = useState('30 Days');
-  const [newCourseCategory, setNewCourseCategory] = useState('Skill Training');
+  const [newCourseCategory, setNewCourseCategory] = useState('');
   const [newCourseImage, setNewCourseImage] = useState<string>('https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=500');
   const [newCourseHidePrice, setNewCourseHidePrice] = useState(false);
+
+  // Consolidated categories for select dropdowns (vendor custom + existing items + popular defaults)
+  const productCategories = useMemo(() => {
+    return getAvailableCategoriesForShop(
+      currentShop.customCategories || [],
+      currentShop.products || [],
+      'PRODUCT'
+    );
+  }, [currentShop.customCategories, currentShop.products]);
+
+  const serviceCategories = useMemo(() => {
+    return getAvailableCategoriesForShop(
+      currentShop.customCategories || [],
+      currentShop.products || [],
+      'SERVICE'
+    );
+  }, [currentShop.customCategories, currentShop.products]);
+
+  const courseCategories = useMemo(() => {
+    return getAvailableCategoriesForShop(
+      currentShop.customCategories || [],
+      currentShop.products || [],
+      'COURSE'
+    );
+  }, [currentShop.customCategories, currentShop.products]);
 
   // Product Editing state
   const [editingProduct, setEditingProduct] = useState<ProductItem | null>(null);
@@ -183,6 +228,21 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
   const [editProductType, setEditProductType] = useState<ProductType>('PRODUCT');
   const [editProductPrice, setEditProductPrice] = useState<number>(0);
   const [editProductOriginalPrice, setEditProductOriginalPrice] = useState<number | string>('');
+
+  // Categories available for the item being edited (Vendor-created + item's existing category)
+  const editAvailableCategories = useMemo(() => {
+    return getAvailableCategoriesForShop(
+      currentShop.customCategories || [],
+      currentShop.products || [],
+      editProductType
+    );
+  }, [currentShop.customCategories, currentShop.products, editProductType]);
+
+  // Quick Add Category Modal state
+  const [isQuickCatModalOpen, setIsQuickCatModalOpen] = useState(false);
+  const [quickCatType, setQuickCatType] = useState<ProductType>('PRODUCT');
+  const [quickCatName, setQuickCatName] = useState('');
+  const [quickCatImage, setQuickCatImage] = useState('');
   const [editProductDesc, setEditProductDesc] = useState('');
   const [editProductImage, setEditProductImage] = useState<string>('');
   const [editProductInStock, setEditProductInStock] = useState<boolean>(true);
@@ -230,7 +290,8 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
       case 'section_products':
         return { title: 'Products Catalogue & Inventory', category: 'CATALOGUE', desc: 'Physical store items, pricing, inventory & stock status' };
       case 'categories':
-        return { title: 'Categories Management', category: 'CATALOGUE', desc: 'Organize products & services into customer-friendly categories' };
+      case 'section_categories':
+        return { title: 'Category Master (Name + Photo Carousel)', category: 'CATALOGUE', desc: 'Create & manage categories with images for Products, Services & Courses' };
       case 'services':
       case 'section_services':
         return { title: 'Services & Offerings', category: 'CATALOGUE', desc: 'Professional services, consultation fees & bookings' };
@@ -461,9 +522,47 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
     showToast('Floating Action Buttons (WhatsApp, Call, Language, Map) update ho gaye!');
   };
 
+  const handleQuickCreateCategory = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!quickCatName.trim()) return;
+    const catName = quickCatName.trim();
+    const newCat: ShopCategory = {
+      id: `cat_${Date.now()}`,
+      name: catName,
+      imageUrl: quickCatImage.trim() || getCategoryImageByName(catName, quickCatType),
+      type: quickCatType,
+    };
+    const currentList = currentShop.customCategories || [];
+    const updated = {
+      ...currentShop,
+      customCategories: [...currentList, newCat],
+    };
+    setCurrentShop(updated);
+    handleSaveAll(updated);
+    if (quickCatType === 'PRODUCT') setNewProductCategory(catName);
+    if (quickCatType === 'SERVICE') setNewServiceCategory(catName);
+    if (quickCatType === 'COURSE') setNewCourseCategory(catName);
+    if (editingProduct) setEditProductCategory(catName);
+    setIsQuickCatModalOpen(false);
+    setQuickCatName('');
+    setQuickCatImage('');
+    showToast(`Nayi category "${catName}" ban gayi aur select ho gayi! ✅`);
+  };
+
   const handleAddProduct = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newProductName.trim()) return;
+
+    const catName = newProductCategory.trim();
+    let updatedCustomCats = [...(currentShop.customCategories || [])];
+    if (catName && !updatedCustomCats.some((c) => c.name.toLowerCase() === catName.toLowerCase())) {
+      updatedCustomCats.push({
+        id: `cat_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+        name: catName,
+        type: 'PRODUCT',
+        imageUrl: newProductImage || getCategoryImageByName(catName, 'PRODUCT'),
+      });
+    }
 
     const newProd: ProductItem = {
       id: `prod_${Date.now()}`,
@@ -474,6 +573,7 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
       description: newProductDesc.trim() || 'Genuine quality product with direct merchant guarantee.',
       imageUrl: newProductImage || 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=500',
       inStock: true,
+      category: catName || undefined,
       unit: newProductUnit.trim() || '1 pc',
       hidePrice: newProductHidePrice,
     };
@@ -481,12 +581,14 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
     const updated = {
       ...currentShop,
       products: [newProd, ...currentShop.products],
+      customCategories: updatedCustomCats,
     };
     setCurrentShop(updated);
     handleSaveAll(updated);
 
     // Reset inputs
     setNewProductName('');
+    setNewProductCategory('');
     setNewProductPrice(199);
     setNewProductOriginalPrice(299);
     setNewProductDesc('');
@@ -498,6 +600,17 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
     e.preventDefault();
     if (!newServiceName.trim()) return;
 
+    const catName = newServiceCategory.trim();
+    let updatedCustomCats = [...(currentShop.customCategories || [])];
+    if (catName && !updatedCustomCats.some((c) => c.name.toLowerCase() === catName.toLowerCase())) {
+      updatedCustomCats.push({
+        id: `cat_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+        name: catName,
+        type: 'SERVICE',
+        imageUrl: newServiceImage || getCategoryImageByName(catName, 'SERVICE'),
+      });
+    }
+
     const newSrv: ProductItem = {
       id: `srv_${Date.now()}`,
       name: newServiceName.trim(),
@@ -507,6 +620,7 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
       description: newServiceDesc.trim() || 'Professional store service with direct WhatsApp booking.',
       imageUrl: newServiceImage || 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=500',
       inStock: true,
+      category: catName || undefined,
       unit: newServiceDuration.trim() || 'Per Visit',
       hidePrice: newServiceHidePrice,
     };
@@ -514,12 +628,14 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
     const updated = {
       ...currentShop,
       products: [newSrv, ...currentShop.products],
+      customCategories: updatedCustomCats,
     };
     setCurrentShop(updated);
     handleSaveAll(updated);
 
     // Reset inputs
     setNewServiceName('');
+    setNewServiceCategory('');
     setNewServicePrice(499);
     setNewServiceOriginalPrice(799);
     setNewServiceDesc('');
@@ -531,6 +647,17 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
     e.preventDefault();
     if (!newCourseName.trim()) return;
 
+    const catName = newCourseCategory.trim();
+    let updatedCustomCats = [...(currentShop.customCategories || [])];
+    if (catName && !updatedCustomCats.some((c) => c.name.toLowerCase() === catName.toLowerCase())) {
+      updatedCustomCats.push({
+        id: `cat_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+        name: catName,
+        type: 'COURSE',
+        imageUrl: newCourseImage || getCategoryImageByName(catName, 'COURSE'),
+      });
+    }
+
     const newCrs: ProductItem = {
       id: `crs_${Date.now()}`,
       name: newCourseName.trim(),
@@ -541,19 +668,21 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
       imageUrl: newCourseImage || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=500',
       inStock: true,
       unit: newCourseDuration.trim() || '30 Days',
-      category: newCourseCategory.trim() || 'Skill Training',
+      category: catName || undefined,
       hidePrice: newCourseHidePrice,
     };
 
     const updated = {
       ...currentShop,
       products: [newCrs, ...currentShop.products],
+      customCategories: updatedCustomCats,
     };
     setCurrentShop(updated);
     handleSaveAll(updated);
 
     // Reset inputs
     setNewCourseName('');
+    setNewCourseCategory('');
     setNewCoursePrice(999);
     setNewCourseOriginalPrice(1999);
     setNewCourseDesc('');
@@ -669,6 +798,17 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
     e.preventDefault();
     if (!editingProduct || !editProductName.trim()) return;
 
+    const catName = editProductCategory.trim();
+    let updatedCustomCats = [...(currentShop.customCategories || [])];
+    if (catName && !updatedCustomCats.some((c) => c.name.toLowerCase() === catName.toLowerCase())) {
+      updatedCustomCats.push({
+        id: `cat_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+        name: catName,
+        type: editProductType,
+        imageUrl: editProductImage || editingProduct.imageUrl || getCategoryImageByName(catName, editProductType),
+      });
+    }
+
     const updatedProduct: ProductItem = {
       ...editingProduct,
       name: editProductName.trim(),
@@ -678,7 +818,7 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
       description: editProductDesc.trim(),
       imageUrl: editProductImage || editingProduct.imageUrl,
       inStock: editProductInStock,
-      category: editProductCategory.trim() || undefined,
+      category: catName || undefined,
       unit: editProductUnit.trim() || undefined,
       hidePrice: editProductHidePrice,
     };
@@ -686,6 +826,7 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
     const updated = {
       ...currentShop,
       products: currentShop.products.map((p) => (p.id === editingProduct.id ? updatedProduct : p)),
+      customCategories: updatedCustomCats,
     };
 
     setCurrentShop(updated);
@@ -930,7 +1071,8 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
           { id: 'services', label: 'Services', icon: Wrench, badge: catalogServices.length },
           { id: 'courses', label: 'Courses', icon: GraduationCap, badge: catalogCourses.length },
           { id: 'gallery', label: 'Gallery', icon: ImageIcon },
-          { id: 'sections', label: '17 Sections', icon: Layout },
+          { id: 'sections', label: 'All Sections', icon: Layout },
+          { id: 'categories', label: '+ Create Category', icon: FolderTree, badge: currentShop.customCategories?.length || 0 },
           { id: 'themes', label: 'Themes (10)', icon: Palette, badge: '10' },
           { id: 'standee', label: 'QR Standee', icon: QrCode },
           { id: 'orders', label: 'Orders', icon: MessageSquare, badge: filteredInquiries.filter(i => i.status === 'UNREAD').length || undefined },
@@ -1841,7 +1983,18 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
       </div>
       )}
 
-      {(activeNav === 'sections' || activeNav.startsWith('section_') || activeNav === 'testimonials') && (
+      {(activeNav === 'categories' || activeNav === 'section_categories') && (
+        <VendorCategoryManager
+          shop={currentShop}
+          onUpdateShop={(updated) => {
+            setCurrentShop(updated);
+            handleSaveAll(updated);
+          }}
+          showToast={showToast}
+        />
+      )}
+
+      {(activeNav === 'sections' || (activeNav.startsWith('section_') && activeNav !== 'section_categories') || activeNav === 'testimonials') && (
         <WebsiteSectionsManager
           shop={currentShop}
           initialExpandedSection={
@@ -1850,18 +2003,24 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
               : (activeNav === 'testimonials' ? 'testimonials' : undefined)
           }
           onUpdateShop={(updated) => {
-            setCurrentShop(updated);
+            const synced = ensureCustomCategoriesSynced(updated);
+            setCurrentShop(synced);
             setHasUnsavedChanges(true);
-            onUpdateShop(updated);
+            onUpdateShop(synced);
           }}
           onPreviewShop={() => onNavigateToShop(currentShop.shopId)}
           onOpenThemes={() => handleSelectNav('themes')}
+          onOpenCategories={() => handleSelectNav('categories')}
+          onOpenCreateCategory={() => {
+            setQuickCatType('PRODUCT');
+            setIsQuickCatModalOpen(true);
+          }}
           showToast={showToast}
           onAnyChange={() => setHasUnsavedChanges(true)}
         />
       )}
 
-      {(activeNav === 'products' || activeNav === 'categories') && (
+      {activeNav === 'products' && (
         /* DEDICATED PRODUCTS CATALOGUE TAB VIEW */
         <div className="space-y-6">
           <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white rounded-2xl p-6 border border-slate-700 shadow-md">
@@ -1943,6 +2102,70 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
                   className="w-full px-3.5 py-2.5 rounded-sm border border-gray-300 text-xs focus:ring-2 focus:ring-emerald-500 bg-gray-50/50"
                 />
               </div>
+            </div>
+
+            {/* Product Category Dropdown (Select only, no manual typing) */}
+            <div className="p-3 bg-emerald-50/60 rounded-xl border border-emerald-200">
+              <div className="flex items-center justify-between mb-1.5 flex-wrap gap-2">
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-emerald-950 flex items-center gap-1.5">
+                  <FolderTree className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Product Category (श्रेणी चुनें - सिर्फ Select Karein) *</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setQuickCatType('PRODUCT');
+                    setIsQuickCatModalOpen(true);
+                  }}
+                  className="text-[11px] font-bold text-emerald-700 hover:text-emerald-900 bg-white hover:bg-emerald-100 px-2.5 py-0.5 rounded border border-emerald-300 flex items-center gap-1 shadow-2xs transition-colors cursor-pointer"
+                >
+                  <Plus className="w-3 h-3" />
+                  <span>+ Nayi Category Banayein</span>
+                </button>
+              </div>
+
+              <select
+                value={newProductCategory}
+                onChange={(e) => {
+                  if (e.target.value === '__NEW__') {
+                    setQuickCatType('PRODUCT');
+                    setIsQuickCatModalOpen(true);
+                  } else {
+                    setNewProductCategory(e.target.value);
+                  }
+                }}
+                className="w-full px-3.5 py-2.5 rounded-lg border border-emerald-300 text-xs focus:ring-2 focus:ring-emerald-500 bg-white font-medium text-slate-900 cursor-pointer"
+              >
+                <option value="">-- Kripya Category Chunein (Select Category) --</option>
+                {productCategories.map((cat) => (
+                  <option key={cat.id} value={cat.name}>
+                    {cat.name} {cat.isCustom ? '★ (Custom)' : ''}
+                  </option>
+                ))}
+                <option value="__NEW__" className="font-bold text-emerald-700 bg-emerald-50">
+                  + Nayi Category Banayein (Create New Category)...
+                </option>
+              </select>
+
+              {productCategories.length === 0 ? (
+                <div className="mt-2 text-[11px] text-amber-800 flex items-center gap-1.5">
+                  <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                  <span>
+                    Abhi koi product category nahi bani hai. <strong>"+ Nayi Category Banayein"</strong> par click karke Name + Photo daalkar category banayein.
+                  </span>
+                </div>
+              ) : (
+                <div className="mt-1.5 text-[10px] text-gray-500 flex items-center justify-between">
+                  <span>Category dropdown me total {productCategories.length} vendor categories uplabdh hain.</span>
+                  <button
+                    type="button"
+                    onClick={() => setActiveNav('categories')}
+                    className="text-emerald-700 hover:underline font-bold"
+                  >
+                    Manage All Categories →
+                  </button>
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -2312,6 +2535,70 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
                   className="w-full px-3.5 py-2.5 rounded-sm border border-gray-300 text-xs focus:ring-2 focus:ring-purple-500 bg-gray-50/50"
                 />
               </div>
+            </div>
+
+            {/* Service Category Dropdown (Select only, no manual typing) */}
+            <div className="p-3 bg-purple-50/60 rounded-xl border border-purple-200">
+              <div className="flex items-center justify-between mb-1.5 flex-wrap gap-2">
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-purple-950 flex items-center gap-1.5">
+                  <FolderTree className="w-3.5 h-3.5 text-purple-600" />
+                  <span>Service Category (श्रेणी चुनें - सिर्फ Select Karein) *</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setQuickCatType('SERVICE');
+                    setIsQuickCatModalOpen(true);
+                  }}
+                  className="text-[11px] font-bold text-purple-700 hover:text-purple-900 bg-white hover:bg-purple-100 px-2.5 py-0.5 rounded border border-purple-300 flex items-center gap-1 shadow-2xs transition-colors cursor-pointer"
+                >
+                  <Plus className="w-3 h-3" />
+                  <span>+ Nayi Category Banayein</span>
+                </button>
+              </div>
+
+              <select
+                value={newServiceCategory}
+                onChange={(e) => {
+                  if (e.target.value === '__NEW__') {
+                    setQuickCatType('SERVICE');
+                    setIsQuickCatModalOpen(true);
+                  } else {
+                    setNewServiceCategory(e.target.value);
+                  }
+                }}
+                className="w-full px-3.5 py-2.5 rounded-lg border border-purple-300 text-xs focus:ring-2 focus:ring-purple-500 bg-white font-medium text-slate-900 cursor-pointer"
+              >
+                <option value="">-- Kripya Category Chunein (Select Category) --</option>
+                {serviceCategories.map((cat) => (
+                  <option key={cat.id} value={cat.name}>
+                    {cat.name} {cat.isCustom ? '★ (Custom)' : ''}
+                  </option>
+                ))}
+                <option value="__NEW__" className="font-bold text-purple-700 bg-purple-50">
+                  + Nayi Category Banayein (Create New Category)...
+                </option>
+              </select>
+
+              {serviceCategories.length === 0 ? (
+                <div className="mt-2 text-[11px] text-amber-800 flex items-center gap-1.5">
+                  <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                  <span>
+                    Abhi koi service category nahi bani hai. <strong>"+ Nayi Category Banayein"</strong> par click karke Name + Photo daalkar category banayein.
+                  </span>
+                </div>
+              ) : (
+                <div className="mt-1.5 text-[10px] text-gray-500 flex items-center justify-between">
+                  <span>Category dropdown me total {serviceCategories.length} service categories uplabdh hain.</span>
+                  <button
+                    type="button"
+                    onClick={() => setActiveNav('categories')}
+                    className="text-purple-700 hover:underline font-bold"
+                  >
+                    Manage All Categories →
+                  </button>
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -2713,16 +3000,48 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-700 mb-1">
-                  Category / Subject
-                </label>
-                <input
-                  type="text"
-                  placeholder="Skill Training, Computer & IT, Competitive Exam"
+                <div className="flex items-center justify-between mb-1 flex-wrap gap-1">
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-700">
+                    Category / Subject (Select Karein) *
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setQuickCatType('COURSE');
+                      setIsQuickCatModalOpen(true);
+                    }}
+                    className="text-[10px] font-bold text-indigo-700 hover:text-indigo-900 underline flex items-center gap-0.5 cursor-pointer"
+                  >
+                    + Nayi Category
+                  </button>
+                </div>
+                <select
                   value={newCourseCategory}
-                  onChange={(e) => setNewCourseCategory(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-sm border border-gray-300 text-xs focus:ring-2 focus:ring-indigo-500 bg-gray-50/50"
-                />
+                  onChange={(e) => {
+                    if (e.target.value === '__NEW__') {
+                      setQuickCatType('COURSE');
+                      setIsQuickCatModalOpen(true);
+                    } else {
+                      setNewCourseCategory(e.target.value);
+                    }
+                  }}
+                  className="w-full px-3.5 py-2.5 rounded-sm border border-gray-300 text-xs focus:ring-2 focus:ring-indigo-500 bg-white font-medium text-slate-900 cursor-pointer"
+                >
+                  <option value="">-- Kripya Category Chunein --</option>
+                  {courseCategories.map((cat) => (
+                    <option key={cat.id} value={cat.name}>
+                      {cat.name} {cat.isCustom ? '★ (Custom)' : ''}
+                    </option>
+                  ))}
+                  <option value="__NEW__" className="font-bold text-indigo-700 bg-indigo-50">
+                    + Nayi Category Banayein (Create New Category)...
+                  </option>
+                </select>
+                {courseCategories.length === 0 && (
+                  <p className="text-[10px] text-amber-700 mt-1">
+                    Koi course category nahi hai. Click karein <strong>"+ Nayi Category"</strong>.
+                  </p>
+                )}
               </div>
             </div>
 
@@ -3365,6 +3684,49 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
                   </div>
                 </div>
 
+                {/* Product Category Dropdown */}
+                <div className="p-3 bg-white rounded-lg border border-gray-200">
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1">
+                      <FolderTree className="w-3 h-3 text-emerald-600" />
+                      <span>Product Category (श्रेणी चुनें) *</span>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setQuickCatType('PRODUCT');
+                        setIsQuickCatModalOpen(true);
+                      }}
+                      className="text-[10px] font-bold text-emerald-700 hover:text-emerald-900 underline flex items-center gap-0.5 cursor-pointer"
+                    >
+                      <Plus className="w-2.5 h-2.5" />
+                      <span>+ Nayi Category Banayein</span>
+                    </button>
+                  </div>
+                  <select
+                    value={newProductCategory}
+                    onChange={(e) => {
+                      if (e.target.value === '__NEW__') {
+                        setQuickCatType('PRODUCT');
+                        setIsQuickCatModalOpen(true);
+                      } else {
+                        setNewProductCategory(e.target.value);
+                      }
+                    }}
+                    className="w-full px-3 py-2 rounded-sm border border-gray-300 text-xs focus:ring-2 focus:ring-emerald-500 bg-white font-medium text-slate-900 cursor-pointer"
+                  >
+                    <option value="">-- Kripya Category Chunein (Select Category) --</option>
+                    {productCategories.map((cat) => (
+                      <option key={cat.id} value={cat.name}>
+                        {cat.name} {cat.isCustom ? '★ (Custom)' : ''}
+                      </option>
+                    ))}
+                    <option value="__NEW__" className="font-bold text-emerald-700 bg-emerald-50">
+                      + Nayi Category Banayein (Create New Category)...
+                    </option>
+                  </select>
+                </div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
                     <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-700 mb-1">
@@ -3583,6 +3945,49 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
                       className="w-full px-3 py-2 rounded-sm border border-gray-300 text-xs focus:ring-2 focus:ring-purple-500 bg-white"
                     />
                   </div>
+                </div>
+
+                {/* Service Category Dropdown */}
+                <div className="p-3 bg-white rounded-lg border border-gray-200">
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1">
+                      <FolderTree className="w-3 h-3 text-purple-600" />
+                      <span>Service Category (श्रेणी चुनें) *</span>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setQuickCatType('SERVICE');
+                        setIsQuickCatModalOpen(true);
+                      }}
+                      className="text-[10px] font-bold text-purple-700 hover:text-purple-900 underline flex items-center gap-0.5 cursor-pointer"
+                    >
+                      <Plus className="w-2.5 h-2.5" />
+                      <span>+ Nayi Category Banayein</span>
+                    </button>
+                  </div>
+                  <select
+                    value={newServiceCategory}
+                    onChange={(e) => {
+                      if (e.target.value === '__NEW__') {
+                        setQuickCatType('SERVICE');
+                        setIsQuickCatModalOpen(true);
+                      } else {
+                        setNewServiceCategory(e.target.value);
+                      }
+                    }}
+                    className="w-full px-3 py-2 rounded-sm border border-gray-300 text-xs focus:ring-2 focus:ring-purple-500 bg-white font-medium text-slate-900 cursor-pointer"
+                  >
+                    <option value="">-- Kripya Category Chunein (Select Category) --</option>
+                    {serviceCategories.map((cat) => (
+                      <option key={cat.id} value={cat.name}>
+                        {cat.name} {cat.isCustom ? '★ (Custom)' : ''}
+                      </option>
+                    ))}
+                    <option value="__NEW__" className="font-bold text-purple-700 bg-purple-50">
+                      + Nayi Category Banayein (Create New Category)...
+                    </option>
+                  </select>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -5415,6 +5820,66 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
                 </div>
               </div>
 
+              {/* Category & Unit in Edit Modal */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                      Category (Select Karein)
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setQuickCatType(editProductType);
+                        setIsQuickCatModalOpen(true);
+                      }}
+                      className="text-[11px] font-bold text-orange-600 hover:text-orange-800 underline cursor-pointer"
+                    >
+                      + Nayi Category
+                    </button>
+                  </div>
+                  <select
+                    value={editProductCategory}
+                    onChange={(e) => {
+                      if (e.target.value === '__NEW__') {
+                        setQuickCatType(editProductType);
+                        setIsQuickCatModalOpen(true);
+                      } else {
+                        setEditProductCategory(e.target.value);
+                      }
+                    }}
+                    className="w-full px-3 py-2 rounded-sm border border-gray-300 text-xs focus:ring-2 focus:ring-orange-500 bg-white font-medium text-slate-900 cursor-pointer"
+                  >
+                    <option value="">
+                      {editAvailableCategories.length > 0
+                        ? '-- Kripya Category Chunein --'
+                        : '-- Pehle Category Banayein --'}
+                    </option>
+                    {editAvailableCategories.map((cat) => (
+                      <option key={cat.id} value={cat.name}>
+                        {cat.name}
+                      </option>
+                    ))}
+                    <option value="__NEW__" className="font-bold text-orange-600 bg-orange-50">
+                      + Nayi Category Banayein...
+                    </option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                    Pack Size / Unit / Duration
+                  </label>
+                  <input
+                    type="text"
+                    value={editProductUnit}
+                    onChange={(e) => setEditProductUnit(e.target.value)}
+                    placeholder="e.g. 1 pc, 1 kg, Per Visit, 30 Days"
+                    className="w-full px-3 py-2 rounded-sm border border-gray-300 text-xs focus:ring-2 focus:ring-orange-500 bg-white"
+                  />
+                </div>
+              </div>
+
               {/* Hide Price Toggle in Edit Modal */}
               <div
                 onClick={() => setEditProductHidePrice(!editProductHidePrice)}
@@ -5523,6 +5988,138 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
                 >
                   <Save className="w-3.5 h-3.5" />
                   <span>Save & Update Item</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* QUICK CATEGORY CREATOR MODAL */}
+      {isQuickCatModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-gray-200 overflow-hidden my-8 animate-in zoom-in-95 duration-150">
+            <div className="px-5 py-3.5 bg-orange-600 text-white flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <FolderTree className="w-4 h-4" />
+                <h3 className="text-xs font-black uppercase tracking-wider">
+                  Nayi Category Banayein (Name + Image)
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsQuickCatModalOpen(false);
+                  setQuickCatName('');
+                  setQuickCatImage('');
+                }}
+                className="p-1 hover:bg-orange-700 rounded-full transition-colors text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleQuickCreateCategory} className="p-5 space-y-4 text-xs">
+              <div>
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-700 mb-1">
+                  Category Type
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {(['PRODUCT', 'SERVICE', 'COURSE'] as ProductType[]).map((t) => (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => setQuickCatType(t)}
+                      className={`py-1.5 px-2 rounded-sm text-[11px] font-bold uppercase transition-all ${
+                        quickCatType === t
+                          ? 'bg-orange-600 text-white shadow-2xs'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      {t === 'PRODUCT' ? 'Product' : t === 'SERVICE' ? 'Service' : 'Course'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-700 mb-1">
+                  Category Name (श्रेणी का नाम) *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder={
+                    quickCatType === 'PRODUCT'
+                      ? 'e.g. Dairy & Ghee, Atta & Rice, Sweets'
+                      : quickCatType === 'SERVICE'
+                      ? 'e.g. AC Repair, Home Cleaning, Spa'
+                      : 'e.g. Spoken English, Web Dev, Yoga Coaching'
+                  }
+                  value={quickCatName}
+                  onChange={(e) => setQuickCatName(e.target.value)}
+                  className="w-full px-3 py-2 rounded-sm border border-gray-300 text-xs focus:ring-2 focus:ring-orange-500 bg-white font-medium"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-700 mb-1">
+                  Category Photo / Icon Image
+                </label>
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-lg border border-gray-300 bg-gray-100 overflow-hidden shrink-0">
+                    <img
+                      src={quickCatImage || (quickCatName ? getCategoryImageByName(quickCatName, quickCatType) : getCategoryImageByName('all', quickCatType))}
+                      alt="Category preview"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="flex-1 space-y-1">
+                    <input
+                      type="url"
+                      placeholder="Image URL or upload below"
+                      value={quickCatImage}
+                      onChange={(e) => setQuickCatImage(e.target.value)}
+                      className="w-full px-2.5 py-1 rounded border border-gray-300 text-[11px] bg-white font-mono"
+                    />
+                    <label className="inline-flex items-center gap-1 px-2.5 py-1 bg-gray-100 hover:bg-gray-200 text-slate-800 rounded-sm text-[10px] font-bold cursor-pointer transition-colors">
+                      <Upload className="w-3 h-3 text-gray-600" />
+                      <span>Upload Device Image</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={async (e) => {
+                          const f = e.target.files?.[0];
+                          if (f) {
+                            const b = await fileToBase64(f);
+                            setQuickCatImage(b);
+                          }
+                        }}
+                      />
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-gray-100 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsQuickCatModalOpen(false);
+                    setQuickCatName('');
+                    setQuickCatImage('');
+                  }}
+                  className="px-3 py-1.5 border border-gray-300 text-gray-700 rounded-sm text-xs font-bold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 bg-orange-600 hover:bg-orange-700 text-white rounded-sm text-xs font-bold shadow-xs flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Save className="w-3.5 h-3.5" />
+                  <span>Category Banayein & Select Karein</span>
                 </button>
               </div>
             </form>

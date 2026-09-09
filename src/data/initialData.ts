@@ -176,6 +176,18 @@ export const INITIAL_SHOPS: Shop[] = [
       whatsapp: 'https://wa.me/919876543210',
       googleMaps: 'https://maps.google.com/?q=Godowlia+Varanasi',
     },
+    customCategories: [
+      { id: 'cat_1_1', name: 'Grains & Rice', imageUrl: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=240&q=80', type: 'PRODUCT' },
+      { id: 'cat_1_2', name: 'Dairy & Ghee', imageUrl: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=240&q=80', type: 'PRODUCT' },
+      { id: 'cat_1_3', name: 'Spices & Masala', imageUrl: 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=240&q=80', type: 'PRODUCT' },
+      { id: 'cat_1_4', name: 'Flours & Atta', imageUrl: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=240&q=80', type: 'PRODUCT' },
+      { id: 'cat_1_5', name: 'Cooking Oil & Mustard Oil', imageUrl: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=240&q=80', type: 'PRODUCT' },
+      { id: 'cat_1_6', name: 'Kirana & Ration Combo', imageUrl: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=240&q=80', type: 'PRODUCT' },
+      { id: 'cat_1_7', name: 'Sweets & Namkeen', imageUrl: 'https://images.unsplash.com/photo-1599785209707-a456fc1337bb?w=240&q=80', type: 'PRODUCT' },
+      { id: 'cat_1_8', name: 'Tea & Beverages', imageUrl: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=240&q=80', type: 'PRODUCT' },
+      { id: 'cat_1_9', name: 'Puja & Festival Items', imageUrl: 'https://images.unsplash.com/photo-1608755728617-aefab37d2edd?w=240&q=80', type: 'PRODUCT' },
+      { id: 'cat_1_10', name: 'Household Essentials', imageUrl: 'https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=240&q=80', type: 'PRODUCT' },
+    ],
     products: [
       {
         id: 'p1',
@@ -322,6 +334,22 @@ export const INITIAL_SHOPS: Shop[] = [
       { id: 'v1', title: 'Pure Gotta Patti Rajputi Poshak Live Demo', youtubeUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
       { id: 'v2', title: 'Bridal Lehenga Custom Fitting & Styling', youtubeUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
     ],
+    customCategories: [
+      // Product categories
+      { id: 'cat_2_p1', name: 'Rajputi Poshak', imageUrl: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=240&q=80', type: 'PRODUCT' },
+      { id: 'cat_2_p2', name: 'Sarees', imageUrl: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=240&q=80', type: 'PRODUCT' },
+      { id: 'cat_2_p3', name: 'Bridal Lehengas', imageUrl: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=240&q=80', type: 'PRODUCT' },
+      { id: 'cat_2_p4', name: 'Designer Kurtis', imageUrl: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=240&q=80', type: 'PRODUCT' },
+      { id: 'cat_2_p5', name: 'Ethnic Jewellery', imageUrl: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=240&q=80', type: 'PRODUCT' },
+      // Service categories
+      { id: 'cat_2_s1', name: 'Services', imageUrl: 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=240&q=80', type: 'SERVICE' },
+      { id: 'cat_2_s2', name: 'Custom Tailoring & Stitching', imageUrl: 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=240&q=80', type: 'SERVICE' },
+      { id: 'cat_2_s3', name: 'Bridal Consultation', imageUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=240&q=80', type: 'SERVICE' },
+      // Course categories
+      { id: 'cat_2_c1', name: 'Fashion & Tailoring', imageUrl: 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=240&q=80', type: 'COURSE' },
+      { id: 'cat_2_c2', name: 'Business & Design', imageUrl: 'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?w=240&q=80', type: 'COURSE' },
+      { id: 'cat_2_c3', name: 'Pattern Drafting', imageUrl: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=240&q=80', type: 'COURSE' },
+    ],
     products: [
       {
         id: 'p1',
@@ -438,6 +466,16 @@ export const INITIAL_SHOPS: Shop[] = [
     serviceBookingEnabled: true,
     videos: [
       { id: 'v1', title: 'Sofa Deep Shampooing & Vacuum Process', youtubeUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
+    ],
+    customCategories: [
+      // Service categories
+      { id: 'cat_3_s1', name: 'Home Cleaning', imageUrl: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=240&q=80', type: 'SERVICE' },
+      { id: 'cat_3_s2', name: 'Upholstery', imageUrl: 'https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?w=240&q=80', type: 'SERVICE' },
+      { id: 'cat_3_s3', name: 'Deep Sanitization', imageUrl: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=240&q=80', type: 'SERVICE' },
+      { id: 'cat_3_s4', name: 'Pest Control', imageUrl: 'https://images.unsplash.com/photo-1628177142898-93e36e4e3a50?w=240&q=80', type: 'SERVICE' },
+      // Course categories
+      { id: 'cat_3_c1', name: 'Skill Training', imageUrl: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=240&q=80', type: 'COURSE' },
+      { id: 'cat_3_c2', name: 'Vocational Training', imageUrl: 'https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?w=240&q=80', type: 'COURSE' },
     ],
     products: [
       {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Layout,
   Eye,
@@ -39,7 +39,9 @@ import {
   Zap,
   Palette,
   X,
-  GraduationCap
+  GraduationCap,
+  FolderTree,
+  AlertCircle
 } from 'lucide-react';
 import {
   Shop,
@@ -66,16 +68,20 @@ import {
   ContactSectionConfig,
   BlogSectionConfig,
   FooterSectionConfig,
-  FloatingButtonsConfig
+  FloatingButtonsConfig,
+  ShopCategory
 } from '../../types';
 import { getDefaultSectionsConfig } from '../../utils/sectionDefaults';
 import { fileToBase64 } from '../../utils/mediaUpload';
+import { getAvailableCategoriesForShop, getCategoryImageByName } from '../../utils/categoryUtils';
 
 interface WebsiteSectionsManagerProps {
   shop: Shop;
   onUpdateShop: (updated: Shop) => void;
   onPreviewShop?: () => void;
   onOpenThemes?: () => void;
+  onOpenCategories?: () => void;
+  onOpenCreateCategory?: () => void;
   showToast: (msg: string) => void;
   initialExpandedSection?: SectionKey | string;
   onAnyChange?: () => void;
@@ -88,6 +94,8 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
   onUpdateShop,
   onPreviewShop,
   onOpenThemes,
+  onOpenCategories,
+  onOpenCreateCategory,
   showToast,
   initialExpandedSection,
   onAnyChange,
@@ -124,6 +132,18 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
   const [itemHidePrice, setItemHidePrice] = useState(false);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
 
+  // Category Selector & Quick Creator state for Item Modal
+  const [showInlineCatCreator, setShowInlineCatCreator] = useState(false);
+  const [customNewCatName, setCustomNewCatName] = useState('');
+
+  const availableItemCategories = useMemo(() => {
+    return getAvailableCategoriesForShop(
+      shop.customCategories || [],
+      shop.products || [],
+      itemModalType
+    );
+  }, [shop.customCategories, shop.products, itemModalType]);
+
   const openAddItem = (type: ProductType) => {
     setItemModalType(type);
     setEditingItem(null);
@@ -131,7 +151,10 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
     setItemPrice('');
     setItemOriginalPrice('');
     setItemUnit(type === 'COURSE' ? '30 Days' : type === 'PRODUCT' ? '1 pc' : 'Per Visit');
-    setItemCategory(type === 'COURSE' ? 'Training & Course' : type === 'PRODUCT' ? 'General' : 'Service');
+    const available = getAvailableCategoriesForShop(shop.customCategories || [], shop.products || [], type);
+    setItemCategory(available.length > 0 ? available[0].name : '');
+    setShowInlineCatCreator(false);
+    setCustomNewCatName('');
     setItemDescription('');
     setItemImageUrl(
       type === 'COURSE'
@@ -152,7 +175,9 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
     setItemPrice(item.price);
     setItemOriginalPrice(item.originalPrice || '');
     setItemUnit(item.unit || (item.type === 'COURSE' ? '30 Days' : item.type === 'PRODUCT' ? '1 pc' : 'Per Visit'));
-    setItemCategory(item.category || (item.type === 'COURSE' ? 'Training & Course' : item.type === 'PRODUCT' ? 'General' : 'Service'));
+    setItemCategory(item.category || '');
+    setShowInlineCatCreator(false);
+    setCustomNewCatName('');
     setItemDescription(item.description || '');
     setItemImageUrl(item.imageUrl || '');
     setItemInStock(item.inStock !== false);
@@ -215,7 +240,22 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
       showToast(`Naya ${itemModalType === 'COURSE' ? 'Course' : itemModalType === 'PRODUCT' ? 'Product' : 'Service'} successfully add ho gaya!`);
     }
 
-    onUpdateShop({ ...shop, products: updatedProducts });
+    // Ensure selected category is persisted in shop.customCategories
+    let updatedCustomCats = shop.customCategories || [];
+    const chosenCat = itemCategory.trim();
+    if (chosenCat && !updatedCustomCats.some((c) => c.name.toLowerCase() === chosenCat.toLowerCase())) {
+      updatedCustomCats = [
+        ...updatedCustomCats,
+        {
+          id: `cat_${Date.now()}`,
+          name: chosenCat,
+          imageUrl: getCategoryImageByName(chosenCat, itemModalType),
+          type: itemModalType,
+        },
+      ];
+    }
+
+    onUpdateShop({ ...shop, products: updatedProducts, customCategories: updatedCustomCats });
     if (onAnyChange) onAnyChange();
     setIsItemModalOpen(false);
     setEditingItem(null);
@@ -226,7 +266,11 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
       return;
     }
     const updatedProducts = (shop.products || []).filter((p) => p.id !== itemId);
-    onUpdateShop({ ...shop, products: updatedProducts });
+    onUpdateShop({
+      ...shop,
+      products: updatedProducts,
+      customCategories: shop.customCategories || [],
+    });
     if (onAnyChange) onAnyChange();
     showToast(`"${name}" delete ho gaya.`);
   };
@@ -235,7 +279,11 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
     const updatedProducts = (shop.products || []).map((p) =>
       p.id === itemId ? { ...p, inStock: !p.inStock } : p
     );
-    onUpdateShop({ ...shop, products: updatedProducts });
+    onUpdateShop({
+      ...shop,
+      products: updatedProducts,
+      customCategories: shop.customCategories || [],
+    });
     if (onAnyChange) onAnyChange();
   };
 
@@ -243,7 +291,11 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
     const updatedProducts = (shop.products || []).map((p) =>
       p.id === itemId ? { ...p, hidePrice: !p.hidePrice } : p
     );
-    onUpdateShop({ ...shop, products: updatedProducts });
+    onUpdateShop({
+      ...shop,
+      products: updatedProducts,
+      customCategories: shop.customCategories || [],
+    });
     if (onAnyChange) onAnyChange();
   };
 
@@ -496,7 +548,7 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
       {/* Top Bar Summary & Quick Actions */}
       <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white rounded-2xl p-5 sm:p-6 shadow-md border border-slate-700 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div className="space-y-1">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <span className="p-1.5 bg-orange-500 rounded-lg text-white">
               <Layout className="w-5 h-5" />
             </span>
@@ -506,6 +558,20 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
             <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded">
               {activeCount} / {totalCount} Live
             </span>
+
+            {/* Create Category option right beside (All Section) */}
+            <button
+              type="button"
+              onClick={onOpenCreateCategory || onOpenCategories}
+              className="ml-1 sm:ml-2 px-3 py-1 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white text-xs font-black uppercase tracking-wider rounded-lg flex items-center gap-1.5 shadow-md transition-all cursor-pointer active:scale-95 border border-orange-400/40"
+              title="Add / Manage Categories"
+            >
+              <FolderTree className="w-3.5 h-3.5" />
+              <span>+ Create Category</span>
+              <span className="bg-black/30 px-1.5 py-0.5 rounded-full text-[10px] font-bold">
+                {shop.customCategories?.length || 0}
+              </span>
+            </button>
           </div>
           <p className="text-xs text-gray-300 leading-relaxed">
             Product & Service ki tarah har section dropdown view mein open hota hai. Aap kisi bhi section par click karke uska text, photos, items aur buttons live customize kar sakte hain.
@@ -513,6 +579,17 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5 shrink-0 w-full md:w-auto">
+          {/* Quick Category Manager Action */}
+          <button
+            type="button"
+            onClick={onOpenCreateCategory || onOpenCategories}
+            className="flex-1 md:flex-initial px-3.5 py-2 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white text-xs font-bold uppercase tracking-wider rounded-sm flex items-center justify-center gap-1.5 shadow-sm transition-all cursor-pointer"
+            title="Create and Manage Categories"
+          >
+            <FolderTree className="w-3.5 h-3.5 text-amber-100" />
+            <span>+ Create Category ({shop.customCategories?.length || 0})</span>
+          </button>
+
           {onOpenThemes && (
             <button
               type="button"
@@ -589,6 +666,52 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
             <span>Change Theme</span>
           </button>
         )}
+      </div>
+
+      {/* STORE CATEGORIES QUICK BAR (Visible directly in Website All Sections) */}
+      <div className="bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-500/10 border border-orange-200 rounded-xl p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-orange-500 to-amber-600 text-white flex items-center justify-center shrink-0 shadow-xs font-bold">
+            <FolderTree className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs font-black uppercase tracking-tight text-slate-900">
+                Store Categories ({shop.customCategories?.length || 0}):
+              </span>
+              {(shop.customCategories || []).length === 0 ? (
+                <span className="text-xs font-medium text-amber-800">
+                  Koi category nahi hai — "+ Create Category" par click karke add karein.
+                </span>
+              ) : (
+                (shop.customCategories || []).slice(0, 5).map((cat) => (
+                  <span
+                    key={cat.id}
+                    className="text-xs font-bold text-orange-950 bg-orange-100 border border-orange-300 px-2 py-0.5 rounded-md"
+                  >
+                    {cat.name}
+                  </span>
+                ))
+              )}
+              {(shop.customCategories || []).length > 5 && (
+                <span className="text-xs font-bold text-gray-500">
+                  +{(shop.customCategories || []).length - 5} aur
+                </span>
+              )}
+            </div>
+            <p className="text-[11px] text-gray-600 mt-0.5">
+              Yeh categories aapke Product, Service aur Course add/edit karte waqt dropdown me aayengi.
+            </p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={onOpenCreateCategory || onOpenCategories}
+          className="self-start sm:self-auto px-4 py-2 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white text-xs font-bold uppercase tracking-wider rounded-lg transition-colors cursor-pointer flex items-center gap-2 shadow-xs shrink-0"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          <span>+ Create Category</span>
+        </button>
       </div>
 
       {/* Filter Tabs & Quick Instructions */}
@@ -894,16 +1017,90 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-700 mb-1">
-                    Category
-                  </label>
-                  <input
-                    type="text"
-                    placeholder={itemModalType === 'COURSE' ? 'e.g. Skill Training, Coaching, IT' : itemModalType === 'PRODUCT' ? 'e.g. Grocery, Clothing' : 'e.g. Home Cleaning, Repair'}
-                    value={itemCategory}
-                    onChange={(e) => setItemCategory(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-xs focus:ring-2 focus:ring-orange-500 bg-gray-50/50"
-                  />
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1">
+                      <FolderTree className="w-3.5 h-3.5 text-orange-600" />
+                      <span>Category (श्रेणी चुनें) *</span>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setShowInlineCatCreator(!showInlineCatCreator)}
+                      className="text-[11px] font-bold text-orange-600 hover:text-orange-800 underline flex items-center gap-0.5 cursor-pointer"
+                    >
+                      <Plus className="w-3 h-3" />
+                      <span>{showInlineCatCreator ? 'Select from list' : '+ Nayi Category Banayein'}</span>
+                    </button>
+                  </div>
+
+                  {!showInlineCatCreator ? (
+                    <select
+                      value={itemCategory}
+                      onChange={(e) => {
+                        if (e.target.value === '__NEW__') {
+                          setShowInlineCatCreator(true);
+                        } else {
+                          setItemCategory(e.target.value);
+                        }
+                      }}
+                      className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-xs focus:ring-2 focus:ring-orange-500 bg-white font-medium text-slate-900 cursor-pointer"
+                    >
+                      <option value="">-- Kripya Category Chunein (Select Category) --</option>
+                      {availableItemCategories.map((cat) => (
+                        <option key={cat.id} value={cat.name}>
+                          {cat.name} {cat.isCustom ? '★ (Custom)' : ''}
+                        </option>
+                      ))}
+                      <option value="__NEW__" className="font-bold text-orange-600 bg-orange-50">
+                        + Nayi Category Banayein (Create New Category)...
+                      </option>
+                    </select>
+                  ) : (
+                    <div className="p-2.5 bg-orange-50 border border-orange-200 rounded-lg space-y-2">
+                      <div className="text-[10px] font-bold text-orange-950 uppercase tracking-wider">
+                        Nayi Shreni Ka Naam Likh Kar Add Karein
+                      </div>
+                      <div className="flex gap-1.5">
+                        <input
+                          type="text"
+                          placeholder={
+                            itemModalType === 'COURSE'
+                              ? 'e.g. AI & Machine Learning'
+                              : itemModalType === 'PRODUCT'
+                              ? 'e.g. Organic Dry Fruits'
+                              : 'e.g. Solar Panel Cleaning'
+                          }
+                          value={customNewCatName}
+                          onChange={(e) => setCustomNewCatName(e.target.value)}
+                          className="flex-1 px-2.5 py-1.5 rounded border border-orange-300 text-xs bg-white font-medium"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (!customNewCatName.trim()) return;
+                            const name = customNewCatName.trim();
+                            const newCat: ShopCategory = {
+                              id: `cat_${Date.now()}`,
+                              name,
+                              imageUrl: getCategoryImageByName(name, itemModalType),
+                              type: itemModalType,
+                            };
+                            const updatedShop = {
+                              ...shop,
+                              customCategories: [...(shop.customCategories || []), newCat],
+                            };
+                            onUpdateShop(updatedShop);
+                            setItemCategory(name);
+                            setCustomNewCatName('');
+                            setShowInlineCatCreator(false);
+                            showToast(`Nayi category "${name}" add ho gayi!`);
+                          }}
+                          className="px-3 py-1.5 bg-orange-600 hover:bg-orange-700 text-white rounded font-bold text-xs shrink-0 cursor-pointer"
+                        >
+                          Add
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 

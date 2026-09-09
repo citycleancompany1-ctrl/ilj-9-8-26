@@ -116,6 +116,13 @@ export const VendorSidebar: React.FC<VendorSidebarProps> = ({
             icon: LayoutDashboard,
           },
           {
+            id: 'categories',
+            label: 'Categories (Shreni)',
+            icon: FolderTree,
+            badge: `${shop.customCategories?.length || 0}`,
+            badgeColor: 'bg-orange-500/20 text-orange-300 border border-orange-500/30',
+          },
+          {
             id: 'profile',
             label: 'My Profile & Shop',
             icon: Store,
@@ -129,11 +136,12 @@ export const VendorSidebar: React.FC<VendorSidebarProps> = ({
         items: [
           {
             id: 'sections',
-            label: 'All Sections (17)',
+            label: 'All Sections (18)',
             icon: Layers,
-            badge: '17 Live',
+            badge: '18 Live',
             badgeColor: 'bg-orange-500/20 text-orange-300 border border-orange-500/30',
             subItems: [
+              { id: 'section_categories', label: `Categories (${shop.customCategories?.length || 0})`, icon: FolderTree },
               { id: 'section_hero', label: 'Hero Section', icon: Sparkles },
               { id: 'section_about', label: 'About Section', icon: Award },
               { id: 'section_features', label: 'Features', icon: CheckCircle2 },
@@ -152,6 +160,13 @@ export const VendorSidebar: React.FC<VendorSidebarProps> = ({
               { id: 'section_blog', label: 'Blog & Articles', icon: FileText },
               { id: 'section_footer', label: 'Footer Section', icon: Globe },
             ],
+          },
+          {
+            id: 'categories',
+            label: '+ Create Category',
+            icon: FolderTree,
+            badge: `${shop.customCategories?.length || 0}`,
+            badgeColor: 'bg-amber-500/20 text-amber-300 border border-amber-500/30',
           },
         ],
       },
