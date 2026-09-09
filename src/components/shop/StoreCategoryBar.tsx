@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Layers } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export interface CategoryBarItem {
   id: string;
@@ -15,7 +15,7 @@ interface StoreCategoryBarProps {
   accentColor?: 'orange' | 'indigo' | 'blue' | 'emerald';
   allLabel?: string;
   allImage?: string;
-  totalCount: number;
+  totalCount?: number;
   sectionTitle?: string;
 }
 
@@ -24,30 +24,11 @@ export const StoreCategoryBar: React.FC<StoreCategoryBarProps> = ({
   selectedCategory,
   onSelectCategory,
   accentColor = 'orange',
-  allLabel = 'All',
-  allImage,
-  totalCount,
-  sectionTitle,
 }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
-
-  // Combine "All" pill with the individual categories
-  const allCategoryItem: CategoryBarItem = {
-    id: 'all-category-item',
-    name: allLabel,
-    imageUrl:
-      allImage ||
-      (categories.length > 0 && categories[0].imageUrl
-        ? categories[0].imageUrl
-        : 'https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=200&q=80'),
-    count: totalCount,
-  };
-
-  const allItemsList = [allCategoryItem, ...categories];
-  const totalItemsCount = allItemsList.length;
 
   // Rule:
   // Desktop: 10 per line. If > 10, carousel starts.
@@ -90,33 +71,21 @@ export const StoreCategoryBar: React.FC<StoreCategoryBarProps> = ({
     orange: {
       activeRing: 'ring-2 ring-orange-500 border-orange-500 shadow-orange-200/50',
       activeText: 'text-orange-600',
-      activeBg: 'bg-orange-50/80',
-      badge: 'bg-orange-600 text-white',
-      badgeInactive: 'bg-slate-800/85 text-white',
       hoverBorder: 'hover:border-orange-400',
     },
     indigo: {
       activeRing: 'ring-2 ring-indigo-600 border-indigo-600 shadow-indigo-200/50',
       activeText: 'text-indigo-600',
-      activeBg: 'bg-indigo-50/80',
-      badge: 'bg-indigo-600 text-white',
-      badgeInactive: 'bg-slate-800/85 text-white',
       hoverBorder: 'hover:border-indigo-400',
     },
     blue: {
       activeRing: 'ring-2 ring-blue-600 border-blue-600 shadow-blue-200/50',
       activeText: 'text-blue-600',
-      activeBg: 'bg-blue-50/80',
-      badge: 'bg-blue-600 text-white',
-      badgeInactive: 'bg-slate-800/85 text-white',
       hoverBorder: 'hover:border-blue-400',
     },
     emerald: {
       activeRing: 'ring-2 ring-emerald-600 border-emerald-600 shadow-emerald-200/50',
       activeText: 'text-emerald-600',
-      activeBg: 'bg-emerald-50/80',
-      badge: 'bg-emerald-600 text-white',
-      badgeInactive: 'bg-slate-800/85 text-white',
       hoverBorder: 'hover:border-emerald-400',
     },
   }[accentColor];
@@ -125,41 +94,7 @@ export const StoreCategoryBar: React.FC<StoreCategoryBarProps> = ({
   if (categories.length === 0) return null;
 
   return (
-    <div className="w-full bg-white rounded-2xl border border-gray-200/90 p-3 sm:p-4 shadow-2xs space-y-2.5">
-      {/* Category Header Label with All items quick filter */}
-      <div className="flex items-center justify-between px-1 flex-wrap gap-2">
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-slate-800">
-            <Layers className="w-3.5 h-3.5 text-orange-600 shrink-0" />
-            <span>Browse by Category {sectionTitle ? `(${sectionTitle})` : ''}</span>
-            <span className="text-[10px] text-gray-400 font-bold">({categories.length} Categories)</span>
-          </div>
-
-          {/* Quick "All" Pill Toggle */}
-          <button
-            type="button"
-            onClick={() => onSelectCategory('ALL')}
-            className={`px-2.5 py-1 rounded-full text-[11px] font-black transition-all cursor-pointer ${
-              selectedCategory === 'ALL'
-                ? `${colorStyles.badge} shadow-xs`
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            {allLabel} ({totalCount})
-          </button>
-        </div>
-
-        {selectedCategory !== 'ALL' && (
-          <button
-            type="button"
-            onClick={() => onSelectCategory('ALL')}
-            className="text-[11px] font-bold text-orange-600 hover:text-orange-700 hover:underline cursor-pointer"
-          >
-            Show All Items ({totalCount}) ✕
-          </button>
-        )}
-      </div>
-
+    <div className="w-full bg-white rounded-2xl border border-gray-200/90 p-3 sm:p-4 shadow-2xs">
       {/* Category Container:
           - Desktop: 10 per line. If > 10, carousel with arrows.
           - Mobile: 5 per line. If > 5, carousel.
@@ -177,7 +112,7 @@ export const StoreCategoryBar: React.FC<StoreCategoryBarProps> = ({
           </button>
         )}
 
-        {/* Categories List */}
+        {/* Categories List: Only categories (Image + Name) */}
         <div
           ref={scrollRef}
           onScroll={checkScroll}
@@ -199,7 +134,7 @@ export const StoreCategoryBar: React.FC<StoreCategoryBarProps> = ({
                 className={`flex flex-col items-center justify-start group cursor-pointer text-center select-none transition-all active:scale-95 ${
                   isCarousel ? 'shrink-0 snap-start w-[64px] sm:w-[76px] lg:w-[84px]' : 'w-full'
                 }`}
-                title={`${item.name} (${item.count} items)`}
+                title={item.name}
               >
                 {/* Category Image Circle */}
                 <div
@@ -219,15 +154,6 @@ export const StoreCategoryBar: React.FC<StoreCategoryBarProps> = ({
                         'https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=200&q=80';
                     }}
                   />
-
-                  {/* Count badge overlay on bottom right */}
-                  <span
-                    className={`absolute -bottom-1 -right-0.5 px-1.5 py-0.2 rounded-full text-[9px] font-black font-mono shadow-2xs border border-white leading-none ${
-                      isSelected ? colorStyles.badge : colorStyles.badgeInactive
-                    }`}
-                  >
-                    {item.count}
-                  </span>
                 </div>
 
                 {/* Category Name */}
