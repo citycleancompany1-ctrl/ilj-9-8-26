@@ -426,6 +426,19 @@ export interface VideoSectionConfig {
   subtitle: string;
 }
 
+export interface SocialMediaSectionConfig {
+  enabled: boolean;
+  title: string;
+  subtitle: string;
+  instagram?: string;
+  facebook?: string;
+  youtube?: string;
+  whatsapp?: string;
+  twitter?: string;
+  linkedin?: string;
+  telegram?: string;
+}
+
 export interface FooterSectionConfig {
   enabled: boolean;
   aboutText: string;
@@ -443,22 +456,23 @@ export interface FooterSectionConfig {
 export interface ShopSectionsConfig {
   hero: HeroSectionConfig;
   about: AboutSectionConfig;
-  features: FeaturesSectionConfig;
+  features: FeaturesSectionConfig; // Why Choose Us
   services: ServicesSectionConfig;
-  courses?: CoursesSectionConfig;
   products: ProductsSectionConfig;
-  benefits: BenefitsSectionConfig;
-  testimonials: TestimonialsSectionConfig;
-  offers: OffersSectionConfig;
+  courses?: CoursesSectionConfig;
   videos?: VideoSectionConfig;
-  gallery?: GallerySectionConfig;
+  offers: OffersSectionConfig;
+  gallery?: GallerySectionConfig; // Photo Gallery
   portfolio: PortfolioSectionConfig;
   team: TeamSectionConfig;
   faq: FaqSectionConfig;
   cta: CtaSectionConfig;
   contact: ContactSectionConfig;
+  socialMedia?: SocialMediaSectionConfig;
   blog: BlogSectionConfig;
   footer: FooterSectionConfig;
+  benefits?: BenefitsSectionConfig;
+  testimonials?: TestimonialsSectionConfig;
   howItWorks?: HowItWorksSectionConfig;
   pricing?: PricingSectionConfig;
 }

@@ -43,6 +43,8 @@ import {
   Image as ImageIcon,
   SlidersHorizontal,
   Camera,
+  MessageCircle,
+  Send,
 } from 'lucide-react';
 import {
   Shop,
@@ -66,6 +68,7 @@ import {
   FaqSectionConfig,
   CtaSectionConfig,
   ContactSectionConfig,
+  SocialMediaSectionConfig,
   BlogSectionConfig,
   BlogPostItem,
   FooterSectionConfig,
@@ -495,7 +498,7 @@ export const AboutSectionRenderer: React.FC<{
 };
 
 // ==========================================
-// 3. FEATURES SECTION
+// 3. WHY CHOOSE US SECTION
 // ==========================================
 export const FeaturesSectionRenderer: React.FC<{
   config: FeaturesSectionConfig;
@@ -503,13 +506,13 @@ export const FeaturesSectionRenderer: React.FC<{
   if (!config.enabled || !config.items || config.items.length === 0) return null;
 
   return (
-    <section id="features" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16">
+    <section id="why-choose-us" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 scroll-mt-20">
       <div className="text-center max-w-2xl mx-auto space-y-2 mb-8">
         <div className="inline-flex items-center gap-1.5 bg-emerald-100 text-emerald-800 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-sm">
-          <CheckCircle2 className="w-3.5 h-3.5" /> Key Advantages
+          <CheckCircle2 className="w-3.5 h-3.5" /> Why Choose Us
         </div>
         <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-slate-900 font-['Outfit',sans-serif]">
-          {config.title}
+          {config.title || 'Why Choose Us'}
         </h2>
         {config.subtitle && (
           <p className="text-xs sm:text-sm text-gray-500">{config.subtitle}</p>
@@ -1952,6 +1955,154 @@ export const ContactSocialMediaBlock: React.FC<{
         })}
       </div>
     </div>
+  );
+};
+
+// ==========================================
+// 15. SOCIAL MEDIA SECTION (Dedicated Storefront Section)
+// ==========================================
+export const SocialMediaSectionRenderer: React.FC<{
+  config?: SocialMediaSectionConfig;
+  shop: Shop;
+}> = ({ config, shop }) => {
+  if (config && config.enabled === false) return null;
+
+  const instagramUrl = config?.instagram || shop.socialLinks?.instagram || '';
+  const facebookUrl = config?.facebook || shop.socialLinks?.facebook || '';
+  const youtubeUrl = config?.youtube || shop.socialLinks?.youtube || '';
+  const whatsappUrl = config?.whatsapp || (shop.whatsapp ? `https://wa.me/91${shop.whatsapp.replace(/\D/g, '')}` : `https://wa.me/91${shop.phone?.replace(/\D/g, '') || ''}`);
+  const twitterUrl = config?.twitter || shop.socialLinks?.twitter || '';
+  const linkedinUrl = config?.linkedin || shop.socialLinks?.linkedin || '';
+  const telegramUrl = config?.telegram || '';
+
+  const channels = [
+    {
+      id: 'whatsapp',
+      name: 'WhatsApp Direct',
+      label: 'Fast Support & Chat',
+      handle: `+91 ${shop.whatsapp || shop.phone || 'Store Hotline'}`,
+      url: whatsappUrl,
+      icon: MessageCircle,
+      color: 'bg-emerald-600 text-white',
+      badgeBg: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+    },
+    {
+      id: 'instagram',
+      name: 'Instagram',
+      label: 'Photos & Reels Updates',
+      handle: instagramUrl ? `@${shop.businessName.toLowerCase().replace(/\s+/g, '_')}` : '@instagram',
+      url: instagramUrl || 'https://instagram.com',
+      icon: Instagram,
+      color: 'bg-gradient-to-tr from-amber-500 via-rose-500 to-purple-600 text-white',
+      badgeBg: 'bg-pink-50 text-pink-800 border-pink-200',
+    },
+    {
+      id: 'facebook',
+      name: 'Facebook Page',
+      label: 'Community & Customer Reviews',
+      handle: facebookUrl ? `${shop.businessName}` : 'Facebook Page',
+      url: facebookUrl || 'https://facebook.com',
+      icon: Facebook,
+      color: 'bg-blue-600 text-white',
+      badgeBg: 'bg-blue-50 text-blue-800 border-blue-200',
+    },
+    {
+      id: 'youtube',
+      name: 'YouTube Channel',
+      label: 'Video Demos & Tutorials',
+      handle: youtubeUrl ? `${shop.businessName} TV` : 'YouTube Channel',
+      url: youtubeUrl || 'https://youtube.com',
+      icon: Youtube,
+      color: 'bg-red-600 text-white',
+      badgeBg: 'bg-red-50 text-red-800 border-red-200',
+    },
+    ...(twitterUrl ? [{
+      id: 'twitter',
+      name: 'Twitter / X',
+      label: 'Latest Tweets & Alerts',
+      handle: `@${shop.businessName.toLowerCase().replace(/\s+/g, '')}`,
+      url: twitterUrl,
+      icon: Twitter,
+      color: 'bg-slate-900 text-white',
+      badgeBg: 'bg-slate-50 text-slate-800 border-slate-200',
+    }] : []),
+    ...(linkedinUrl ? [{
+      id: 'linkedin',
+      name: 'LinkedIn',
+      label: 'Professional Network',
+      handle: `${shop.businessName}`,
+      url: linkedinUrl,
+      icon: Linkedin,
+      color: 'bg-blue-700 text-white',
+      badgeBg: 'bg-blue-50 text-blue-800 border-blue-200',
+    }] : []),
+    ...(telegramUrl ? [{
+      id: 'telegram',
+      name: 'Telegram Channel',
+      label: 'Direct Channel & Deals',
+      handle: `${shop.businessName}`,
+      url: telegramUrl,
+      icon: Send,
+      color: 'bg-sky-500 text-white',
+      badgeBg: 'bg-sky-50 text-sky-800 border-sky-200',
+    }] : []),
+  ];
+
+  return (
+    <section id="social-media" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 scroll-mt-20">
+      <div className="bg-white rounded-3xl border border-orange-200/90 p-6 sm:p-8 lg:p-10 shadow-sm space-y-8">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-gray-100">
+          <div className="space-y-1.5">
+            <div className="inline-flex items-center gap-1.5 bg-orange-100 text-orange-800 text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-md shadow-xs">
+              <Share2 className="w-3.5 h-3.5" /> Social Media & Online Profiles
+            </div>
+            <h3 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-slate-900 font-['Outfit',sans-serif]">
+              {config?.title || 'Connect With Us on Social Media'}
+            </h3>
+            <p className="text-xs sm:text-sm text-gray-500 max-w-2xl">
+              {config?.subtitle || 'Humein social media par follow karein aur exclusive offers, naye products aur videos ke taaza updates paayein.'}
+            </p>
+          </div>
+
+          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3.5 py-1.5 rounded-full shadow-xs">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600" /> Official Verified Accounts
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+          {channels.map((chan) => {
+            const IconComp = chan.icon;
+            return (
+              <a
+                key={`dedicated-social-${chan.id}`}
+                href={chan.url}
+                target="_blank"
+                rel="noreferrer"
+                className="group p-5 rounded-2xl border border-gray-200/90 hover:border-orange-300 hover:shadow-md transition-all flex items-center justify-between gap-3.5 bg-gray-50/40 hover:bg-white cursor-pointer"
+              >
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <div className={`w-12 h-12 rounded-xl ${chan.color} flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform`}>
+                    <IconComp className="w-6 h-6" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-xs font-black uppercase text-slate-900 truncate group-hover:text-orange-600 transition-colors">
+                      {chan.name}
+                    </div>
+                    <div className="text-[11px] text-gray-500 truncate">
+                      {chan.handle}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="w-8 h-8 rounded-full bg-white group-hover:bg-orange-50 text-gray-400 group-hover:text-orange-600 flex items-center justify-center shrink-0 border border-gray-200 group-hover:border-orange-200 transition-colors shadow-xs">
+                  <ArrowUpRight className="w-4 h-4" />
+                </div>
+              </a>
+            );
+          })}
+        </div>
+      </div>
+    </section>
   );
 };
 

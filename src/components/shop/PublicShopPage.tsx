@@ -57,17 +57,15 @@ import {
   FeaturesSectionRenderer,
   ServicesSectionRenderer,
   CoursesSectionRenderer,
-  BenefitsSectionRenderer,
-  TestimonialsSectionRenderer,
   OffersSectionRenderer,
   PortfolioSectionRenderer,
   TeamSectionRenderer,
   FaqSectionRenderer,
   CtaSectionRenderer,
+  SocialMediaSectionRenderer,
   BlogSectionRenderer,
   GallerySectionRenderer,
   VideoSectionRenderer,
-  ContactSocialMediaBlock,
 } from './PublicStoreSections';
 import { StoreItemsCarouselSection } from './StoreItemsCarouselSection';
 import { ProductDetailModal } from './ProductDetailModal';
@@ -766,91 +764,7 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
         />
       )}
 
-      {/* 4. QUICK INFO BENTO STRIP: Location, Owner, Hours, UPI 0% Direct */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
-        <div className="bg-white rounded-2xl border border-gray-200/90 p-5 sm:p-6 shadow-sm grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 text-xs">
-          
-          {/* Card 1: Location */}
-          <div className="flex items-start gap-3.5 p-3 rounded-xl hover:bg-orange-50/40 transition-colors">
-            <div className="w-9 h-9 rounded-xl bg-orange-100 text-orange-800 flex items-center justify-center shrink-0 shadow-xs">
-              <MapPin className="w-4 h-4 text-orange-700" />
-            </div>
-            <div className="min-w-0">
-              <div className="font-black uppercase tracking-wider text-slate-900 text-xs">Store Location</div>
-              <div className="text-gray-600 text-[11px] line-clamp-2 mt-0.5 leading-snug">{shop.address}, {shop.city}</div>
-              <a 
-                href={googleMapsUrl}
-                target="_blank" 
-                rel="noreferrer"
-                className="text-[11px] font-bold text-orange-600 hover:underline inline-flex items-center gap-1 mt-1.5"
-              >
-                <span>Get Directions</span>
-                <ArrowUpRight className="w-3 h-3" />
-              </a>
-            </div>
-          </div>
-
-          {/* Card 2: Verified Owner */}
-          <div className="flex items-start gap-3.5 p-3 rounded-xl hover:bg-emerald-50/40 transition-colors">
-            <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0 shadow-xs">
-              <ShieldCheck className="w-4 h-4 text-emerald-700" />
-            </div>
-            <div className="min-w-0">
-              <div className="font-black uppercase tracking-wider text-slate-900 text-xs">Proprietor / Owner</div>
-              <div className="text-slate-900 font-bold text-xs mt-0.5 truncate">{shop.vendorName}</div>
-              <div className="text-emerald-700 font-bold text-[11px] flex items-center gap-1 mt-0.5">
-                <Check className="w-2.5 h-2.5 text-emerald-600" />
-                <span>Verified Merchant</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Card 3: Working Hours */}
-          <div className="flex items-start gap-3.5 p-3 rounded-xl hover:bg-purple-50/40 transition-colors">
-            <div className="w-9 h-9 rounded-xl bg-purple-100 text-purple-800 flex items-center justify-center shrink-0 shadow-xs">
-              <Clock className="w-4 h-4 text-purple-700" />
-            </div>
-            <div className="min-w-0">
-              <div className="font-black uppercase tracking-wider text-slate-900 text-xs">Working Hours</div>
-              <div className="text-slate-900 font-bold text-xs mt-0.5">{shop.workingHours || '9:00 AM - 9:00 PM'}</div>
-              <div className="text-emerald-700 font-bold text-[11px] flex items-center gap-1.5 mt-0.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span>Open 7 Days a Week</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Card 4: 0% Direct UPI Payment */}
-          <div className="flex items-start gap-3.5 p-3 rounded-xl hover:bg-blue-50/40 transition-colors">
-            <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-800 flex items-center justify-center shrink-0 shadow-xs">
-              <QrCode className="w-4 h-4 text-blue-700" />
-            </div>
-            <div className="min-w-0">
-              <div className="font-black uppercase tracking-wider text-slate-900 text-xs">Direct 0% UPI Pay</div>
-              <div className="text-gray-700 font-mono text-[11px] font-bold truncate mt-0.5">{shop.upiId || '7087033009@paytm'}</div>
-              <div className="flex items-center gap-2 mt-1.5">
-                <button
-                  onClick={() => setShowQrModal(true)}
-                  className="text-[11px] font-bold text-blue-700 hover:underline inline-flex items-center gap-0.5 cursor-pointer"
-                >
-                  <span>Scan QR</span>
-                  <ArrowRight className="w-2.5 h-2.5" />
-                </button>
-                <span className="text-gray-300">•</span>
-                <button
-                  onClick={handleCopyUpi}
-                  className="text-[11px] font-bold text-slate-700 hover:text-black cursor-pointer"
-                >
-                  {copiedUpi ? 'Copied! ✓' : 'Copy ID'}
-                </button>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </section>
-
-      {/* 2. ABOUT SECTION (ON/OFF & Custom Builder Config) */}
+      {/* 2. ABOUT US SECTION */}
       {sectionsConfig && sectionsConfig.about.enabled && (
         <AboutSectionRenderer config={sectionsConfig.about} shop={shop} />
       )}
@@ -860,7 +774,7 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
         <FeaturesSectionRenderer config={sectionsConfig.features} />
       )}
 
-      {/* SERVICES SECTION (Rendered from Store's Services Catalogue) */}
+      {/* 4. SERVICES SECTION (Rendered from Store's Services Catalogue) */}
       {catalogServices.length > 0 && (
         <ServicesSectionRenderer
           config={sectionsConfig?.services}
@@ -874,19 +788,6 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
             setCustService(serviceName);
             inquirySectionRef.current?.scrollIntoView({ behavior: 'smooth' });
           }}
-        />
-      )}
-
-      {/* COURSES SECTION (Rendered from Store's Courses Catalogue) */}
-      {catalogCourses.length > 0 && (
-        <CoursesSectionRenderer
-          config={sectionsConfig?.courses}
-          catalogCourses={catalogCourses}
-          shop={shop}
-          cart={cart}
-          onAddToCart={addToCart}
-          onRemoveFromCart={removeFromCart}
-          onSelectCourse={(courseProd) => setSelectedProduct(courseProd)}
         />
       )}
 
@@ -908,27 +809,30 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
         />
       )}
 
-      {/* STORE DEMO VIDEOS (4 videos Desktop Grid, Mobile Carousel, View More Button) */}
+      {/* 6. COURSES SECTION (Rendered from Store's Courses Catalogue) */}
+      {catalogCourses.length > 0 && (
+        <CoursesSectionRenderer
+          config={sectionsConfig?.courses}
+          catalogCourses={catalogCourses}
+          shop={shop}
+          cart={cart}
+          onAddToCart={addToCart}
+          onRemoveFromCart={removeFromCart}
+          onSelectCourse={(courseProd) => setSelectedProduct(courseProd)}
+        />
+      )}
+
+      {/* 7. STORE DEMO VIDEOS */}
       {(!sectionsConfig?.videos || sectionsConfig.videos.enabled) && (
         <VideoSectionRenderer shop={shop} config={sectionsConfig?.videos} />
       )}
 
-      {/* 6. BENEFITS SECTION (ON/OFF & Custom Builder Config) */}
-      {sectionsConfig && sectionsConfig.benefits.enabled && (
-        <BenefitsSectionRenderer config={sectionsConfig.benefits} />
-      )}
-
-      {/* 7. TESTIMONIALS (Carousel + View More Modal) */}
-      {sectionsConfig && sectionsConfig.testimonials.enabled && (
-        <TestimonialsSectionRenderer config={sectionsConfig.testimonials} shop={shop} />
-      )}
-
-      {/* 8. OUR OFFERS & PROMOTIONAL BANNERS (ON/OFF & Custom Builder Config - 1 or 2 Banners) */}
+      {/* 8. OUR OFFERS & PROMOTIONAL BANNERS */}
       {sectionsConfig && sectionsConfig.offers && sectionsConfig.offers.enabled && (
         <OffersSectionRenderer config={sectionsConfig.offers} shop={shop} />
       )}
 
-      {/* 9. MASONRY GALLERY SECTION (Masonry Layout + Lightbox + View More Button) */}
+      {/* 9. PHOTO GALLERY SECTION */}
       {(!sectionsConfig || !sectionsConfig.gallery || sectionsConfig.gallery.enabled) && (
         <GallerySectionRenderer config={sectionsConfig?.gallery} shop={shop} />
       )}
@@ -1152,18 +1056,20 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
           </div>
 
         </div>
-
-        {/* SOCIAL MEDIA ICONS & PROFILES CONNECT BLOCK */}
-        <ContactSocialMediaBlock shop={shop} />
       </section>
       )}
 
-      {/* 14. BLOG / ARTICLES SECTION (ON/OFF & Custom Builder Config) */}
+      {/* 15. SOCIAL MEDIA SECTION */}
+      {(!sectionsConfig?.socialMedia || sectionsConfig.socialMedia.enabled) && (
+        <SocialMediaSectionRenderer config={sectionsConfig?.socialMedia} shop={shop} />
+      )}
+
+      {/* 16. BLOG / ARTICLES SECTION (ON/OFF & Custom Builder Config) */}
       {sectionsConfig && sectionsConfig.blog.enabled && (
         <BlogSectionRenderer config={sectionsConfig.blog} shop={shop} />
       )}
 
-      {/* 16. STORE FOOTER WITH VENDOR PAYMENT QR (LIGHT THEME) */}
+      {/* 17. STORE FOOTER WITH VENDOR PAYMENT QR (LIGHT THEME) */}
       {(!sectionsConfig || sectionsConfig.footer.enabled) && (
       <footer className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-20 mb-8">
         <div className="bg-white text-slate-900 rounded-3xl border border-gray-200/90 p-8 sm:p-10 lg:p-12 shadow-sm grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 text-xs">

@@ -13,10 +13,6 @@ interface StoreCategoryBarProps {
   selectedCategory: string; // 'ALL' or category name
   onSelectCategory: (categoryName: string) => void;
   accentColor?: 'orange' | 'indigo' | 'blue' | 'emerald';
-  allLabel?: string;
-  allImage?: string;
-  totalCount?: number;
-  sectionTitle?: string;
 }
 
 export const StoreCategoryBar: React.FC<StoreCategoryBarProps> = ({

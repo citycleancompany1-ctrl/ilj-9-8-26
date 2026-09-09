@@ -65,10 +65,10 @@ export function getDefaultSectionsConfig(shop: Partial<Shop> = {}): ShopSections
       ],
     },
 
-    // 3. Features Section
+    // 3. Why Choose Us Section
     features: {
       enabled: true,
-      title: 'Key Features & Why Choose Us',
+      title: 'Why Choose Us',
       subtitle: 'Khas Baatein Jo Hamein Sabse Alag Banati Hain',
       items: [
         {
@@ -149,9 +149,9 @@ export function getDefaultSectionsConfig(shop: Partial<Shop> = {}): ShopSections
       ],
     },
 
-    // 7. Benefits Section
+    // Benefits Section (Optional)
     benefits: {
-      enabled: true,
+      enabled: false,
       title: 'Customer Benefits & Advantages',
       subtitle: 'Hamare Sath Judne Ke Fayde',
       items: [
@@ -182,9 +182,9 @@ export function getDefaultSectionsConfig(shop: Partial<Shop> = {}): ShopSections
       ],
     },
 
-    // 8. Testimonials Section
+    // Testimonials Section (Optional)
     testimonials: {
-      enabled: true,
+      enabled: false,
       title: 'What Customers Say (Reviews)',
       subtitle: 'Hamare Khush Grahakon Ki Raay',
       items: [
@@ -376,7 +376,21 @@ export function getDefaultSectionsConfig(shop: Partial<Shop> = {}): ShopSections
       workingHours: shop.workingHours || '9:00 AM - 9:00 PM (All 7 Days Open)',
     },
 
-    // 15. Blog / Articles Section
+    // 15. Social Media Section
+    socialMedia: {
+      enabled: true,
+      title: 'Connect With Us on Social Media',
+      subtitle: 'Hamare official social channels follow karein aur updates payein',
+      instagram: shop.socialLinks?.instagram || 'https://instagram.com',
+      facebook: shop.socialLinks?.facebook || 'https://facebook.com',
+      youtube: shop.socialLinks?.youtube || 'https://youtube.com',
+      whatsapp: `https://wa.me/91${phone.replace(/\D/g, '')}`,
+      twitter: shop.socialLinks?.twitter || '',
+      linkedin: shop.socialLinks?.linkedin || '',
+      telegram: '',
+    },
+
+    // 16. Blog / Articles Section
     blog: {
       enabled: true,
       title: 'Latest News, Tips & Articles',
@@ -438,17 +452,26 @@ Agar aapko kisi bhi item ke upyog ya storage mein salah chahiye, toh hamare help
       ],
     },
 
-    // 16. Footer Section
+    // 17. Footer Section
     footer: {
       enabled: true,
       aboutText: `${name} is a proud verified merchant powered by the IndianLalaJi Platform Network. Providing genuine quality and direct 0% commission local commerce across ${city}.`,
       quickLinks: [
-        { label: 'Products Catalog', url: '#products' },
+        { label: 'Hero Home', url: '#hero' },
         { label: 'About Us', url: '#about' },
-        { label: 'Features', url: '#features' },
-        { label: 'Customer Reviews', url: '#testimonials' },
+        { label: 'Why Choose Us', url: '#why-choose-us' },
+        { label: 'Services', url: '#services' },
+        { label: 'Products', url: '#products' },
+        { label: 'Courses', url: '#courses' },
+        { label: 'Videos', url: '#videos' },
+        { label: 'Special Offers', url: '#offers' },
+        { label: 'Photo Gallery', url: '#gallery' },
+        { label: 'Portfolio', url: '#portfolio' },
+        { label: 'Our Team', url: '#team' },
         { label: 'FAQ', url: '#faq' },
-        { label: 'Contact Us', url: '#contact' },
+        { label: 'Contact Us', url: '#contact-inquiry' },
+        { label: 'Social Media', url: '#social-media' },
+        { label: 'Blog', url: '#blog' },
       ],
       socialLinks: {
         instagram: shop.socialLinks?.instagram || 'https://instagram.com',

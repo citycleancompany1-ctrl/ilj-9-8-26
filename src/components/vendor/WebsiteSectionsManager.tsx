@@ -41,7 +41,8 @@ import {
   X,
   GraduationCap,
   FolderTree,
-  AlertCircle
+  AlertCircle,
+  Share2
 } from 'lucide-react';
 import {
   Shop,
@@ -61,11 +62,13 @@ import {
   OffersSectionConfig,
   OfferBannerItem,
   VideoSectionConfig,
+  GallerySectionConfig,
   PortfolioSectionConfig,
   TeamSectionConfig,
   FaqSectionConfig,
   CtaSectionConfig,
   ContactSectionConfig,
+  SocialMediaSectionConfig,
   BlogSectionConfig,
   FooterSectionConfig,
   FloatingButtonsConfig,
@@ -386,7 +389,7 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
   // Count active sections within builder
   const activeCount = Object.values(config).filter((s) => (s as { enabled?: boolean })?.enabled !== false).length;
 
-  // Metadata for the 16 Modular Website Sections (Strictly matches requested order)
+  // Metadata for the 17 Modular Website Sections (Strict parity with public store website)
   const SECTION_METAS: Array<{
     key: SectionKey;
     number: number;
@@ -406,7 +409,7 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
     {
       key: 'about',
       number: 2,
-      title: 'About Section',
+      title: 'About Us',
       subtitle: 'Company / store / owner story & achievements',
       icon: Award,
       color: 'text-blue-600 bg-blue-50',
@@ -414,79 +417,71 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
     {
       key: 'features',
       number: 3,
-      title: 'Features Section',
-      subtitle: 'Product / service key highlights & why choose us',
+      title: 'Why Choose Us',
+      subtitle: 'Key store highlights & why customers choose you',
       icon: CheckCircle2,
       color: 'text-emerald-600 bg-emerald-50',
     },
     {
-      key: 'products',
-      number: 4,
-      title: 'Products Section',
-      subtitle: 'Products showcase catalogue with prices & stock',
-      icon: Tag,
-      color: 'text-orange-600 bg-orange-50',
-    },
-    {
       key: 'services',
-      number: 5,
-      title: 'Services Section',
+      number: 4,
+      title: 'Service',
       subtitle: 'Professional services, consultations & booking offerings',
       icon: Wrench,
       color: 'text-purple-600 bg-purple-50',
     },
     {
+      key: 'products',
+      number: 5,
+      title: 'Product',
+      subtitle: 'Products showcase catalogue with prices & stock',
+      icon: Tag,
+      color: 'text-orange-600 bg-orange-50',
+    },
+    {
       key: 'courses',
       number: 6,
-      title: 'Courses & Training',
+      title: 'Course',
       subtitle: 'Structured courses, syllabus, fees & certification batches',
       icon: GraduationCap,
       color: 'text-indigo-600 bg-indigo-50',
     },
     {
-      key: 'benefits',
-      number: 7,
-      title: 'Benefits Section',
-      subtitle: 'Customer benefits, guarantees, free delivery & support stats',
-      icon: Star,
-      color: 'text-yellow-600 bg-yellow-50',
-    },
-    {
-      key: 'testimonials',
-      number: 8,
-      title: 'Testimonials',
-      subtitle: 'Customer reviews (Name, rating, review text & location)',
-      icon: MessageSquare,
-      color: 'text-rose-600 bg-rose-50',
-    },
-    {
-      key: 'offers',
-      number: 8,
-      title: 'Our Offers & Deals',
-      subtitle: 'Promotional banners with coupon codes & direct WhatsApp deals',
-      icon: Sparkles,
-      color: 'text-pink-600 bg-pink-50',
-    },
-    {
       key: 'videos',
-      number: 9,
-      title: 'Store Videos',
+      number: 7,
+      title: 'Video',
       subtitle: 'Showcase store walkthroughs, product reels & YouTube demos',
       icon: Play,
       color: 'text-red-600 bg-red-50',
     },
     {
+      key: 'offers',
+      number: 8,
+      title: 'Offer',
+      subtitle: 'Promotional banners with coupon codes & direct WhatsApp deals',
+      icon: Sparkles,
+      color: 'text-pink-600 bg-pink-50',
+    },
+    {
+      key: 'gallery',
+      number: 9,
+      title: 'Photo Gallery',
+      subtitle: 'Store photos, showroom images & photo showcase',
+      icon: ImageIcon,
+      color: 'text-teal-600 bg-teal-50',
+    },
+    {
       key: 'portfolio',
       number: 10,
-      title: 'Portfolio & Projects',
-      subtitle: 'Previous work, client projects & photo gallery showcase',
-      icon: ImageIcon,
+      title: 'Portfolio',
+      subtitle: 'Previous work, client projects & work showcase',
+      icon: Briefcase,
       color: 'text-cyan-600 bg-cyan-50',
     },
     {
       key: 'team',
       number: 11,
-      title: 'Team Members',
+      title: 'Team',
       subtitle: 'Staff & specialists (Photo, name, role & bio)',
       icon: Users,
       color: 'text-fuchsia-600 bg-fuchsia-50',
@@ -494,7 +489,7 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
     {
       key: 'faq',
       number: 12,
-      title: 'FAQ Section',
+      title: 'FAQ',
       subtitle: 'Frequently asked questions & customer answers',
       icon: HelpCircle,
       color: 'text-sky-600 bg-sky-50',
@@ -502,7 +497,7 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
     {
       key: 'cta',
       number: 13,
-      title: 'Call to Action (CTA)',
+      title: 'CTA',
       subtitle: 'Prominent banner encouraging customer order or booking',
       icon: Zap,
       color: 'text-indigo-600 bg-indigo-50',
@@ -510,23 +505,31 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
     {
       key: 'contact',
       number: 14,
-      title: 'Contact Details',
+      title: 'Contact Us',
       subtitle: 'Phone, WhatsApp, email, address, working hours & inquiry form',
       icon: Phone,
       color: 'text-emerald-600 bg-emerald-50',
     },
     {
-      key: 'blog',
+      key: 'socialMedia',
       number: 15,
-      title: 'Blog & Articles',
+      title: 'Social Media',
+      subtitle: 'Instagram, Facebook, YouTube, WhatsApp & social channel links',
+      icon: Share2,
+      color: 'text-rose-600 bg-rose-50',
+    },
+    {
+      key: 'blog',
+      number: 16,
+      title: 'Blog',
       subtitle: 'Latest store news, buying guides & expert articles',
       icon: FileText,
       color: 'text-amber-600 bg-amber-50',
     },
     {
       key: 'footer',
-      number: 16,
-      title: 'Footer Section',
+      number: 17,
+      title: 'Footer',
       subtitle: 'Copyright text, quick links, disclaimer & social profiles',
       icon: Globe,
       color: 'text-slate-600 bg-slate-100',
@@ -2255,139 +2258,49 @@ function renderSectionEditor(
       );
     }
 
-    // 7. BENEFITS SECTION
-    case 'benefits': {
-      const data = config.benefits;
-      const update = (patch: Partial<BenefitsSectionConfig>) => {
-        setConfig((prev) => ({ ...prev, benefits: { ...prev.benefits, ...patch } }));
+    // 9. PHOTO GALLERY
+    case 'gallery': {
+      const data: GallerySectionConfig = config.gallery || {
+        enabled: true,
+        title: 'Store Photo Gallery',
+        subtitle: 'Hamari dukaan, taaza stock aur shandar collection ka photo showcase',
+        items: [],
       };
-      return (
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                Benefits Heading
-              </label>
-              <input
-                type="text"
-                value={data.title}
-                onChange={(e) => update({ title: e.target.value })}
-                className="w-full px-3 py-2 text-xs rounded-sm border border-gray-300 bg-white"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                Subtitle
-              </label>
-              <input
-                type="text"
-                value={data.subtitle}
-                onChange={(e) => update({ subtitle: e.target.value })}
-                className="w-full px-3 py-2 text-xs rounded-sm border border-gray-300 bg-white"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-3 pt-2">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-800">
-                Key Benefits & Perks ({data.items.length})
-              </span>
-              <button
-                type="button"
-                onClick={() => {
-                  const newItem = {
-                    id: `ben_${Date.now()}`,
-                    title: 'New Customer Advantage',
-                    description: 'Reason why customers gain more value.',
-                    stat: '100% Value',
-                  };
-                  update({ items: [...data.items, newItem] });
-                }}
-                className="px-2.5 py-1 bg-orange-50 hover:bg-orange-100 text-orange-800 text-[11px] font-bold uppercase rounded flex items-center gap-1 border border-orange-200"
-              >
-                <Plus className="w-3 h-3" />
-                <span>Add Benefit</span>
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {data.items.map((item, idx) => (
-                <div key={item.id || idx} className="p-3 bg-white rounded-lg border border-gray-200 space-y-2">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="font-mono text-[10px] text-yellow-700 font-bold">Benefit #{idx + 1}</span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        update({ items: data.items.filter((_, i) => i !== idx) });
-                      }}
-                      className="text-gray-400 hover:text-red-600 p-0.5"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                  <div className="grid grid-cols-3 gap-2">
-                    <input
-                      type="text"
-                      value={item.title}
-                      onChange={(e) => {
-                        const newItems = [...data.items];
-                        newItems[idx].title = e.target.value;
-                        update({ items: newItems });
-                      }}
-                      placeholder="Title"
-                      className="col-span-2 px-2.5 py-1.5 text-xs rounded border border-gray-200 font-bold text-slate-900"
-                    />
-                    <input
-                      type="text"
-                      value={item.stat || ''}
-                      onChange={(e) => {
-                        const newItems = [...data.items];
-                        newItems[idx].stat = e.target.value;
-                        update({ items: newItems });
-                      }}
-                      placeholder="Badge/Stat"
-                      className="col-span-1 px-2 py-1.5 text-xs rounded border border-gray-200 text-orange-700 font-bold"
-                    />
-                  </div>
-                  <textarea
-                    rows={2}
-                    value={item.description}
-                    onChange={(e) => {
-                      const newItems = [...data.items];
-                      newItems[idx].description = e.target.value;
-                      update({ items: newItems });
-                    }}
-                    placeholder="Benefit description..."
-                    className="w-full px-2.5 py-1.5 text-xs rounded border border-gray-200 text-gray-700"
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    // 8. TESTIMONIALS (Customer Reviews: Name + Avatar + Text + Location)
-    case 'testimonials': {
-      const data = config.testimonials;
-      const update = (patch: Partial<TestimonialsSectionConfig>) => {
-        setConfig((prev) => ({ ...prev, testimonials: { ...prev.testimonials, ...patch } }));
+      const update = (patch: Partial<GallerySectionConfig>) => {
+        setConfig((prev) => ({
+          ...prev,
+          gallery: { ...(prev.gallery || data), ...patch },
+        }));
       };
 
-      const handleAvatarUpload = async (idx: number, e: React.ChangeEvent<HTMLInputElement>) => {
+      const galleryPhotos = (data.items && data.items.length > 0)
+        ? data.items
+        : (shop.galleryImages && shop.galleryImages.length > 0 ? shop.galleryImages : [
+            'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800',
+            'https://images.unsplash.com/photo-1607344645866-009c320c5ab8?w=800',
+            'https://images.unsplash.com/photo-1555529669-e69e7aa0ba9a?w=800',
+            'https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=800',
+          ]);
+
+      const handleAddGalleryImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
         try {
           const base64 = await fileToBase64(file);
-          const newItems = [...data.items];
-          newItems[idx].avatarUrl = base64;
-          update({ items: newItems });
-          showToast('Customer photo upload ho gayi!');
-        } catch (err) {
-          showToast('Image upload failed. Kripya doosri image try karein.');
+          const currentList = data.items && data.items.length > 0 ? data.items : galleryPhotos;
+          const updatedPhotos = [...currentList, base64];
+          update({ items: updatedPhotos });
+          showToast('New photo added to gallery!');
+        } catch {
+          showToast('Photo upload failed. Kripya doosri image try karein.');
         }
+      };
+
+      const handleRemoveGalleryImage = (idx: number) => {
+        const currentList = data.items && data.items.length > 0 ? data.items : galleryPhotos;
+        const updatedPhotos = currentList.filter((_, i) => i !== idx);
+        update({ items: updatedPhotos });
+        showToast('Photo gallery se remove ho gayi.');
       };
 
       return (
@@ -2395,24 +2308,26 @@ function renderSectionEditor(
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                Reviews Heading
+                Gallery Heading *
               </label>
               <input
                 type="text"
                 value={data.title}
                 onChange={(e) => update({ title: e.target.value })}
-                className="w-full px-3 py-2 text-xs rounded-sm border border-gray-300 bg-white"
+                className="w-full px-3 py-2 text-xs rounded-sm border border-gray-300 bg-white font-medium"
+                placeholder="e.g. Store Photo Gallery"
               />
             </div>
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                Reviews Subtitle
+                Gallery Subtitle
               </label>
               <input
                 type="text"
                 value={data.subtitle}
                 onChange={(e) => update({ subtitle: e.target.value })}
                 className="w-full px-3 py-2 text-xs rounded-sm border border-gray-300 bg-white"
+                placeholder="e.g. Hamari dukaan aur taaza stock ka photo showcase"
               />
             </div>
           </div>
@@ -2420,147 +2335,44 @@ function renderSectionEditor(
           <div className="space-y-3 pt-2">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold uppercase tracking-wider text-slate-800">
-                Customer Reviews (Name + Avatar Photo + Text + Location) ({data.items.length})
+                Gallery Photos Showcase ({galleryPhotos.length})
               </span>
-              <button
-                type="button"
-                onClick={() => {
-                  const newItem = {
-                    id: `test_${Date.now()}`,
-                    name: 'Customer Name',
-                    location: shop.city || 'India',
-                    rating: 5,
-                    text: 'Bahut hi shandar service aur products! Highly recommended.',
-                    avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120',
-                  };
-                  update({ items: [...data.items, newItem] });
-                }}
-                className="px-2.5 py-1 bg-orange-50 hover:bg-orange-100 text-orange-800 text-[11px] font-bold uppercase rounded flex items-center gap-1 border border-orange-200 cursor-pointer"
-              >
-                <Plus className="w-3 h-3" />
-                <span>Add Review</span>
-              </button>
+              <label className="px-3 py-1.5 bg-teal-50 hover:bg-teal-100 text-teal-800 text-[11px] font-bold uppercase rounded flex items-center gap-1.5 border border-teal-200 cursor-pointer transition-colors shadow-2xs">
+                <Plus className="w-3.5 h-3.5" />
+                <span>Upload Photo</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleAddGalleryImage}
+                />
+              </label>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {data.items.map((item, idx) => (
-                <div key={item.id || idx} className="p-3.5 bg-white rounded-lg border border-gray-200 space-y-3 shadow-2xs">
-                  <div className="flex items-center justify-between gap-2 border-b border-gray-100 pb-2">
-                    <span className="font-mono text-[10px] text-rose-600 font-bold">Review #{idx + 1}</span>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {galleryPhotos.map((photoUrl, idx) => (
+                <div
+                  key={idx}
+                  className="relative aspect-square rounded-xl overflow-hidden border border-gray-200 group bg-gray-50 shadow-2xs"
+                >
+                  <img
+                    src={photoUrl}
+                    alt={`Gallery ${idx + 1}`}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                  />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <button
                       type="button"
-                      onClick={() => {
-                        update({ items: data.items.filter((_, i) => i !== idx) });
-                      }}
-                      className="text-gray-400 hover:text-red-600 p-0.5"
+                      onClick={() => handleRemoveGalleryImage(idx)}
+                      className="p-1.5 rounded-full bg-red-600 text-white hover:bg-red-700 transition-colors shadow-md cursor-pointer"
+                      title="Delete Photo"
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
-
-                  {/* Avatar Upload & Preview */}
-                  <div className="flex items-center gap-3 p-2.5 bg-slate-50 rounded-md border border-slate-100">
-                    <div className="relative shrink-0">
-                      {item.avatarUrl ? (
-                        <img
-                          src={item.avatarUrl}
-                          alt={item.name}
-                          className="w-12 h-12 rounded-full object-cover border border-gray-200 shadow-xs"
-                        />
-                      ) : (
-                        <div className="w-12 h-12 rounded-full bg-rose-100 text-rose-800 font-bold flex items-center justify-center text-sm border border-rose-200">
-                          {item.name ? item.name.charAt(0).toUpperCase() : 'C'}
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex-1 space-y-1.5 min-w-0">
-                      <label className="block text-[10px] font-bold uppercase text-slate-700">
-                        Customer Photo / Avatar
-                      </label>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <label className="px-2 py-1 bg-white hover:bg-gray-50 border border-gray-300 rounded text-[10px] font-bold text-slate-700 cursor-pointer flex items-center gap-1 shadow-2xs">
-                          <Upload className="w-3 h-3 text-orange-600" />
-                          <span>Upload Photo</span>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={(e) => handleAvatarUpload(idx, e)}
-                          />
-                        </label>
-                        {item.avatarUrl && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const newItems = [...data.items];
-                              newItems[idx].avatarUrl = '';
-                              update({ items: newItems });
-                            }}
-                            className="text-[10px] text-red-600 hover:underline"
-                          >
-                            Remove Photo
-                          </button>
-                        )}
-                      </div>
-                      <input
-                        type="text"
-                        value={item.avatarUrl || ''}
-                        onChange={(e) => {
-                          const newItems = [...data.items];
-                          newItems[idx].avatarUrl = e.target.value;
-                          update({ items: newItems });
-                        }}
-                        placeholder="Or paste image URL (https://...)"
-                        className="w-full px-2 py-1 text-[10px] rounded border border-gray-200 text-gray-600 bg-white"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="block text-[10px] font-bold text-gray-500">Customer Name *</label>
-                      <input
-                        type="text"
-                        value={item.name}
-                        onChange={(e) => {
-                          const newItems = [...data.items];
-                          newItems[idx].name = e.target.value;
-                          update({ items: newItems });
-                        }}
-                        placeholder="e.g. Ramesh Kumar"
-                        className="w-full px-2 py-1 text-xs rounded border border-gray-200 font-bold text-slate-900"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-bold text-gray-500">Location / City *</label>
-                      <input
-                        type="text"
-                        value={item.location}
-                        onChange={(e) => {
-                          const newItems = [...data.items];
-                          newItems[idx].location = e.target.value;
-                          update({ items: newItems });
-                        }}
-                        placeholder="e.g. Ludhiana, Sector 4"
-                        className="w-full px-2 py-1 text-xs rounded border border-gray-200 text-slate-800"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] font-bold text-gray-500">Review Text *</label>
-                    <textarea
-                      rows={2}
-                      value={item.text}
-                      onChange={(e) => {
-                        const newItems = [...data.items];
-                        newItems[idx].text = e.target.value;
-                        update({ items: newItems });
-                      }}
-                      placeholder="Customer feedback..."
-                      className="w-full px-2.5 py-1.5 text-xs rounded border border-gray-200 text-gray-700"
-                    />
-                  </div>
+                  <span className="absolute bottom-1.5 left-1.5 bg-black/60 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">
+                    Photo #{idx + 1}
+                  </span>
                 </div>
               ))}
             </div>
@@ -3617,7 +3429,145 @@ function renderSectionEditor(
       );
     }
 
-    // 16. FOOTER SECTION
+    // 15. SOCIAL MEDIA SECTION
+    case 'socialMedia': {
+      const data: SocialMediaSectionConfig = config.socialMedia || {
+        enabled: true,
+        title: 'Connect With Us On Social Media',
+        subtitle: 'Follow our official channels for latest updates, new launches & deals',
+        instagram: shop.socialLinks?.instagram || '',
+        facebook: shop.socialLinks?.facebook || '',
+        youtube: shop.socialLinks?.youtube || '',
+        whatsapp: shop.whatsapp || shop.phone || '',
+        twitter: '',
+        linkedin: '',
+        telegram: '',
+      };
+      const update = (patch: Partial<SocialMediaSectionConfig>) => {
+        setConfig((prev) => ({
+          ...prev,
+          socialMedia: { ...(prev.socialMedia || data), ...patch },
+        }));
+      };
+
+      return (
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                Section Heading *
+              </label>
+              <input
+                type="text"
+                value={data.title}
+                onChange={(e) => update({ title: e.target.value })}
+                className="w-full px-3 py-2 text-xs rounded-sm border border-gray-300 bg-white font-medium"
+                placeholder="e.g. Follow Us On Social Media"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                Section Subtitle
+              </label>
+              <input
+                type="text"
+                value={data.subtitle}
+                onChange={(e) => update({ subtitle: e.target.value })}
+                className="w-full px-3 py-2 text-xs rounded-sm border border-gray-300 bg-white"
+                placeholder="e.g. Latest updates aur offers paane ke liye follow karein"
+              />
+            </div>
+          </div>
+
+          <div className="pt-2">
+            <span className="block text-xs font-bold uppercase tracking-wider text-slate-800 mb-3">
+              Social Profiles & Channels
+            </span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                  Instagram Profile URL
+                </label>
+                <input
+                  type="text"
+                  value={data.instagram || ''}
+                  onChange={(e) => update({ instagram: e.target.value })}
+                  placeholder="https://instagram.com/yourhandle"
+                  className="w-full px-3 py-2 text-xs rounded-sm border border-gray-300 bg-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                  Facebook Page URL
+                </label>
+                <input
+                  type="text"
+                  value={data.facebook || ''}
+                  onChange={(e) => update({ facebook: e.target.value })}
+                  placeholder="https://facebook.com/yourpage"
+                  className="w-full px-3 py-2 text-xs rounded-sm border border-gray-300 bg-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                  YouTube Channel URL
+                </label>
+                <input
+                  type="text"
+                  value={data.youtube || ''}
+                  onChange={(e) => update({ youtube: e.target.value })}
+                  placeholder="https://youtube.com/@yourchannel"
+                  className="w-full px-3 py-2 text-xs rounded-sm border border-gray-300 bg-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                  WhatsApp Number (with country code)
+                </label>
+                <input
+                  type="text"
+                  value={data.whatsapp || ''}
+                  onChange={(e) => update({ whatsapp: e.target.value })}
+                  placeholder="+91 9876543210"
+                  className="w-full px-3 py-2 text-xs rounded-sm border border-gray-300 bg-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                  Twitter / X Profile URL
+                </label>
+                <input
+                  type="text"
+                  value={data.twitter || ''}
+                  onChange={(e) => update({ twitter: e.target.value })}
+                  placeholder="https://x.com/yourhandle"
+                  className="w-full px-3 py-2 text-xs rounded-sm border border-gray-300 bg-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                  LinkedIn Profile / Company URL
+                </label>
+                <input
+                  type="text"
+                  value={data.linkedin || ''}
+                  onChange={(e) => update({ linkedin: e.target.value })}
+                  placeholder="https://linkedin.com/in/yourprofile"
+                  className="w-full px-3 py-2 text-xs rounded-sm border border-gray-300 bg-white"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // 17. FOOTER SECTION
     case 'footer': {
       const data = config.footer;
       const update = (patch: Partial<FooterSectionConfig>) => {

@@ -484,7 +484,7 @@ export const StoreItemsCarouselSection: React.FC<StoreItemsCarouselSectionProps>
           </div>
 
           <h2 className="text-base sm:text-xl md:text-2xl font-black uppercase tracking-tight text-slate-900 font-['Outfit',sans-serif] mt-1 truncate">
-            {title} <span className="text-gray-400 text-xs sm:text-sm md:text-base font-bold">({filteredItems.length})</span>
+            {title}
           </h2>
 
           {subtitle && (
@@ -494,37 +494,11 @@ export const StoreItemsCarouselSection: React.FC<StoreItemsCarouselSectionProps>
           )}
         </div>
 
-        {/* Right: Search Bar */}
-        <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
-          <div className="relative w-full sm:w-64 md:w-80">
-            <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-            <input
-              type="text"
-              placeholder={
-                searchPlaceholder ||
-                (isCourse
-                  ? 'Search courses...'
-                  : isService
-                  ? 'Search services...'
-                  : 'Search products...')
-              }
-              value={currentSearch}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              className="w-full pl-9 pr-8 py-2 text-xs rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-gray-50/90 hover:bg-gray-50 transition-all placeholder:text-gray-400 font-medium"
-            />
-            {currentSearch && (
-              <button
-                type="button"
-                onClick={() => handleSearchChange('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-slate-700 cursor-pointer p-0.5 rounded-full hover:bg-gray-200 transition-colors"
-                title="Clear search"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
+        {extraHeaderAction && (
+          <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
+            {extraHeaderAction}
           </div>
-          {extraHeaderAction}
-        </div>
+        )}
       </div>
 
       {/* Optional Toolbar (if passed) */}
@@ -537,9 +511,6 @@ export const StoreItemsCarouselSection: React.FC<StoreItemsCarouselSectionProps>
           selectedCategory={activeCategory}
           onSelectCategory={handleSelectCategory}
           accentColor={isCourse ? 'indigo' : isService ? 'blue' : 'orange'}
-          allLabel={isCourse ? 'All Courses' : isService ? 'All Services' : 'All Products'}
-          totalCount={items.length}
-          sectionTitle={badgeText || title}
         />
       )}
 
