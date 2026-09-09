@@ -42,6 +42,7 @@ import {
   AboutSectionConfig,
   FeaturesSectionConfig,
   ServicesSectionConfig,
+  CoursesSectionConfig,
   HowItWorksSectionConfig,
   BenefitsSectionConfig,
   TestimonialsSectionConfig,
@@ -452,6 +453,62 @@ export const ServicesSectionRenderer: React.FC<{
       onRemoveFromCart={onRemoveFromCart || (() => {})}
       onSelectItem={(serviceProd) => {
         if (onSelectService) onSelectService(serviceProd);
+      }}
+    />
+  );
+};
+
+// ==========================================
+// COURSES SECTION (Rendered from Store's Courses Catalogue)
+// ==========================================
+export const CoursesSectionRenderer: React.FC<{
+  config?: CoursesSectionConfig;
+  shop: Shop;
+  catalogCourses?: ProductItem[];
+  cart?: CartItem[];
+  onAddToCart?: (product: ProductItem) => void;
+  onRemoveFromCart?: (productId: string) => void;
+  onSelectCourse?: (courseProduct: ProductItem) => void;
+}> = ({
+  config,
+  shop,
+  catalogCourses = [],
+  cart = [],
+  onAddToCart,
+  onRemoveFromCart,
+  onSelectCourse,
+}) => {
+  // If explicitly disabled in config, don't show
+  if (config && !config.enabled) return null;
+
+  // Filter unique verified courses created by merchant
+  const seenTitles = new Set<string>();
+  const uniqueCourses: ProductItem[] = [];
+  catalogCourses.forEach((p) => {
+    const key = p.name.trim().toLowerCase();
+    if (!seenTitles.has(key)) {
+      seenTitles.add(key);
+      uniqueCourses.push(p);
+    }
+  });
+
+  if (uniqueCourses.length === 0) return null;
+
+  return (
+    <StoreItemsCarouselSection
+      id="courses"
+      title={config?.title || 'Our Courses & Training'}
+      subtitle={config?.subtitle || 'Skill-up karein hamare practical batches aur certified courses ke sath.'}
+      badgeText={config?.badge || 'Courses & Training 🎓'}
+      isCourse={true}
+      itemType="COURSE"
+      items={uniqueCourses}
+      shop={shop}
+      cart={cart}
+      onAddToCart={onAddToCart || (() => {})}
+      onRemoveFromCart={onRemoveFromCart || (() => {})}
+      onSelectItem={(courseProd) => {
+        if (onSelectCourse) onSelectCourse(courseProd);
       }}
     />
   );

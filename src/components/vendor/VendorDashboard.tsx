@@ -33,6 +33,7 @@ import {
   X,
   Check,
   Calendar,
+  GraduationCap,
   ShieldCheck,
   Award,
   Zap,
@@ -147,9 +148,10 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
     }
   }, [shop]);
 
-  // Split products and services from shop
-  const catalogProducts = (currentShop.products || []).filter((p) => p.type !== 'SERVICE');
+  // Split products, services, and courses from shop
+  const catalogProducts = (currentShop.products || []).filter((p) => p.type !== 'SERVICE' && p.type !== 'COURSE');
   const catalogServices = (currentShop.products || []).filter((p) => p.type === 'SERVICE');
+  const catalogCourses = (currentShop.products || []).filter((p) => p.type === 'COURSE');
 
   // Dedicated Product addition state
   const [newProductName, setNewProductName] = useState('');
@@ -168,6 +170,16 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
   const [newServiceDuration, setNewServiceDuration] = useState('Per Visit');
   const [newServiceImage, setNewServiceImage] = useState<string>('https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=500');
   const [newServiceHidePrice, setNewServiceHidePrice] = useState(false);
+
+  // Dedicated Course addition state
+  const [newCourseName, setNewCourseName] = useState('');
+  const [newCoursePrice, setNewCoursePrice] = useState<number | string>(999);
+  const [newCourseOriginalPrice, setNewCourseOriginalPrice] = useState<number | string>(1999);
+  const [newCourseDesc, setNewCourseDesc] = useState('');
+  const [newCourseDuration, setNewCourseDuration] = useState('30 Days');
+  const [newCourseCategory, setNewCourseCategory] = useState('Skill Training');
+  const [newCourseImage, setNewCourseImage] = useState<string>('https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=500');
+  const [newCourseHidePrice, setNewCourseHidePrice] = useState(false);
 
   // Product Editing state
   const [editingProduct, setEditingProduct] = useState<ProductItem | null>(null);
@@ -195,8 +207,8 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
     return inq.status === inquiryFilter;
   });
 
-  // Main Dashboard View Tabs: General Settings vs 15 Website Sections vs Products vs Services
-  const [activeMainTab, setActiveMainTab] = useState<'SETTINGS' | 'SECTIONS' | 'PRODUCTS' | 'SERVICES'>('SETTINGS');
+  // Main Dashboard View Tabs: General Settings vs 16 Website Sections vs Products vs Services vs Courses
+  const [activeMainTab, setActiveMainTab] = useState<'SETTINGS' | 'SECTIONS' | 'PRODUCTS' | 'SERVICES' | 'COURSES'>('SETTINGS');
 
   // Dukaan QR Standee Modal
   const [showStandeeModal, setShowStandeeModal] = useState(false);
@@ -226,10 +238,13 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
       case 'services':
       case 'section_services':
         return { title: 'Services & Offerings', category: 'CATALOGUE', desc: 'Professional services, consultation fees & bookings' };
+      case 'courses':
+      case 'section_courses':
+        return { title: 'Courses & Training Catalogue', category: 'CATALOGUE', desc: 'Structured courses, coaching batches, syllabus & certification offerings' };
       case 'gallery':
         return { title: 'Banners, Media & Photo Gallery', category: 'WEBSITE', desc: 'Store hero banner, photo gallery & promotional posters' };
       case 'sections':
-        return { title: '16 Modular Website Sections Suite', category: 'WEBSITE', desc: 'Turn sections ON/OFF, reorder layout & customize titles' };
+        return { title: '17 Modular Website Sections Suite', category: 'WEBSITE', desc: 'Turn sections ON/OFF, reorder layout & customize titles' };
       case 'section_hero':
         return { title: 'Hero Banner Section', category: 'WEBSITE SECTIONS', desc: 'Hero heading, subtext, CTA buttons, and background banner' };
       case 'section_about':
@@ -333,6 +348,8 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
       setActiveMainTab('PRODUCTS');
     } else if (navKey === 'services') {
       setActiveMainTab('SERVICES');
+    } else if (navKey === 'courses') {
+      setActiveMainTab('COURSES');
     } else if (navKey === 'dashboard') {
       setActiveMainTab('OVERVIEW');
     } else {
@@ -469,6 +486,40 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
     showToast('Nayi Service catalogue mein add ho gayi! 🛠️');
   };
 
+  const handleAddCourse = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCourseName.trim()) return;
+
+    const newCrs: ProductItem = {
+      id: `crs_${Date.now()}`,
+      name: newCourseName.trim(),
+      type: 'COURSE',
+      price: Number(newCoursePrice) || 0,
+      originalPrice: newCourseOriginalPrice ? Number(newCourseOriginalPrice) : undefined,
+      description: newCourseDesc.trim() || 'Structured curriculum with batch enrollment, doubt sessions & certificate.',
+      imageUrl: newCourseImage || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=500',
+      inStock: true,
+      unit: newCourseDuration.trim() || '30 Days',
+      category: newCourseCategory.trim() || 'Skill Training',
+      hidePrice: newCourseHidePrice,
+    };
+
+    const updated = {
+      ...currentShop,
+      products: [newCrs, ...currentShop.products],
+    };
+    setCurrentShop(updated);
+    handleSaveAll(updated);
+
+    // Reset inputs
+    setNewCourseName('');
+    setNewCoursePrice(999);
+    setNewCourseOriginalPrice(1999);
+    setNewCourseDesc('');
+    setNewCourseHidePrice(false);
+    showToast('Naya Course catalogue mein add ho gaya! 🎓');
+  };
+
   const handleDeleteProduct = (prodId: string) => {
     const updated = {
       ...currentShop,
@@ -520,7 +571,7 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
     );
   };
 
-  const handleBulkToggleProductPrices = (type: 'ALL' | 'PRODUCT' | 'SERVICE', hide: boolean) => {
+  const handleBulkToggleProductPrices = (type: 'ALL' | 'PRODUCT' | 'SERVICE' | 'COURSE', hide: boolean) => {
     let updatedProducts = [...currentShop.products];
     if (type === 'ALL') {
       updatedProducts = updatedProducts.map((p) => ({ ...p, hidePrice: hide }));
@@ -545,9 +596,11 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
 
     const typeLabel =
       type === 'ALL'
-        ? 'Sabhi Products aur Services'
+        ? 'Sabhi Products, Services aur Courses'
         : type === 'PRODUCT'
         ? 'Sabhi Physical Products'
+        : type === 'COURSE'
+        ? 'Sabhi Courses & Training'
         : 'Sabhi Services';
 
     showToast(
@@ -597,7 +650,7 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
     setCurrentShop(updated);
     handleSaveAll(updated);
     setEditingProduct(null);
-    showToast(`${editProductType === 'PRODUCT' ? 'Product' : 'Service'} ke changes update ho gaye! ✅`);
+    showToast(`${editProductType === 'COURSE' ? 'Course' : editProductType === 'PRODUCT' ? 'Product' : 'Service'} ke changes update ho gaye! ✅`);
   };
 
   const handleCancelEditProduct = () => {
@@ -859,8 +912,9 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
           { id: 'profile', label: 'Profile', icon: User },
           { id: 'products', label: 'Products', icon: Package, badge: catalogProducts.length },
           { id: 'services', label: 'Services', icon: Wrench, badge: catalogServices.length },
+          { id: 'courses', label: 'Courses', icon: GraduationCap, badge: catalogCourses.length },
           { id: 'gallery', label: 'Gallery', icon: ImageIcon },
-          { id: 'sections', label: '16 Sections', icon: Layout },
+          { id: 'sections', label: '17 Sections', icon: Layout },
           { id: 'themes', label: 'Themes (10)', icon: Palette, badge: '10' },
           { id: 'standee', label: 'QR Standee', icon: QrCode },
           { id: 'orders', label: 'Orders', icon: MessageSquare, badge: filteredInquiries.filter(i => i.status === 'UNREAD').length || undefined },
@@ -1394,7 +1448,7 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
           <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80">
             <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Total Products</div>
             <div className="text-xl sm:text-2xl font-black text-slate-900 mt-1 font-['Outfit',sans-serif]">
@@ -1412,6 +1466,14 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
           </div>
 
           <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Active Courses</div>
+            <div className="text-xl sm:text-2xl font-black text-indigo-700 mt-1 font-['Outfit',sans-serif]">
+              {catalogCourses.length}
+            </div>
+            <div className="text-[11px] text-indigo-600 font-semibold mt-0.5">Courses & Training</div>
+          </div>
+
+          <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80">
             <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">WhatsApp Orders</div>
             <div className="text-xl sm:text-2xl font-black text-emerald-700 mt-1 font-['Outfit',sans-serif]">
               {inquiries.length}
@@ -1421,7 +1483,7 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
             </div>
           </div>
 
-          <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80">
+          <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 col-span-2 sm:col-span-1">
             <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Plan Validity</div>
             <div className="text-base sm:text-lg font-black text-slate-900 mt-1 truncate font-['Outfit',sans-serif]">
               {currentShop.status === 'PUBLISHED' ? 'Verified Online' : 'Active'}
@@ -1433,7 +1495,7 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
         </div>
       </div>
 
-      {/* 9 TOUCH-FRIENDLY QUICK ACTION CARDS (Instant visual navigation on mobile & desktop) */}
+      {/* TOUCH-FRIENDLY QUICK ACTION CARDS (Instant visual navigation on mobile & desktop) */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <h3 className="text-xs font-black uppercase tracking-wider text-slate-500">
@@ -1509,6 +1571,30 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
               </h4>
               <p className="text-[11px] text-gray-500 mt-0.5 line-clamp-1">
                 Service catalogue, pricing & duration
+              </p>
+            </div>
+          </button>
+
+          {/* Card 4: Courses & Training */}
+          <button
+            type="button"
+            onClick={() => handleSelectNav('courses')}
+            className="p-4 rounded-2xl bg-white border border-gray-200 hover:border-indigo-500 hover:shadow-md transition-all text-left group cursor-pointer flex flex-col justify-between"
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div className="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <GraduationCap className="w-5 h-5" />
+              </div>
+              <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
+                {catalogCourses.length} Courses
+              </span>
+            </div>
+            <div>
+              <h4 className="text-xs sm:text-sm font-black text-slate-900 font-['Outfit',sans-serif] uppercase">
+                Courses & Training
+              </h4>
+              <p className="text-[11px] text-gray-500 mt-0.5 line-clamp-1">
+                Batches, fees, syllabus & duration
               </p>
             </div>
           </button>
@@ -2128,7 +2214,7 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
         </div>
       )}
 
-      {activeMainTab === 'SERVICES' && (
+      {(activeNav === 'services' || activeMainTab === 'SERVICES') && (
         /* DEDICATED SERVICES CATALOGUE TAB VIEW */
         <div className="space-y-6">
           <div className="bg-gradient-to-r from-slate-900 via-purple-950 to-slate-900 text-white rounded-2xl p-6 border border-purple-800 shadow-md">
@@ -2484,6 +2570,364 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
                           onClick={() => handleDeleteProduct(item.id)}
                           className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-sm border border-gray-200"
                           title="Delete Service"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {(activeNav === 'courses' || activeMainTab === 'COURSES') && (
+        /* DEDICATED COURSES CATALOGUE TAB VIEW */
+        <div className="space-y-6">
+          <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-2xl p-6 border border-indigo-800 shadow-md">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <div className="inline-flex items-center gap-2 text-indigo-300 text-xs font-black uppercase tracking-wider mb-1">
+                  <GraduationCap className="w-4 h-4" />
+                  <span>Courses & Training Programs</span>
+                </div>
+                <h2 className="text-xl sm:text-2xl font-black tracking-tight font-['Outfit',sans-serif]">
+                  Store Courses & Batches ({catalogCourses.length} Courses)
+                </h2>
+                <p className="text-xs text-indigo-200 mt-1 max-w-2xl leading-relaxed">
+                  Apne store ke sabhi structured courses, coaching classes, vocational training aur certificate programs manage karein. Yeh courses aapki website ke <strong>Dedicated Courses Section (#6)</strong> me direct WhatsApp batch inquiry aur syllabus details ke sath dikhaye jaate hain.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => onNavigateToShop(currentShop.shopId)}
+                className="px-4 py-2.5 rounded-sm bg-indigo-600 hover:bg-indigo-700 text-white font-bold uppercase tracking-wider text-xs flex items-center gap-2 transition-all shadow-sm shrink-0 self-start sm:self-center"
+              >
+                <Eye className="w-4 h-4" />
+                <span>View Courses on Live Shop</span>
+              </button>
+            </div>
+
+            {/* Quick Stats */}
+            <div className="grid grid-cols-3 gap-3 mt-6 pt-5 border-t border-indigo-800/60">
+              <div className="bg-indigo-900/40 rounded-xl p-3 border border-indigo-800/50">
+                <div className="text-[10px] text-indigo-300 font-bold uppercase">Total Courses</div>
+                <div className="text-xl font-black text-white">{catalogCourses.length}</div>
+              </div>
+              <div className="bg-indigo-900/40 rounded-xl p-3 border border-indigo-800/50">
+                <div className="text-[10px] text-emerald-400 font-bold uppercase">Seats Open / Enrolling</div>
+                <div className="text-xl font-black text-emerald-400">
+                  {catalogCourses.filter((c) => c.inStock !== false).length}
+                </div>
+              </div>
+              <div className="bg-indigo-900/40 rounded-xl p-3 border border-indigo-800/50">
+                <div className="text-[10px] text-amber-300 font-bold uppercase">Batches Full / Closed</div>
+                <div className="text-xl font-black text-amber-300">
+                  {catalogCourses.filter((c) => c.inStock === false).length}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Add Course Form */}
+          <form onSubmit={handleAddCourse} className="p-5 bg-white rounded-2xl border border-gray-200 shadow-xs space-y-4">
+            <div className="font-black text-sm text-slate-900 uppercase tracking-wider flex items-center gap-2 border-b border-gray-100 pb-3">
+              <Plus className="w-4 h-4 text-indigo-600" />
+              <span>Add New Course / Training Program (Naya Course Add Karein)</span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="sm:col-span-2">
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-700 mb-1">
+                  Course Title / Program Name *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Master Digital Marketing & Ads, Full Stack Web Dev, Spoken English"
+                  value={newCourseName}
+                  onChange={(e) => setNewCourseName(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-sm border border-gray-300 text-xs focus:ring-2 focus:ring-indigo-500 bg-gray-50/50"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-700 mb-1">
+                  Duration / Schedule (e.g. 30 Days, 3 Months, Weekend Batch)
+                </label>
+                <input
+                  type="text"
+                  placeholder="30 Days, 3 Months, Weekend Batches, 60 Hours"
+                  value={newCourseDuration}
+                  onChange={(e) => setNewCourseDuration(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-sm border border-gray-300 text-xs focus:ring-2 focus:ring-indigo-500 bg-gray-50/50"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-700 mb-1">
+                  Course Fee / Tuition (₹) *
+                </label>
+                <input
+                  type="number"
+                  required
+                  min="0"
+                  value={newCoursePrice}
+                  onChange={(e) => setNewCoursePrice(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-sm border border-gray-300 text-xs focus:ring-2 focus:ring-indigo-500 bg-gray-50/50 font-bold text-slate-900"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-700 mb-1">
+                  Regular Fee / MRP (₹, optional strike-through)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  placeholder="e.g. 1999"
+                  value={newCourseOriginalPrice}
+                  onChange={(e) => setNewCourseOriginalPrice(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-sm border border-gray-300 text-xs focus:ring-2 focus:ring-indigo-500 bg-gray-50/50"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-700 mb-1">
+                  Category / Subject
+                </label>
+                <input
+                  type="text"
+                  placeholder="Skill Training, Computer & IT, Competitive Exam"
+                  value={newCourseCategory}
+                  onChange={(e) => setNewCourseCategory(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-sm border border-gray-300 text-xs focus:ring-2 focus:ring-indigo-500 bg-gray-50/50"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-700 mb-1">
+                Course Thumbnail Image URL
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="url"
+                  placeholder="https://images.unsplash.com/..."
+                  value={newCourseImage}
+                  onChange={(e) => setNewCourseImage(e.target.value)}
+                  className="flex-1 px-3.5 py-2 rounded-sm border border-gray-300 text-xs focus:ring-2 focus:ring-indigo-500 bg-gray-50/50"
+                />
+                <label className="px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-sm text-xs font-bold flex items-center gap-1.5 cursor-pointer shrink-0">
+                  <Upload className="w-3.5 h-3.5" />
+                  <span>Upload</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                          setNewCourseImage(reader.result as string);
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                  />
+                </label>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-700 mb-1">
+                Course Curriculum / Description (Syllabus summary, eligibility & benefits)
+              </label>
+              <textarea
+                rows={2}
+                placeholder="Comprehensive training with live practicals, doubt clearing sessions, notes PDF and recognized completion certificate."
+                value={newCourseDesc}
+                onChange={(e) => setNewCourseDesc(e.target.value)}
+                className="w-full px-3.5 py-2 rounded-sm border border-gray-300 text-xs focus:ring-2 focus:ring-indigo-500 bg-gray-50/50"
+              />
+            </div>
+
+            <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-gray-100">
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={newCourseHidePrice}
+                  onChange={(e) => setNewCourseHidePrice(e.target.checked)}
+                  className="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
+                />
+                <span className="text-xs text-slate-700 font-semibold">
+                  Hide Fee on Website (Display <strong>"Price / Fees on Request"</strong>)
+                </span>
+              </label>
+
+              <button
+                type="submit"
+                className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs uppercase tracking-wider rounded-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer shrink-0"
+              >
+                <Plus className="w-4 h-4" />
+                <span>+ Add Course to Catalogue</span>
+              </button>
+            </div>
+          </form>
+
+          {/* Quick Visibility & Bulk Toggle Bar */}
+          <div className="bg-white rounded-xl p-4 border border-gray-200 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-slate-700">Course Fees Visibility:</span>
+              <button
+                type="button"
+                onClick={() => handleBulkToggleProductPrices('COURSE', true)}
+                className="px-3 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded text-xs font-bold flex items-center gap-1 cursor-pointer transition-colors"
+              >
+                <EyeOff className="w-3.5 h-3.5 text-amber-700" />
+                <span>Hide All Course Fees</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleBulkToggleProductPrices('COURSE', false)}
+                className="px-3 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded text-xs font-bold flex items-center gap-1 cursor-pointer transition-colors"
+              >
+                <Eye className="w-3.5 h-3.5 text-emerald-700" />
+                <span>Show All Course Fees</span>
+              </button>
+            </div>
+
+            <div className="text-xs text-gray-500">
+              Showing <strong>{catalogCourses.length}</strong> courses
+            </div>
+          </div>
+
+          {/* Courses List - Product & Service Card Style */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-black uppercase tracking-wider text-slate-500">
+                All Listed Courses ({catalogCourses.length})
+              </h3>
+            </div>
+
+            {catalogCourses.length === 0 ? (
+              <div className="p-8 text-center bg-white rounded-2xl border border-dashed border-gray-300 space-y-3">
+                <GraduationCap className="w-10 h-10 text-gray-400 mx-auto" />
+                <div className="text-sm font-bold text-slate-800">Abhi koi course listed nahi hai</div>
+                <p className="text-xs text-gray-500 max-w-sm mx-auto">
+                  Upar diye gaye form se apna pehla course ya coaching program add karein taaki students online enroll kar sakein.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {catalogCourses.map((item) => (
+                  <div
+                    key={item.id}
+                    className="bg-white rounded-2xl border border-gray-200 p-4 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between group"
+                  >
+                    <div>
+                      <div className="relative aspect-video rounded-xl bg-gray-100 overflow-hidden mb-3">
+                        <img
+                          src={item.imageUrl}
+                          alt={item.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                        <span className={`absolute top-2 right-2 px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider ${
+                          item.inStock !== false ? 'bg-indigo-600 text-white shadow-xs' : 'bg-red-600 text-white shadow-xs'
+                        }`}>
+                          {item.inStock !== false ? 'Seats Open' : 'Batch Full'}
+                        </span>
+                        {item.unit && (
+                          <span className="absolute bottom-2 left-2 px-2 py-0.5 rounded bg-slate-900/80 text-white text-[10px] font-bold">
+                            {item.unit}
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="flex items-center justify-between gap-1 mb-1">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600">
+                          {item.category || 'Course'}
+                        </span>
+                        <span className="text-[10px] text-gray-400">ID: {item.id.slice(-4)}</span>
+                      </div>
+
+                      <h4 className="font-bold text-sm text-slate-900 line-clamp-1">{item.name}</h4>
+                      <p className="text-xs text-gray-500 line-clamp-2 mt-1">{item.description}</p>
+
+                      <div className="flex items-baseline gap-2 mt-3 flex-wrap">
+                        {item.hidePrice || currentShop.hideAllPrices ? (
+                          <span className="text-xs font-bold text-amber-800 bg-amber-100/90 border border-amber-300 px-2 py-0.5 rounded flex items-center gap-1">
+                            <EyeOff className="w-3 h-3 text-amber-700" />
+                            <span>Fees Hidden ({formatINR(item.price)})</span>
+                          </span>
+                        ) : (
+                          <>
+                            <span className="text-base font-black text-indigo-700 font-['Outfit',sans-serif]">
+                              {formatINR(item.price)}
+                            </span>
+                            {item.originalPrice && (
+                              <span className="text-xs line-through text-gray-400 font-semibold">
+                                {formatINR(item.originalPrice)}
+                              </span>
+                            )}
+                            {item.originalPrice && item.originalPrice > item.price && (
+                              <span className="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-1.5 py-0.2 rounded">
+                                Save {formatINR(item.originalPrice - item.price)}
+                              </span>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between gap-1.5 flex-wrap">
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => handleToggleProductStock(item.id)}
+                          className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-sm border ${
+                            item.inStock !== false
+                              ? 'bg-indigo-50 text-indigo-800 border-indigo-200 hover:bg-indigo-100'
+                              : 'bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-200'
+                          }`}
+                        >
+                          {item.inStock !== false ? 'Seats Open' : 'Closed'}
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleToggleProductHidePrice(item.id)}
+                          className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-sm border flex items-center gap-1 ${
+                            item.hidePrice
+                              ? 'bg-amber-100 text-amber-900 border-amber-300 hover:bg-amber-200'
+                              : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
+                          }`}
+                          title={item.hidePrice ? 'Fee hidden. Click to show on website.' : 'Click to hide fee (Fees on Request)'}
+                        >
+                          {item.hidePrice ? <EyeOff className="w-3 h-3 text-amber-700" /> : <Eye className="w-3 h-3 text-gray-500" />}
+                          <span>{item.hidePrice ? 'Hidden' : 'Hide'}</span>
+                        </button>
+                      </div>
+
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => handleStartEditProduct(item)}
+                          className="p-1.5 text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-sm border border-gray-200 cursor-pointer"
+                          title="Edit Course"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteProduct(item.id)}
+                          className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-sm border border-gray-200 cursor-pointer"
+                          title="Delete Course"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -4616,7 +5060,7 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
               <div className="flex items-center gap-2">
                 <Edit2 className="w-4 h-4" />
                 <h3 className="text-sm font-black uppercase tracking-wider">
-                  Edit {editProductType === 'PRODUCT' ? 'Product' : 'Service'} Details
+                  Edit {editProductType === 'COURSE' ? 'Course' : editProductType === 'PRODUCT' ? 'Product' : 'Service'} Details
                 </h3>
               </div>
               <button
@@ -4632,7 +5076,7 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="sm:col-span-2">
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                    Item / Service Name *
+                    Item / Service / Course Name *
                   </label>
                   <input
                     type="text"
@@ -4654,6 +5098,7 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
                   >
                     <option value="PRODUCT">Product (Item)</option>
                     <option value="SERVICE">Service (Booking)</option>
+                    <option value="COURSE">Course (Training/Batch)</option>
                   </select>
                 </div>
               </div>

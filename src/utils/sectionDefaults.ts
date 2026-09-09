@@ -106,6 +106,14 @@ export function getDefaultSectionsConfig(shop: Partial<Shop> = {}): ShopSections
       items: [],
     },
 
+    // Courses Section (Managed via Store Courses Catalogue)
+    courses: {
+      enabled: true,
+      title: 'Our Featured Courses & Training',
+      subtitle: 'Skill-up karein hamare structured courses aur practical batches ke sath',
+      badge: 'Certified Courses & Training 🎓',
+    },
+
     // 5. Products Section
     products: {
       enabled: true,

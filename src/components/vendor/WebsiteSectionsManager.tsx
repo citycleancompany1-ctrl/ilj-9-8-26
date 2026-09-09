@@ -38,7 +38,8 @@ import {
   Video,
   Zap,
   Palette,
-  X
+  X,
+  GraduationCap
 } from 'lucide-react';
 import {
   Shop,
@@ -49,6 +50,7 @@ import {
   AboutSectionConfig,
   FeaturesSectionConfig,
   ServicesSectionConfig,
+  CoursesSectionConfig,
   ProductsSectionConfig,
   HowItWorksSectionConfig,
   BenefitsSectionConfig,
@@ -128,11 +130,13 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
     setItemName('');
     setItemPrice('');
     setItemOriginalPrice('');
-    setItemUnit(type === 'PRODUCT' ? '1 pc' : 'Per Visit');
-    setItemCategory(type === 'PRODUCT' ? 'General' : 'Service');
+    setItemUnit(type === 'COURSE' ? '30 Days' : type === 'PRODUCT' ? '1 pc' : 'Per Visit');
+    setItemCategory(type === 'COURSE' ? 'Training & Course' : type === 'PRODUCT' ? 'General' : 'Service');
     setItemDescription('');
     setItemImageUrl(
-      type === 'PRODUCT'
+      type === 'COURSE'
+        ? 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=500&auto=format&fit=crop&q=80'
+        : type === 'PRODUCT'
         ? 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&auto=format&fit=crop&q=80'
         : 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=500&auto=format&fit=crop&q=80'
     );
@@ -147,8 +151,8 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
     setItemName(item.name);
     setItemPrice(item.price);
     setItemOriginalPrice(item.originalPrice || '');
-    setItemUnit(item.unit || (item.type === 'PRODUCT' ? '1 pc' : 'Per Visit'));
-    setItemCategory(item.category || (item.type === 'PRODUCT' ? 'General' : 'Service'));
+    setItemUnit(item.unit || (item.type === 'COURSE' ? '30 Days' : item.type === 'PRODUCT' ? '1 pc' : 'Per Visit'));
+    setItemCategory(item.category || (item.type === 'COURSE' ? 'Training & Course' : item.type === 'PRODUCT' ? 'General' : 'Service'));
     setItemDescription(item.description || '');
     setItemImageUrl(item.imageUrl || '');
     setItemInStock(item.inStock !== false);
@@ -186,7 +190,7 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
             }
           : p
       );
-      showToast(`${itemModalType === 'PRODUCT' ? 'Product' : 'Service'} successfully update ho gaya!`);
+      showToast(`${itemModalType === 'COURSE' ? 'Course' : itemModalType === 'PRODUCT' ? 'Product' : 'Service'} successfully update ho gaya!`);
     } else {
       const newItem: ProductItem = {
         id: `p_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
@@ -194,11 +198,13 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
         type: itemModalType,
         price: priceNum,
         originalPrice: origPriceNum,
-        unit: itemUnit.trim() || (itemModalType === 'PRODUCT' ? '1 pc' : 'Per Visit'),
-        category: itemCategory.trim() || (itemModalType === 'PRODUCT' ? 'General' : 'Service'),
+        unit: itemUnit.trim() || (itemModalType === 'COURSE' ? '30 Days' : itemModalType === 'PRODUCT' ? '1 pc' : 'Per Visit'),
+        category: itemCategory.trim() || (itemModalType === 'COURSE' ? 'Training & Course' : itemModalType === 'PRODUCT' ? 'General' : 'Service'),
         description: itemDescription.trim(),
         imageUrl: itemImageUrl.trim() || (
-          itemModalType === 'PRODUCT'
+          itemModalType === 'COURSE'
+            ? 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=500&auto=format&fit=crop&q=80'
+            : itemModalType === 'PRODUCT'
             ? 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&auto=format&fit=crop&q=80'
             : 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=500&auto=format&fit=crop&q=80'
         ),
@@ -206,7 +212,7 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
         hidePrice: itemHidePrice,
       };
       updatedProducts = [...(shop.products || []), newItem];
-      showToast(`Naya ${itemModalType === 'PRODUCT' ? 'Product' : 'Service'} successfully add ho gaya!`);
+      showToast(`Naya ${itemModalType === 'COURSE' ? 'Course' : itemModalType === 'PRODUCT' ? 'Product' : 'Service'} successfully add ho gaya!`);
     }
 
     onUpdateShop({ ...shop, products: updatedProducts });
@@ -378,8 +384,16 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
       color: 'text-purple-600 bg-purple-50',
     },
     {
-      key: 'benefits',
+      key: 'courses',
       number: 6,
+      title: 'Courses & Training',
+      subtitle: 'Structured courses, syllabus, fees & certification batches',
+      icon: GraduationCap,
+      color: 'text-indigo-600 bg-indigo-50',
+    },
+    {
+      key: 'benefits',
+      number: 7,
       title: 'Benefits Section',
       subtitle: 'Customer benefits, guarantees, free delivery & support stats',
       icon: Star,
@@ -387,7 +401,7 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
     },
     {
       key: 'testimonials',
-      number: 7,
+      number: 8,
       title: 'Testimonials',
       subtitle: 'Customer reviews (Name, rating, review text & location)',
       icon: MessageSquare,
@@ -775,18 +789,28 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
             <div className="flex items-center justify-between pb-3 border-b border-gray-100">
               <div className="flex items-center gap-2">
                 <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                  itemModalType === 'PRODUCT' ? 'bg-orange-100 text-orange-600' : 'bg-purple-100 text-purple-600'
+                  itemModalType === 'COURSE'
+                    ? 'bg-indigo-100 text-indigo-600'
+                    : itemModalType === 'PRODUCT'
+                    ? 'bg-orange-100 text-orange-600'
+                    : 'bg-purple-100 text-purple-600'
                 }`}>
-                  {itemModalType === 'PRODUCT' ? <Package className="w-4 h-4" /> : <Wrench className="w-4 h-4" />}
+                  {itemModalType === 'COURSE' ? (
+                    <GraduationCap className="w-4 h-4" />
+                  ) : itemModalType === 'PRODUCT' ? (
+                    <Package className="w-4 h-4" />
+                  ) : (
+                    <Wrench className="w-4 h-4" />
+                  )}
                 </div>
                 <div>
                   <h3 className="text-base font-black text-slate-900 font-['Outfit',sans-serif]">
                     {editingItem
-                      ? (itemModalType === 'PRODUCT' ? 'Edit Product Details' : 'Edit Service Details')
-                      : (itemModalType === 'PRODUCT' ? 'Add New Physical Product' : 'Add New Professional Service')}
+                      ? (itemModalType === 'COURSE' ? 'Edit Course Details' : itemModalType === 'PRODUCT' ? 'Edit Product Details' : 'Edit Service Details')
+                      : (itemModalType === 'COURSE' ? 'Add New Training / Course' : itemModalType === 'PRODUCT' ? 'Add New Physical Product' : 'Add New Professional Service')}
                   </h3>
                   <p className="text-[11px] text-gray-500">
-                    {itemModalType === 'PRODUCT' ? 'Product catalog details bharein' : 'Service & booking terms bharein'}
+                    {itemModalType === 'COURSE' ? 'Course syllabus, fees & batch details bharein' : itemModalType === 'PRODUCT' ? 'Product catalog details bharein' : 'Service & booking terms bharein'}
                   </p>
                 </div>
               </div>
@@ -806,13 +830,15 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
             <form onSubmit={handleSaveItemModal} className="space-y-4 text-xs">
               <div>
                 <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-700 mb-1">
-                  {itemModalType === 'PRODUCT' ? 'Product / Item Name *' : 'Service Name *'}
+                  {itemModalType === 'COURSE' ? 'Course / Training Title *' : itemModalType === 'PRODUCT' ? 'Product / Item Name *' : 'Service Name *'}
                 </label>
                 <input
                   type="text"
                   required
                   placeholder={
-                    itemModalType === 'PRODUCT'
+                    itemModalType === 'COURSE'
+                      ? 'e.g. Masterclass in Web Design, Digital Marketing, Yoga Coaching'
+                      : itemModalType === 'PRODUCT'
                       ? 'e.g. Pure Desi Cow Ghee (1 Litre Jar) ya Cotton Kurti'
                       : 'e.g. AC Deep Cleaning, Bridal Makeup, Legal Consultation'
                   }
@@ -825,13 +851,13 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-700 mb-1">
-                    {itemModalType === 'PRODUCT' ? 'Selling Price (₹) *' : 'Starting Fee (₹) *'}
+                    {itemModalType === 'COURSE' ? 'Course Fee (₹) *' : itemModalType === 'PRODUCT' ? 'Selling Price (₹) *' : 'Starting Fee (₹) *'}
                   </label>
                   <input
                     type="number"
                     required
                     min="0"
-                    placeholder="e.g. 499"
+                    placeholder="e.g. 999"
                     value={itemPrice}
                     onChange={(e) => setItemPrice(e.target.value)}
                     className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-xs focus:ring-2 focus:ring-orange-500 bg-gray-50/50 font-bold text-slate-900"
@@ -840,12 +866,12 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
 
                 <div>
                   <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-700 mb-1">
-                    {itemModalType === 'PRODUCT' ? 'Original MRP (₹) (Optional)' : 'Regular Fee (₹) (Optional)'}
+                    {itemModalType === 'COURSE' ? 'Original Regular Fee (₹) (Optional)' : itemModalType === 'PRODUCT' ? 'Original MRP (₹) (Optional)' : 'Regular Fee (₹) (Optional)'}
                   </label>
                   <input
                     type="number"
                     min="0"
-                    placeholder="e.g. 699 (Discount ke liye)"
+                    placeholder="e.g. 1999 (Discount ke liye)"
                     value={itemOriginalPrice}
                     onChange={(e) => setItemOriginalPrice(e.target.value)}
                     className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-xs focus:ring-2 focus:ring-orange-500 bg-gray-50/50"
@@ -856,11 +882,11 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-700 mb-1">
-                    {itemModalType === 'PRODUCT' ? 'Pack Size / Unit' : 'Duration / Terms'}
+                    {itemModalType === 'COURSE' ? 'Batch Duration / Validity' : itemModalType === 'PRODUCT' ? 'Pack Size / Unit' : 'Duration / Terms'}
                   </label>
                   <input
                     type="text"
-                    placeholder={itemModalType === 'PRODUCT' ? 'e.g. 1 pc, 1 kg, 500gm' : 'e.g. Per Visit, 1 Hour, Per Room'}
+                    placeholder={itemModalType === 'COURSE' ? 'e.g. 30 Days, 3 Months, 40 Hours' : itemModalType === 'PRODUCT' ? 'e.g. 1 pc, 1 kg, 500gm' : 'e.g. Per Visit, 1 Hour, Per Room'}
                     value={itemUnit}
                     onChange={(e) => setItemUnit(e.target.value)}
                     className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-xs focus:ring-2 focus:ring-orange-500 bg-gray-50/50"
@@ -873,7 +899,7 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
                   </label>
                   <input
                     type="text"
-                    placeholder={itemModalType === 'PRODUCT' ? 'e.g. Grocery, Clothing' : 'e.g. Home Cleaning, Repair'}
+                    placeholder={itemModalType === 'COURSE' ? 'e.g. Skill Training, Coaching, IT' : itemModalType === 'PRODUCT' ? 'e.g. Grocery, Clothing' : 'e.g. Home Cleaning, Repair'}
                     value={itemCategory}
                     onChange={(e) => setItemCategory(e.target.value)}
                     className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-xs focus:ring-2 focus:ring-orange-500 bg-gray-50/50"
@@ -928,10 +954,12 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
                   />
                   <div>
                     <div className="font-bold text-slate-900">
-                      {itemModalType === 'PRODUCT' ? 'Available in Stock' : 'Booking Available'}
+                      {itemModalType === 'COURSE' ? 'Seats Open / Enrolling' : itemModalType === 'PRODUCT' ? 'Available in Stock' : 'Booking Available'}
                     </div>
                     <div className="text-[10px] text-gray-500">
-                      {itemInStock ? 'Website par order ke liye live rahega' : 'Website par paused dikhega'}
+                      {itemInStock
+                        ? (itemModalType === 'COURSE' ? 'Admissions live rahenge' : 'Website par live rahega')
+                        : (itemModalType === 'COURSE' ? 'Batch Full / Closed' : 'Website par paused dikhega')}
                     </div>
                   </div>
                 </label>
@@ -955,12 +983,14 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
               {/* Description */}
               <div>
                 <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-700 mb-1">
-                  Description / Features (Short Summary)
+                  {itemModalType === 'COURSE' ? 'Course Curriculum & Highlights' : 'Description / Features (Short Summary)'}
                 </label>
                 <textarea
                   rows={2}
                   placeholder={
-                    itemModalType === 'PRODUCT'
+                    itemModalType === 'COURSE'
+                      ? 'e.g. Practical syllabus, weekly doubt-clearing sessions, live certificate, and study notes.'
+                      : itemModalType === 'PRODUCT'
                       ? 'e.g. 100% pure chemical-free organic ingredients with 6 months shelf life.'
                       : 'e.g. Complete inspection, deep jet cleaning with eco-friendly chemicals.'
                   }
@@ -985,12 +1015,16 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
                 <button
                   type="submit"
                   className={`px-5 py-2 text-white rounded-lg font-black uppercase tracking-wider text-xs shadow-md transition-all cursor-pointer ${
-                    itemModalType === 'PRODUCT'
+                    itemModalType === 'COURSE'
+                      ? 'bg-indigo-600 hover:bg-indigo-700'
+                      : itemModalType === 'PRODUCT'
                       ? 'bg-orange-600 hover:bg-orange-700'
                       : 'bg-purple-600 hover:bg-purple-700'
                   }`}
                 >
-                  {editingItem ? 'Update Item' : '+ Add Item'}
+                  {editingItem
+                    ? (itemModalType === 'COURSE' ? 'Update Course' : itemModalType === 'PRODUCT' ? 'Update Product' : 'Update Service')
+                    : (itemModalType === 'COURSE' ? '+ Add Course' : itemModalType === 'PRODUCT' ? '+ Add Product' : '+ Add Service')}
                 </button>
               </div>
             </form>
@@ -1727,6 +1761,237 @@ function renderSectionEditor(
                 >
                   <Plus className="w-4 h-4" />
                   <span>+ Add Your First Service</span>
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // 6. COURSES & TRAINING
+    case 'courses': {
+      const data: CoursesSectionConfig = config.courses || {
+        enabled: true,
+        title: 'Our Featured Courses & Training',
+        subtitle: 'Skill-up karein hamare structured courses aur practical batches ke sath',
+        badge: 'Certified Courses & Training 🎓',
+      };
+      const update = (patch: Partial<CoursesSectionConfig>) => {
+        setConfig({ ...config, courses: { ...data, ...patch } });
+      };
+      const courses = (shop.products || []).filter((p) => p.type === 'COURSE');
+
+      return (
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                Section Heading / Title
+              </label>
+              <input
+                type="text"
+                value={data.title}
+                onChange={(e) => update({ title: e.target.value })}
+                className="w-full px-3 py-2 rounded-lg border border-gray-300 text-xs focus:ring-2 focus:ring-indigo-500 bg-white"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                Badge / Tagline
+              </label>
+              <input
+                type="text"
+                value={data.badge || ''}
+                onChange={(e) => update({ badge: e.target.value })}
+                placeholder="e.g. Certified Courses & Training 🎓"
+                className="w-full px-3 py-2 rounded-lg border border-gray-300 text-xs focus:ring-2 focus:ring-indigo-500 bg-white"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+              Subtitle / Supporting Text
+            </label>
+            <input
+              type="text"
+              value={data.subtitle || ''}
+              onChange={(e) => update({ subtitle: e.target.value })}
+              className="w-full px-3 py-2 rounded-lg border border-gray-300 text-xs focus:ring-2 focus:ring-indigo-500 bg-white"
+            />
+          </div>
+
+          {/* Courses List & Action Header */}
+          <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-black uppercase tracking-wider text-slate-900">
+                Courses Catalogue ({courses.length})
+              </span>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-bold">
+                {courses.filter((c) => c.inStock !== false).length} Enrolling Active
+              </span>
+            </div>
+            {actions && (
+              <button
+                type="button"
+                onClick={() => actions.onOpenAddItem('COURSE')}
+                className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold flex items-center gap-1 cursor-pointer shadow-xs transition-colors"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>+ Add Course</span>
+              </button>
+            )}
+          </div>
+
+          {courses.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+              {courses.map((crs) => (
+                <div
+                  key={crs.id}
+                  className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col justify-between group"
+                >
+                  <div>
+                    <div className="relative aspect-video bg-gray-100 overflow-hidden">
+                      <img
+                        src={crs.imageUrl || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=500'}
+                        alt={crs.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src =
+                            'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=500';
+                        }}
+                      />
+                      <div className="absolute top-2 left-2 flex flex-col gap-1">
+                        <span
+                          className={`text-[9px] font-black px-2 py-0.5 rounded-sm uppercase tracking-wider shadow-xs ${
+                            crs.inStock !== false
+                              ? 'bg-emerald-600 text-white'
+                              : 'bg-red-600 text-white'
+                          }`}
+                        >
+                          {crs.inStock !== false ? 'Seats Open' : 'Batch Full'}
+                        </span>
+                        {crs.unit && (
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-sm bg-slate-900/80 text-white backdrop-blur-xs shadow-xs">
+                            {crs.unit}
+                          </span>
+                        )}
+                      </div>
+                      {crs.hidePrice && (
+                        <div className="absolute top-2 right-2">
+                          <span className="text-[9px] font-black px-2 py-0.5 rounded-sm bg-amber-500 text-white shadow-xs">
+                            Fees on Request
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="p-3">
+                      <div className="flex items-center justify-between gap-1 mb-1">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600">
+                          {crs.category || 'Training'}
+                        </span>
+                        <span className="text-[10px] font-semibold text-gray-500">
+                          ID: {crs.id.slice(-4)}
+                        </span>
+                      </div>
+                      <h4 className="text-xs font-bold text-slate-900 line-clamp-1">{crs.name}</h4>
+                      {crs.description && (
+                        <p className="text-[11px] text-gray-500 line-clamp-2 mt-1">{crs.description}</p>
+                      )}
+
+                      <div className="mt-2.5 flex items-baseline gap-2">
+                        {crs.hidePrice ? (
+                          <span className="text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded">
+                            Fees on Request
+                          </span>
+                        ) : (
+                          <>
+                            <span className="text-sm font-black text-slate-900 font-['Outfit',sans-serif]">
+                              ₹{crs.price}
+                            </span>
+                            {crs.originalPrice && crs.originalPrice > crs.price && (
+                              <span className="text-xs text-gray-400 line-through">
+                                ₹{crs.originalPrice}
+                              </span>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {actions && (
+                    <div className="p-2.5 border-t border-gray-100 bg-gray-50/50 flex items-center justify-between gap-1">
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => actions.onToggleStock(crs.id)}
+                          className={`p-1.5 rounded text-[10px] font-bold cursor-pointer transition-colors ${
+                            crs.inStock !== false
+                              ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200'
+                              : 'bg-red-100 text-red-800 hover:bg-red-200'
+                          }`}
+                          title="Toggle Seats Open / Batch Full"
+                        >
+                          {crs.inStock !== false ? 'Seats Open' : 'Closed'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => actions.onToggleHidePrice(crs.id)}
+                          className={`p-1.5 rounded text-[10px] font-bold cursor-pointer transition-colors ${
+                            crs.hidePrice
+                              ? 'bg-amber-100 text-amber-800 hover:bg-amber-200'
+                              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                          }`}
+                          title="Show / Hide Fee"
+                        >
+                          {crs.hidePrice ? 'Fee Hidden' : 'Show Fee'}
+                        </button>
+                      </div>
+
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => actions.onOpenEditItem(crs)}
+                          className="p-1.5 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded border border-gray-200 flex items-center gap-1 text-[11px] font-bold cursor-pointer transition-colors"
+                          title="Edit Course"
+                        >
+                          <Edit2 className="w-3.5 h-3.5 text-slate-600 hover:text-indigo-700" />
+                          <span>Edit</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => actions.onDeleteItem(crs.id, crs.name)}
+                          className="p-1.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded border border-gray-200 flex items-center gap-1 text-[11px] font-bold cursor-pointer transition-colors"
+                          title="Delete Course"
+                        >
+                          <Trash2 className="w-3.5 h-3.5 text-red-500" />
+                          <span>Delete</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="p-6 text-center rounded-xl border border-dashed border-gray-300 bg-white space-y-2">
+              <GraduationCap className="w-8 h-8 text-gray-400 mx-auto" />
+              <div className="text-xs font-bold text-slate-800">Abhi koi course listed nahi hai</div>
+              <p className="text-[11px] text-gray-500 max-w-sm mx-auto">
+                Skill training, coaching batches, vocational classes ya computer courses add karein taaki students direct WhatsApp se syllabus aur batch timings jaan sakein.
+              </p>
+              {actions && (
+                <button
+                  type="button"
+                  onClick={() => actions.onOpenAddItem('COURSE')}
+                  className="mt-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer shadow-sm"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>+ Add Your First Course</span>
                 </button>
               )}
             </div>

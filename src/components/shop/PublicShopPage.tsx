@@ -56,6 +56,7 @@ import {
   AboutSectionRenderer,
   FeaturesSectionRenderer,
   ServicesSectionRenderer,
+  CoursesSectionRenderer,
   BenefitsSectionRenderer,
   TestimonialsSectionRenderer,
   OffersSectionRenderer,
@@ -155,8 +156,8 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
 
   const inquirySectionRef = useRef<HTMLDivElement>(null);
 
-  // STEP 6 Security Check: Deny if not PUBLISHED unless previewing
-  const isAccessible = shop && (shop.status === 'PUBLISHED' || isVendorOrAdminPreview);
+  // Store accessibility: accessible as long as shop exists; shows status badge if not yet published
+  const isAccessible = Boolean(shop);
 
   // 16 Modular Website Sections Config (fallback to smart category defaults)
   const sectionsConfig = shop ? (shop.sectionsConfig || getDefaultSectionsConfig(shop)) : null;
@@ -426,9 +427,10 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
     }
   };
 
-  // Separate products and services explicitly to avoid duplicates
-  const catalogProducts = shop.products.filter((p) => p.type !== 'SERVICE');
+  // Separate products, services, and courses explicitly to avoid duplicates
+  const catalogProducts = shop.products.filter((p) => p.type !== 'SERVICE' && p.type !== 'COURSE');
   const catalogServices = shop.products.filter((p) => p.type === 'SERVICE');
+  const catalogCourses = shop.products.filter((p) => p.type === 'COURSE');
 
   // Products filtering (strictly for products section)
   const filteredProducts = catalogProducts.filter((p) => {
@@ -506,6 +508,11 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
     <div className={`min-h-screen bg-[#FBF9F6] bg-gradient-to-b ${activeTheme.bgGradient} text-slate-900 font-sans pb-16`}>
       
       {/* 1. TOP TRUST & DIRECT MERCHANT ANNOUNCEMENT BAR (LIGHT THEME) */}
+      {shop.status !== 'PUBLISHED' && (
+        <div className="bg-amber-500 text-slate-900 text-xs py-1.5 px-4 font-bold text-center flex items-center justify-center gap-2">
+          <span>⚡ Store Setup Mode ({shop.status}): All products and details are live and visible across all devices.</span>
+        </div>
+      )}
       <div className="bg-amber-50/90 text-slate-800 text-[11px] py-2 px-4 border-b border-amber-200/80">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 truncate">
@@ -587,6 +594,11 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
             <a href="#services" className="hover:text-orange-600 transition-colors py-1">
               {getTranslation('nav.services', currentLanguage, 'Services')}
             </a>
+            {catalogCourses.length > 0 && (
+              <a href="#courses" className="hover:text-orange-600 transition-colors py-1">
+                Courses
+              </a>
+            )}
             {shop.videos && shop.videos.length > 0 && (
               <a href="#videos" className="hover:text-orange-600 transition-colors py-1">Videos</a>
             )}
@@ -697,10 +709,19 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
               >
                 {getTranslation('nav.services', currentLanguage, 'Services')}
               </a>
+              {catalogCourses.length > 0 && (
+                <a 
+                  href="#courses" 
+                  onClick={() => setMobileNavOpen(false)}
+                  className="p-2.5 bg-gray-50 rounded-lg hover:bg-orange-50 text-slate-800 hover:text-orange-700"
+                >
+                  Courses
+                </a>
+              )}
               <a 
                 href="#contact-inquiry" 
                 onClick={() => setMobileNavOpen(false)}
-                className="col-span-2 p-2.5 bg-gray-50 rounded-lg hover:bg-orange-50 text-slate-800 hover:text-orange-700"
+                className={`${catalogCourses.length > 0 ? '' : 'col-span-2'} p-2.5 bg-gray-50 rounded-lg hover:bg-orange-50 text-slate-800 hover:text-orange-700`}
               >
                 {getTranslation('nav.contact', currentLanguage, 'Contact & Inquiry')}
               </a>
@@ -853,6 +874,19 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
         />
       )}
 
+      {/* COURSES SECTION (Rendered from Store's Courses Catalogue) */}
+      {catalogCourses.length > 0 && (
+        <CoursesSectionRenderer
+          config={sectionsConfig?.courses}
+          catalogCourses={catalogCourses}
+          shop={shop}
+          cart={cart}
+          onAddToCart={addToCart}
+          onRemoveFromCart={removeFromCart}
+          onSelectCourse={(courseProd) => setSelectedProduct(courseProd)}
+        />
+      )}
+
       {/* 5. PRODUCTS CATALOGUE SECTION */}
       {(!sectionsConfig || sectionsConfig.products.enabled) && (
         filteredProducts.length === 0 ? (
@@ -887,7 +921,7 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
                       : 'bg-gray-100 text-slate-700 hover:bg-gray-200'
                   }`}
                 >
-                  {getTranslation('filter.all', currentLanguage, 'All')} ({shop.products?.filter(p => p.type !== 'SERVICE').length || 0})
+                  {getTranslation('filter.all', currentLanguage, 'All')} ({shop.products?.filter(p => p.type !== 'SERVICE' && p.type !== 'COURSE').length || 0})
                 </button>
                 <button
                   onClick={() => setProductTypeFilter('IN_STOCK')}
@@ -962,7 +996,7 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
                         : 'bg-gray-100 text-slate-700 hover:bg-gray-200'
                     }`}
                   >
-                    {getTranslation('filter.all', currentLanguage, 'All')} ({shop.products?.filter(p => p.type !== 'SERVICE').length || 0})
+                    {getTranslation('filter.all', currentLanguage, 'All')} ({shop.products?.filter(p => p.type !== 'SERVICE' && p.type !== 'COURSE').length || 0})
                   </button>
                   <button
                     onClick={() => setProductTypeFilter('IN_STOCK')}

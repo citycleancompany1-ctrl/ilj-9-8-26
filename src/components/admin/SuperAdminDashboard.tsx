@@ -38,7 +38,8 @@ import {
   Settings,
   FileText,
   Receipt,
-  Link2
+  Link2,
+  Download
 } from 'lucide-react';
 import { Shop, AdvertisementPopup, PricingPackage, TutorialVideo, PlatformLead, PlatformState } from '../../types';
 import { fileToBase64, formatINR, generateShopId, getWhatsAppDirectUrl, getYouTubeEmbedUrl, getYouTubeThumbnail, formatDisplayDate, calculateDaysRemaining, getOneYearExpiryDate } from '../../utils/mediaUpload';
@@ -51,6 +52,8 @@ import { AdminBillingManager } from './AdminBillingManager';
 import { AdminSectionsManager } from './AdminSectionsManager';
 import { AddWebsiteModal } from './AddWebsiteModal';
 import { ConnectWebsiteModal } from './ConnectWebsiteModal';
+import { DataExportManager } from './DataExportManager';
+import { VendorDataExportModal } from './VendorDataExportModal';
 
 interface SuperAdminDashboardProps {
   state: PlatformState;
@@ -65,11 +68,12 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
   onLogout,
   onNavigateToShop,
 }) => {
-  const [activeTab, setActiveTab] = useState<'SHOPS' | 'BILLING' | 'SECTIONS' | 'POPUPS' | 'PRICING' | 'VIDEOS' | 'LEADS' | 'PLATFORM_SETTINGS'>('SHOPS');
+  const [activeTab, setActiveTab] = useState<'SHOPS' | 'DATA_EXPORT' | 'BILLING' | 'SECTIONS' | 'POPUPS' | 'PRICING' | 'VIDEOS' | 'LEADS' | 'PLATFORM_SETTINGS'>('SHOPS');
   
   // Website Add & Connect Modals
   const [showAddShopModal, setShowAddShopModal] = useState(false);
   const [connectingDomainShop, setConnectingDomainShop] = useState<Shop | null>(null);
+  const [exportingVendorShop, setExportingVendorShop] = useState<Shop | null>(null);
   
   // Filtering states for shops
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
@@ -321,6 +325,21 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
 
         {/* Global Popup Master ON/OFF Switch (STEP 33) & Logout */}
         <div className="flex flex-wrap items-center gap-3">
+          
+          {/* Quick Export Data Hub Shortcut */}
+          <button
+            onClick={() => setActiveTab('DATA_EXPORT')}
+            className={`px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer ${
+              activeTab === 'DATA_EXPORT'
+                ? 'bg-orange-600 text-white shadow-xs'
+                : 'bg-orange-50 text-orange-800 hover:bg-orange-100 border border-orange-200'
+            }`}
+            title="Pure Portal, All Vendors & Specific Vendor Data Download Hub"
+          >
+            <Download className="w-4 h-4" />
+            <span>📥 Export Data Hub</span>
+          </button>
+
           <div className="flex items-center gap-2 bg-gray-50 px-3.5 py-2 rounded-xl border border-gray-200">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-700">GLOBAL POPUP:</span>
             <button
@@ -401,6 +420,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
       <div className="flex items-center gap-2 border-b border-gray-200 pb-2 overflow-x-auto scrollbar-none">
         {[
           { id: 'SHOPS', label: 'Vendors & Stores Management', icon: Store, count: state.shops.length },
+          { id: 'DATA_EXPORT', label: '📥 Data Export & Backups (Pure Portal / All Shops / Specific Vendor)', icon: Download },
           { id: 'BILLING', label: 'Billing & Website Earnings (Day/Month/Year)', icon: Receipt },
           { id: 'SECTIONS', label: 'Website Sections (ON / OFF)', icon: Sliders },
           { id: 'POPUPS', label: 'Advertisement Popups Engine', icon: Megaphone, count: state.popups.length },
@@ -636,6 +656,14 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
                       <td className="py-3.5 px-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
                           <button
+                            onClick={() => setExportingVendorShop(shop)}
+                            className="p-1.5 text-slate-600 hover:text-orange-600 hover:bg-orange-50 rounded-sm transition-colors"
+                            title="Download / Export This Vendor Data (JSON / Products CSV / Dossier)"
+                          >
+                            <Download className="w-4 h-4" />
+                          </button>
+
+                          <button
                             onClick={() => setViewingInvoiceShop(shop)}
                             className="p-1.5 text-slate-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-sm"
                             title="View 1-Year Tax Invoice & Receipt"
@@ -689,6 +717,14 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
           </div>
 
         </div>
+      )}
+
+      {/* TAB: DATA EXPORT & BACKUPS (PURE PORTAL / ALL SHOPS / SPECIFIC VENDOR) */}
+      {activeTab === 'DATA_EXPORT' && (
+        <DataExportManager
+          state={state}
+          onNavigateToShop={onNavigateToShop}
+        />
       )}
 
       {/* TAB: BILLING & WEBSITE EARNINGS (DAY / MONTH / YEAR FILTERS) */}
@@ -2043,6 +2079,15 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
         isOpen={!!viewingInvoiceShop}
         onClose={() => setViewingInvoiceShop(null)}
         shop={viewingInvoiceShop}
+      />
+
+      {/* SPECIFIC VENDOR DATA EXPORT & DOSSIER MODAL */}
+      <VendorDataExportModal
+        isOpen={Boolean(exportingVendorShop)}
+        onClose={() => setExportingVendorShop(null)}
+        shop={exportingVendorShop}
+        inquiries={state.inquiries}
+        onNavigateToShop={onNavigateToShop}
       />
 
       {/* + ADD NEW WEBSITE / DUKAAN MODAL */}

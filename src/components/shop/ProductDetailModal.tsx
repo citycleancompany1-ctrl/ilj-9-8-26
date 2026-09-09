@@ -42,6 +42,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   if (!isOpen || !product) return null;
 
   const inCart = cart.find((item) => item.product.id === product.id);
+  const isCourse = product.type === 'COURSE';
   const isService = product.type === 'SERVICE';
   const isPriceHidden = Boolean(shop.hideAllPrices || shop.isCatalogOnly || (shop as any).websiteMode === 'CATALOG' || product.hidePrice);
   const hasDiscount = !isPriceHidden && product.originalPrice && product.originalPrice > product.price;
@@ -49,7 +50,9 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
     ? Math.round(((product.originalPrice! - product.price) / product.originalPrice!) * 100)
     : 0;
 
-  const defaultImg = isService
+  const defaultImg = isCourse
+    ? 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600'
+    : isService
     ? 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=600'
     : 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=600';
 
@@ -109,7 +112,11 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
             {/* Badges Overlay */}
             <div className="absolute top-3 left-3 flex flex-col gap-1.5 pointer-events-none">
-              {isService ? (
+              {isCourse ? (
+                <span className="bg-indigo-600 text-white text-[10px] font-black px-2.5 py-1 rounded-md uppercase tracking-wider shadow-sm">
+                  Course
+                </span>
+              ) : isService ? (
                 <span className="bg-blue-600 text-white text-[10px] font-black px-2.5 py-1 rounded-md uppercase tracking-wider shadow-sm">
                   Service
                 </span>
@@ -123,7 +130,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
               {product.unit && (
                 <span className="bg-black/70 backdrop-blur-xs text-white text-[10px] font-bold px-2.5 py-0.5 rounded-md flex items-center gap-1 shadow-xs">
-                  {isService ? <Clock className="w-3 h-3" /> : null}
+                  {isService || isCourse ? <Clock className="w-3 h-3" /> : null}
                   {product.unit}
                 </span>
               )}
@@ -131,7 +138,17 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
             {/* Stock status badge */}
             <div className="absolute bottom-3 left-3 pointer-events-none">
-              {product.inStock ? (
+              {isCourse ? (
+                product.inStock ? (
+                  <span className="bg-emerald-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-xs flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3" /> Seats Open & Enrolling
+                  </span>
+                ) : (
+                  <span className="bg-red-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-xs">
+                    Batch Full / Closed
+                  </span>
+                )
+              ) : product.inStock ? (
                 <span className="bg-emerald-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-xs flex items-center gap-1">
                   <CheckCircle2 className="w-3 h-3" /> In Stock & Available
                 </span>
@@ -240,7 +257,11 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               <a
                 href={getWhatsAppDirectUrl(
                   shop.whatsapp || shop.phone,
-                  `Namaste ${shop.businessName}! Mujhe "${product.name}" ki price aur details jaanni hain. Kripya best quote share karein.`
+                  isCourse
+                    ? `Namaste ${shop.businessName}! Mujhe aapke course "${product.name}" ke syllabus, batch timings aur enrollment fee ke baare me janna hai.`
+                    : isService
+                    ? `Namaste ${shop.businessName}! Mujhe aapki "${product.name}" service ke charges aur details janni hain.`
+                    : `Namaste ${shop.businessName}! Mujhe "${product.name}" ki price aur details jaanni hain. Kripya best quote share karein.`
                 )}
                 target="_blank"
                 rel="noreferrer"

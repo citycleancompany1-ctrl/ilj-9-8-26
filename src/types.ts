@@ -5,7 +5,7 @@ export type UserRole = 'VENDOR' | 'ADMIN' | 'CUSTOMER';
 
 export type ShopStatus = 'DRAFT' | 'PENDING_APPROVAL' | 'PUBLISHED' | 'HOLD' | 'REJECTED';
 
-export type ProductType = 'PRODUCT' | 'SERVICE';
+export type ProductType = 'PRODUCT' | 'SERVICE' | 'COURSE';
 
 export interface ProductItem {
   id: string;
@@ -218,6 +218,13 @@ export interface ServicesSectionConfig {
   items: ServiceItem[];
 }
 
+export interface CoursesSectionConfig {
+  enabled: boolean;
+  title: string;
+  subtitle: string;
+  badge?: string;
+}
+
 export interface ProductsSectionConfig {
   enabled: boolean;
   title: string;
@@ -413,6 +420,7 @@ export interface ShopSectionsConfig {
   about: AboutSectionConfig;
   features: FeaturesSectionConfig;
   services: ServicesSectionConfig;
+  courses?: CoursesSectionConfig;
   products: ProductsSectionConfig;
   benefits: BenefitsSectionConfig;
   testimonials: TestimonialsSectionConfig;

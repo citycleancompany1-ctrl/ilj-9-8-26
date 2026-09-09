@@ -26,6 +26,7 @@ import { loadPlatformState, savePlatformState } from './data/initialData';
 import { 
   seedFirestoreIfEmpty, 
   subscribeToShops, 
+  subscribeToShop,
   subscribeToPlatformConfig, 
   savePlatformStateToFirestore, 
   saveShopToFirestore,
@@ -204,6 +205,9 @@ export default function App() {
 
       if (['home', 'stores', 'how-it-works', 'pricing', 'contact'].includes(cleanPath)) {
         setCurrentView(cleanPath);
+      } else {
+        // Any root domain or unmapped path always renders the home page cleanly
+        setCurrentView('home');
       }
     };
 
@@ -342,12 +346,18 @@ export default function App() {
   };
 
   // Vendor updates their shop
-  const handleVendorUpdateShop = (updatedShop: Shop) => {
-    saveShopToFirestore(updatedShop);
-    const updatedShops = platformState.shops.map((s) =>
-      s.id === updatedShop.id || s.shopId === updatedShop.shopId ? updatedShop : s
-    );
-    handleUpdateState({ ...platformState, shops: updatedShops });
+  const handleVendorUpdateShop = async (updatedShop: Shop) => {
+    // 1. Immediately persist this specific shop to Firestore cloud
+    await saveShopToFirestore(updatedShop);
+    // 2. Update local state & localStorage so this device reflects change immediately
+    setPlatformState((prev) => {
+      const updatedShops = prev.shops.map((s) =>
+        s.id === updatedShop.id || s.shopId === updatedShop.shopId ? updatedShop : s
+      );
+      const updatedState = { ...prev, shops: updatedShops };
+      savePlatformState(updatedState);
+      return updatedState;
+    });
   };
 
   // Switch active vendor website
@@ -403,26 +413,42 @@ export default function App() {
     });
   };
 
-  // Auto-fetch active shop from cloud if opening direct link on new device before snapshot completes
+  // Real-time live subscription for active shop to guarantee instant cross-device product & catalogue sync
   useEffect(() => {
     if (!activeShopId) return;
-    const exists = platformState.shops.some(
-      (s) => s.shopId.toLowerCase() === activeShopId.toLowerCase() || s.id.toLowerCase() === activeShopId.toLowerCase()
-    );
-    if (!exists) {
-      fetchShopFromFirestore(activeShopId).then((fetchedShop) => {
-        if (fetchedShop) {
-          setPlatformState((prev) => {
-            const alreadyThere = prev.shops.some((s) => s.shopId === fetchedShop.shopId);
-            if (alreadyThere) return prev;
-            const updated = { ...prev, shops: [fetchedShop, ...prev.shops] };
-            savePlatformState(updated);
-            return updated;
-          });
-        }
-      });
-    }
-  }, [activeShopId, platformState.shops]);
+
+    // Immediate direct cloud fetch in case shop was just added on another device
+    fetchShopFromFirestore(activeShopId).then((fetchedShop) => {
+      if (fetchedShop) {
+        setPlatformState((prev) => {
+          const exists = prev.shops.some((s) => s.shopId === fetchedShop.shopId);
+          const updatedShops = exists
+            ? prev.shops.map((s) => (s.shopId === fetchedShop.shopId ? fetchedShop : s))
+            : [fetchedShop, ...prev.shops];
+          const updated = { ...prev, shops: updatedShops };
+          savePlatformState(updated);
+          return updated;
+        });
+      }
+    });
+
+    // Real-time listener: any product added on mobile will reflect instantly on this device
+    const unsubSingle = subscribeToShop(activeShopId, (liveShop) => {
+      if (liveShop && liveShop.shopId) {
+        setPlatformState((prev) => {
+          const exists = prev.shops.some((s) => s.shopId === liveShop.shopId);
+          const updatedShops = exists
+            ? prev.shops.map((s) => (s.shopId === liveShop.shopId ? liveShop : s))
+            : [liveShop, ...prev.shops];
+          const updated = { ...prev, shops: updatedShops };
+          savePlatformState(updated);
+          return updated;
+        });
+      }
+    });
+
+    return () => unsubSingle();
+  }, [activeShopId]);
 
   // Find active shop for shop view or vendor dashboard (Strict: undefined if not logged in)
   const currentVendorShop = loggedVendorShopId

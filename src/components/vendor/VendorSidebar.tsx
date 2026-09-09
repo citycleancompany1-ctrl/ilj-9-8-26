@@ -40,7 +40,8 @@ import {
   Phone,
   Award,
   CheckCircle2,
-  Printer
+  Printer,
+  GraduationCap
 } from 'lucide-react';
 import { Shop } from '../../types';
 
@@ -104,8 +105,9 @@ export const VendorSidebar: React.FC<VendorSidebarProps> = ({
   const isCatalog = Boolean(
     (shop as any).websiteMode === 'CATALOG' || shop.isCatalogOnly || shop.hideAllPrices
   );
-  const productsCount = (shop.products || []).filter((p) => p.type !== 'SERVICE').length;
+  const productsCount = (shop.products || []).filter((p) => p.type !== 'SERVICE' && p.type !== 'COURSE').length;
   const servicesCount = (shop.products || []).filter((p) => p.type === 'SERVICE').length;
+  const coursesCount = (shop.products || []).filter((p) => p.type === 'COURSE').length;
 
   const menuGroups: MenuGroup[] = useMemo(
     () => [
@@ -131,9 +133,9 @@ export const VendorSidebar: React.FC<VendorSidebarProps> = ({
         items: [
           {
             id: 'sections',
-            label: 'All Sections (16)',
+            label: 'All Sections (17)',
             icon: Layers,
-            badge: '16 Live',
+            badge: '17 Live',
             badgeColor: 'bg-orange-500/20 text-orange-300 border border-orange-500/30',
             subItems: [
               { id: 'section_hero', label: 'Hero Section', icon: Sparkles },
@@ -141,6 +143,7 @@ export const VendorSidebar: React.FC<VendorSidebarProps> = ({
               { id: 'section_features', label: 'Features', icon: CheckCircle2 },
               { id: 'section_products', label: `Products (${productsCount})`, icon: Tag },
               { id: 'section_services', label: `Services (${servicesCount})`, icon: Wrench },
+              { id: 'section_courses', label: `Courses (${coursesCount})`, icon: GraduationCap },
               { id: 'section_benefits', label: 'Benefits', icon: Star },
               { id: 'section_testimonials', label: 'Testimonials', icon: MessageSquare },
               { id: 'section_offers', label: 'Our Offers & Deals', icon: Sparkles },
@@ -268,7 +271,7 @@ export const VendorSidebar: React.FC<VendorSidebarProps> = ({
         ],
       },
     ],
-    [shop.products, isCatalog, productsCount, servicesCount]
+    [shop.products, isCatalog, productsCount, servicesCount, coursesCount]
   );
 
   // Filter menu items by search query

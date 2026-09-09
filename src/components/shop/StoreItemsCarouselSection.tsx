@@ -12,15 +12,17 @@ import {
   ShieldCheck,
   Zap,
 } from 'lucide-react';
-import { ProductItem, Shop, CartItem } from '../../types';
+import { ProductItem, Shop, CartItem, ProductType } from '../../types';
 import { formatINR, getWhatsAppDirectUrl } from '../../utils/mediaUpload';
 
 export interface StoreItemsCarouselSectionProps {
-  id: string; // 'products' or 'services'
+  id: string; // 'products', 'services', or 'courses'
   title: string;
   subtitle?: string;
   badgeText: string;
   isService?: boolean;
+  isCourse?: boolean;
+  itemType?: ProductType;
   items: ProductItem[];
   shop: Shop;
   cart: CartItem[];
@@ -34,6 +36,8 @@ export interface StoreItemsCarouselSectionProps {
 interface SharedItemCardProps {
   item: ProductItem;
   isService?: boolean;
+  isCourse?: boolean;
+  itemType?: ProductType;
   shop: Shop;
   cart: CartItem[];
   onAddToCart: (product: ProductItem) => void;
@@ -44,12 +48,17 @@ interface SharedItemCardProps {
 export const SharedItemCard: React.FC<SharedItemCardProps> = ({
   item,
   isService = false,
+  isCourse = false,
+  itemType,
   shop,
   cart,
   onAddToCart,
   onRemoveFromCart,
   onSelectItem,
 }) => {
+  const isCourseItem = item.type === 'COURSE' || isCourse || itemType === 'COURSE';
+  const isServiceItem = !isCourseItem && (item.type === 'SERVICE' || isService || itemType === 'SERVICE');
+
   const inCart = cart.find((c) => c.product.id === item.id);
   const isPriceHidden = Boolean(
     shop.hideAllPrices ||
@@ -62,27 +71,35 @@ export const SharedItemCard: React.FC<SharedItemCardProps> = ({
     ? Math.round(((item.originalPrice! - item.price) / item.originalPrice!) * 100)
     : 0;
 
-  const defaultImg = isService
+  const defaultImg = isCourseItem
+    ? 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=500'
+    : isServiceItem
     ? 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=500'
     : 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=500';
 
   const whatsappInquiryUrl = isPriceHidden
     ? getWhatsAppDirectUrl(
         shop.whatsapp || shop.phone,
-        isService
+        isCourseItem
+          ? `Namaste ${shop.businessName}! Mujhe aapke course/training "${item.name}" ke syllabus, batch timing aur fee ke baare me janna hai.`
+          : isServiceItem
           ? `Namaste ${shop.businessName}! Mujhe aapki "${item.name}" service ke charges aur details janni hain.`
           : `Namaste ${shop.businessName}! Mujhe "${item.name}" ki price aur details janni hai.`
       )
     : getWhatsAppDirectUrl(
         shop.whatsapp || shop.phone,
-        isService
+        isCourseItem
+          ? `Namaste ${shop.businessName}! I want to enroll/inquire about your course: "${item.name}" (${formatINR(item.price)}).`
+          : isServiceItem
           ? `Namaste ${shop.businessName}! I want to book/inquire about your service: "${item.name}" (${formatINR(item.price)}).`
           : `Namaste ${shop.businessName}! I want to order "${item.name}" (${formatINR(item.price)}).`
       );
 
+  const cardId = `${isCourseItem ? 'course' : isServiceItem ? 'service' : 'product'}-card-${item.id}`;
+
   return (
     <div
-      id={`${isService ? 'service' : 'product'}-card-${item.id}`}
+      id={cardId}
       onClick={() => onSelectItem(item)}
       className="bg-white rounded-xl sm:rounded-2xl border border-gray-200/90 hover:border-orange-500/60 overflow-hidden shadow-2xs hover:shadow-md transition-all flex flex-col justify-between group cursor-pointer h-full select-none"
     >
@@ -98,7 +115,11 @@ export const SharedItemCard: React.FC<SharedItemCardProps> = ({
         {/* Top Badges */}
         <div className="absolute top-2 left-2 right-2 flex items-center justify-between pointer-events-none gap-1">
           {/* Left badge */}
-          {isService ? (
+          {isCourseItem ? (
+            <span className="bg-indigo-600 text-white text-[8px] sm:text-[9px] font-black px-1.5 py-0.5 rounded shadow-xs uppercase tracking-wider">
+              COURSE
+            </span>
+          ) : isServiceItem ? (
             <span className="bg-blue-600 text-white text-[8px] sm:text-[9px] font-black px-1.5 py-0.5 rounded shadow-xs uppercase tracking-wider">
               SERVICE
             </span>
@@ -111,7 +132,17 @@ export const SharedItemCard: React.FC<SharedItemCardProps> = ({
           )}
 
           {/* Right badge */}
-          {isService ? (
+          {isCourseItem ? (
+            item.inStock ? (
+              <span className="bg-emerald-600/90 text-white text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded shadow-xs">
+                Seats Open
+              </span>
+            ) : (
+              <span className="bg-red-600 text-white text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded shadow-xs">
+                Batch Full
+              </span>
+            )
+          ) : isServiceItem ? (
             item.unit ? (
               <span className="bg-slate-900/80 backdrop-blur-xs text-white text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded shadow-xs uppercase tracking-wider">
                 {item.unit}
@@ -129,7 +160,7 @@ export const SharedItemCard: React.FC<SharedItemCardProps> = ({
         </div>
 
         {/* Bottom unit indicator */}
-        {!isService && item.unit && (
+        {item.unit && (
           <span className="absolute bottom-1.5 left-1.5 bg-black/60 backdrop-blur-xs text-white text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded">
             {item.unit}
           </span>
@@ -151,7 +182,7 @@ export const SharedItemCard: React.FC<SharedItemCardProps> = ({
                 Price on Request
               </span>
               <span className="text-[9px] text-amber-700 font-semibold block">
-                {isService ? 'फीस पूछें' : 'कीमत पूछें'}
+                {isCourseItem ? 'फीस पूछें' : isServiceItem ? 'फीस पूछें' : 'कीमत पूछें'}
               </span>
             </div>
           ) : (
@@ -250,6 +281,8 @@ export const StoreItemsCarouselSection: React.FC<StoreItemsCarouselSectionProps>
   subtitle,
   badgeText,
   isService = false,
+  isCourse = false,
+  itemType,
   items,
   shop,
   cart,
@@ -389,6 +422,8 @@ export const StoreItemsCarouselSection: React.FC<StoreItemsCarouselSectionProps>
                 key={item.id}
                 item={item}
                 isService={isService}
+                isCourse={isCourse}
+                itemType={itemType}
                 shop={shop}
                 cart={cart}
                 onAddToCart={onAddToCart}
@@ -453,6 +488,8 @@ export const StoreItemsCarouselSection: React.FC<StoreItemsCarouselSectionProps>
                     <SharedItemCard
                       item={pair[0]}
                       isService={isService}
+                      isCourse={isCourse}
+                      itemType={itemType}
                       shop={shop}
                       cart={cart}
                       onAddToCart={onAddToCart}
@@ -468,6 +505,8 @@ export const StoreItemsCarouselSection: React.FC<StoreItemsCarouselSectionProps>
                     <SharedItemCard
                       item={pair[1]}
                       isService={isService}
+                      isCourse={isCourse}
+                      itemType={itemType}
                       shop={shop}
                       cart={cart}
                       onAddToCart={onAddToCart}

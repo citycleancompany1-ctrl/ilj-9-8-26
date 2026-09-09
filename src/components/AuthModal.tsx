@@ -21,7 +21,8 @@ import {
 import { BUSINESS_CATEGORIES, SUPER_ADMIN_CREDENTIALS } from '../data/initialData';
 import { generateShopId, getOneYearExpiryDate } from '../utils/mediaUpload';
 import { hashPassword, verifyPassword } from '../utils/security';
-import { saveShopToFirestore } from '../services/firebase';
+import { saveShopToFirestore, fetchShopFromFirestore } from '../services/firebase';
+import { getRememberedShopId } from '../services/authSession';
 import { Shop } from '../types';
 
 interface AuthModalProps {
@@ -73,10 +74,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [loginEmailOrPhone, setLoginEmailOrPhone] = useState(prefilledShopId || '');
   const [loginPassword, setLoginPassword] = useState('');
 
-  // Sync prefilledShopId into login input
+  // Sync prefilledShopId or rememberedShopId into login input
   useEffect(() => {
     if (prefilledShopId) {
       setLoginEmailOrPhone(prefilledShopId);
+    } else if (!loginEmailOrPhone) {
+      const remembered = getRememberedShopId();
+      if (remembered) {
+        setLoginEmailOrPhone(remembered);
+      }
     }
   }, [prefilledShopId, isOpen]);
 
@@ -114,12 +120,20 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
 
     // Match with existing registered shops
-    const foundShop = allShops.find(
+    let foundShop = allShops.find(
       (s) => s.vendorEmail.toLowerCase() === query || 
              s.phone === query || 
              s.whatsapp === query || 
              s.shopId.toLowerCase() === query
     );
+
+    // Fallback: If shop was registered on another device and local cache hasn't synced yet, fetch directly from cloud
+    if (!foundShop && query.startsWith('shp')) {
+      const cloudShop = await fetchShopFromFirestore(query.toUpperCase());
+      if (cloudShop) {
+        foundShop = cloudShop;
+      }
+    }
 
     if (!foundShop) {
       setErrorMsg('Account nahi mila! Kripya apna registered Mobile number ya Shop ID darj karein, ya naya account Register karein.');
@@ -217,7 +231,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         city: 'Local City',
         address: `Shop No. 1, Main Market, ${state}`,
         pincode: '110001',
-        status: 'DRAFT', // Starts as DRAFT until submitted & approved
+        status: 'PUBLISHED', // Immediately published so website & products are live across all devices in 2 minutes
         templateId: 'tpl_premium_retail',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),

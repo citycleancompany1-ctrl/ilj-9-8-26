@@ -107,6 +107,36 @@ export async function fetchShopFromFirestore(shopId: string): Promise<Shop | nul
 }
 
 /**
+ * Subscribe to real-time changes for a specific shop
+ * Guarantees that any product entry or update made on one device (e.g. mobile)
+ * is immediately pushed and rendered on all other devices viewing that shop without refresh.
+ */
+export function subscribeToShop(shopId: string, onUpdate: (shop: Shop) => void): () => void {
+  if (!shopId) return () => {};
+  try {
+    const docRef = doc(db, SHOPS_COLLECTION, shopId);
+    const unsubscribe = onSnapshot(
+      docRef,
+      (docSnap) => {
+        if (docSnap.exists()) {
+          const shopData = docSnap.data() as Shop;
+          if (shopData && shopData.shopId) {
+            onUpdate(shopData);
+          }
+        }
+      },
+      (err) => {
+        console.warn(`[Firestore] Real-time shop listener error for ${shopId}:`, err);
+      }
+    );
+    return unsubscribe;
+  } catch (e) {
+    console.error(`[Firestore] Failed to attach single shop listener for ${shopId}:`, e);
+    return () => {};
+  }
+}
+
+/**
  * Save platform global settings to Firestore (popups, packages, tutorials, leads, inquiries)
  */
 export async function savePlatformConfigToFirestore(state: Partial<PlatformState>): Promise<void> {
