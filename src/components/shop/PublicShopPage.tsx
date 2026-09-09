@@ -65,6 +65,9 @@ import {
   FaqSectionRenderer,
   CtaSectionRenderer,
   BlogSectionRenderer,
+  GallerySectionRenderer,
+  VideoSectionRenderer,
+  ContactSocialMediaBlock,
 } from './PublicStoreSections';
 import { StoreItemsCarouselSection } from './StoreItemsCarouselSection';
 import { ProductDetailModal } from './ProductDetailModal';
@@ -888,172 +891,26 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
       )}
 
       {/* 5. PRODUCTS CATALOGUE SECTION */}
-      {(!sectionsConfig || sectionsConfig.products.enabled) && (
-        filteredProducts.length === 0 ? (
-          <section id="products" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 space-y-4">
-            {/* Search Box & Filters Bar */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 bg-white p-3.5 sm:p-4 rounded-2xl border border-gray-200/90 shadow-2xs">
-              <div className="relative flex-1 max-w-md">
-                <Search className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
-                <input
-                  type="text"
-                  placeholder={getTranslation('search.placeholder', currentLanguage, 'Search products...')}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 pr-8 py-2 text-xs rounded-xl border border-gray-300 w-full focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-gray-50/80 transition-all"
-                />
-                {searchQuery && (
-                  <button 
-                    onClick={() => setSearchQuery('')}
-                    className="absolute right-2.5 top-2.5 text-gray-400 hover:text-slate-700 cursor-pointer"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                )}
-              </div>
-
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
-                <button
-                  onClick={() => setProductTypeFilter('ALL')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all cursor-pointer ${
-                    productTypeFilter === 'ALL'
-                      ? 'bg-slate-900 text-white shadow-xs'
-                      : 'bg-gray-100 text-slate-700 hover:bg-gray-200'
-                  }`}
-                >
-                  {getTranslation('filter.all', currentLanguage, 'All')} ({shop.products?.filter(p => p.type !== 'SERVICE' && p.type !== 'COURSE').length || 0})
-                </button>
-                <button
-                  onClick={() => setProductTypeFilter('IN_STOCK')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all cursor-pointer ${
-                    productTypeFilter === 'IN_STOCK'
-                      ? 'bg-emerald-700 text-white shadow-xs'
-                      : 'bg-gray-100 text-slate-700 hover:bg-gray-200'
-                  }`}
-                >
-                  {getTranslation('filter.inStock', currentLanguage, 'In Stock')}
-                </button>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-2xl border border-gray-200 p-10 sm:p-12 text-center space-y-3 shadow-2xs">
-              <ShoppingBag className="w-12 h-12 text-gray-300 mx-auto" />
-              <h3 className="text-base font-bold text-slate-800">Koi Product Nahi Mila</h3>
-              <p className="text-xs text-gray-500">
-                Aapki search query ya filter ke mutabiq koi product uplabdh nahi hai.
-              </p>
-              <button
-                onClick={() => {
-                  setSearchQuery('');
-                  setProductTypeFilter('ALL');
-                }}
-                className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white font-bold uppercase tracking-wider text-xs rounded-xl cursor-pointer transition-colors"
-              >
-                Reset Filters
-              </button>
-            </div>
-          </section>
-        ) : (
-          <StoreItemsCarouselSection
-            id="products"
-            title={getTranslation('nav.products', currentLanguage, 'Store Products')}
-            subtitle="Direct store prices with zero platform commission and instant WhatsApp delivery."
-            badgeText="Products Catalogue"
-            isService={false}
-            items={filteredProducts}
-            shop={shop}
-            cart={cart}
-            onAddToCart={addToCart}
-            onRemoveFromCart={removeFromCart}
-            onSelectItem={(prod) => setSelectedProduct(prod)}
-            filterToolbar={
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 bg-white p-3 sm:p-3.5 rounded-xl border border-gray-200/90 shadow-2xs">
-                <div className="relative flex-1 max-w-md">
-                  <Search className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
-                  <input
-                    type="text"
-                    placeholder={getTranslation('search.placeholder', currentLanguage, 'Search products...')}
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-9 pr-8 py-2 text-xs rounded-xl border border-gray-300 w-full focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-gray-50/80 transition-all"
-                  />
-                  {searchQuery && (
-                    <button 
-                      onClick={() => setSearchQuery('')}
-                      className="absolute right-2.5 top-2.5 text-gray-400 hover:text-slate-700 cursor-pointer"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  )}
-                </div>
-
-                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
-                  <button
-                    onClick={() => setProductTypeFilter('ALL')}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all cursor-pointer ${
-                      productTypeFilter === 'ALL'
-                        ? 'bg-slate-900 text-white shadow-xs'
-                        : 'bg-gray-100 text-slate-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    {getTranslation('filter.all', currentLanguage, 'All')} ({shop.products?.filter(p => p.type !== 'SERVICE' && p.type !== 'COURSE').length || 0})
-                  </button>
-                  <button
-                    onClick={() => setProductTypeFilter('IN_STOCK')}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all cursor-pointer ${
-                      productTypeFilter === 'IN_STOCK'
-                        ? 'bg-emerald-700 text-white shadow-xs'
-                        : 'bg-gray-100 text-slate-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    {getTranslation('filter.inStock', currentLanguage, 'In Stock')}
-                  </button>
-                </div>
-              </div>
-            }
-          />
-        )
+      {(!sectionsConfig || sectionsConfig.products.enabled) && catalogProducts.length > 0 && (
+        <StoreItemsCarouselSection
+          id="products"
+          title={getTranslation('nav.products', currentLanguage, 'Store Products')}
+          subtitle="Direct store prices with zero platform commission and instant WhatsApp delivery."
+          badgeText="Products Catalogue"
+          isService={false}
+          items={catalogProducts}
+          shop={shop}
+          cart={cart}
+          onAddToCart={addToCart}
+          onRemoveFromCart={removeFromCart}
+          onSelectItem={(prod) => setSelectedProduct(prod)}
+          searchPlaceholder={getTranslation('search.placeholder', currentLanguage, 'Search products...')}
+        />
       )}
 
-      {/* STORE DEMO VIDEOS (Up to 8 Videos) */}
-      {shop.videos && shop.videos.length > 0 && (!sectionsConfig?.videos || sectionsConfig.videos.enabled) && (
-        <section id="videos" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 space-y-6">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-red-100 text-red-600 flex items-center justify-center">
-              <Play className="w-4 h-4 fill-red-600" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-black uppercase tracking-tight text-slate-900 font-['Outfit',sans-serif]">
-                {sectionsConfig?.videos?.title || 'Watch Store Videos & Product Demos'}
-              </h2>
-              <p className="text-xs text-gray-500">
-                {sectionsConfig?.videos?.subtitle || 'Live demonstrations, shop tours, and product unboxing'}
-              </p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {shop.videos.map((vid) => {
-              const embedUrl = getYouTubeEmbedUrl(vid.youtubeUrl) || vid.youtubeUrl;
-              return (
-                <div key={vid.id} className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-xs hover:shadow-md transition-shadow">
-                  <div className="relative aspect-video bg-black">
-                    <iframe
-                      src={embedUrl}
-                      title={vid.title}
-                      className="w-full h-full border-0"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                      allowFullScreen
-                    />
-                  </div>
-                  <div className="p-3.5">
-                    <h4 className="text-xs font-bold text-slate-900 line-clamp-1">{vid.title}</h4>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </section>
+      {/* STORE DEMO VIDEOS (4 videos Desktop Grid, Mobile Carousel, View More Button) */}
+      {(!sectionsConfig?.videos || sectionsConfig.videos.enabled) && (
+        <VideoSectionRenderer shop={shop} config={sectionsConfig?.videos} />
       )}
 
       {/* 6. BENEFITS SECTION (ON/OFF & Custom Builder Config) */}
@@ -1061,9 +918,9 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
         <BenefitsSectionRenderer config={sectionsConfig.benefits} />
       )}
 
-      {/* 7. TESTIMONIALS (ON/OFF & Custom Builder Config - Name + Text + Location) */}
+      {/* 7. TESTIMONIALS (Carousel + View More Modal) */}
       {sectionsConfig && sectionsConfig.testimonials.enabled && (
-        <TestimonialsSectionRenderer config={sectionsConfig.testimonials} />
+        <TestimonialsSectionRenderer config={sectionsConfig.testimonials} shop={shop} />
       )}
 
       {/* 8. OUR OFFERS & PROMOTIONAL BANNERS (ON/OFF & Custom Builder Config - 1 or 2 Banners) */}
@@ -1071,7 +928,12 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
         <OffersSectionRenderer config={sectionsConfig.offers} shop={shop} />
       )}
 
-      {/* 10. PORTFOLIO / GALLERY (ON/OFF & Custom Builder Config) */}
+      {/* 9. MASONRY GALLERY SECTION (Masonry Layout + Lightbox + View More Button) */}
+      {(!sectionsConfig || !sectionsConfig.gallery || sectionsConfig.gallery.enabled) && (
+        <GallerySectionRenderer config={sectionsConfig?.gallery} shop={shop} />
+      )}
+
+      {/* 10. PORTFOLIO / WORK SHOWCASE (ON/OFF & Custom Builder Config) */}
       {sectionsConfig && sectionsConfig.portfolio.enabled && (
         <PortfolioSectionRenderer config={sectionsConfig.portfolio} />
       )}
@@ -1093,7 +955,7 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
 
       {/* 14. CONTACT US & CUSTOMER INQUIRY FORM SECTION (ON/OFF & Custom Builder Config) */}
       {(!sectionsConfig || sectionsConfig.contact.enabled) && (
-      <section id="contact-inquiry" ref={inquirySectionRef} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16">
+      <section id="contact-inquiry" ref={inquirySectionRef} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 space-y-8">
         <div className="bg-gradient-to-br from-orange-50/80 via-white to-white rounded-3xl border border-orange-200/80 p-6 sm:p-10 lg:p-12 shadow-sm">
           
           <div className="text-center max-w-2xl mx-auto space-y-2 mb-10">
@@ -1290,6 +1152,9 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
           </div>
 
         </div>
+
+        {/* SOCIAL MEDIA ICONS & PROFILES CONNECT BLOCK */}
+        <ContactSocialMediaBlock shop={shop} />
       </section>
       )}
 

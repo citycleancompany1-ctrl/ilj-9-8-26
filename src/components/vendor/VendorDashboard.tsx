@@ -104,8 +104,6 @@ interface VendorDashboardProps {
   adminAccountHolder?: string;
   adminPhone?: string;
   adminWhatsapp?: string;
-  allShops?: Shop[];
-  onSwitchShop?: (shopId: string) => void;
 }
 
 export const VendorDashboard: React.FC<VendorDashboardProps> = ({
@@ -121,8 +119,6 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
   adminAccountHolder = 'IndianLalaJi Platform (R. K. Mehra)',
   adminPhone = '7087033009',
   adminWhatsapp = '7087033009',
-  allShops,
-  onSwitchShop,
 }) => {
   // Sidebar and mobile drawer states
   const [activeNav, setActiveNav] = useState<string>('dashboard');
@@ -394,9 +390,11 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
         setCurrentShop(updated);
         handleSaveAll(updated);
       } else if (field === 'gallery') {
-        const updated = { ...currentShop, galleryImages: [base64, ...currentShop.galleryImages.slice(0, 7)] };
+        const currentList = currentShop.galleryImages || [];
+        const updated = { ...currentShop, galleryImages: [base64, ...currentList.slice(0, 11)] };
         setCurrentShop(updated);
         handleSaveAll(updated);
+        showToast('Photo gallery mein naya photo add ho gaya!');
       } else {
         const updated = { ...currentShop, [field]: base64 };
         setCurrentShop(updated);
@@ -405,6 +403,49 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
     } catch (err) {
       console.error('File upload error:', err);
       alert('Kripya valid image file upload karein (PNG / JPG).');
+    }
+  };
+
+  const handleDesktopBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const base64 = await fileToBase64(file);
+      const currentList = [...(currentShop.desktopBanners || currentShop.banners || [])];
+      while (currentList.length <= index) currentList.push('');
+      currentList[index] = base64;
+      const updated = {
+        ...currentShop,
+        desktopBanners: currentList,
+        banners: currentList,
+      };
+      setCurrentShop(updated);
+      handleSaveAll(updated);
+      showToast(`Desktop Banner #${index + 1} safalta se upload ho gaya!`);
+    } catch (err) {
+      console.error(err);
+      alert('Image upload error');
+    }
+  };
+
+  const handleMobileBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const base64 = await fileToBase64(file);
+      const currentList = [...(currentShop.mobileBanners || currentShop.banners || [])];
+      while (currentList.length <= index) currentList.push('');
+      currentList[index] = base64;
+      const updated = {
+        ...currentShop,
+        mobileBanners: currentList,
+      };
+      setCurrentShop(updated);
+      handleSaveAll(updated);
+      showToast(`Mobile Banner #${index + 1} safalta se upload ho gaya!`);
+    } catch (err) {
+      console.error(err);
+      alert('Image upload error');
     }
   };
 
@@ -778,8 +819,6 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
         onLogout={onLogout}
         onVisitStore={() => onNavigateToShop(currentShop.shopId)}
         unreadInquiriesCount={filteredInquiries.filter((i) => i.status === 'UNREAD').length}
-        allShops={allShops}
-        onSwitchShop={onSwitchShop}
       />
 
       {/* 2. RIGHT MAIN CONTENT AREA: Remaining screen width */}
@@ -788,7 +827,7 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
         {/* Top Header Bar with Mobile Hamburger, Breadcrumbs, & Quick Actions */}
         <header className="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-gray-200 px-4 sm:px-6 py-3 shadow-2xs">
           <div className="flex items-center justify-between gap-3">
-            {/* Left: Hamburger (Mobile) + Breadcrumb + Website Switcher */}
+            {/* Left: Hamburger (Mobile) + Breadcrumb + Verified Status */}
             <div className="flex items-center gap-3 min-w-0">
               <button
                 type="button"
@@ -812,33 +851,10 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
                   ID: {currentShop.shopId}
                 </span>
 
-                {/* Topbar Website Switcher Dropdown */}
-                {allShops && allShops.length > 1 && (
-                  <div className="flex items-center gap-1.5 bg-orange-50/70 hover:bg-orange-100/70 border border-orange-200 rounded-xl px-2.5 py-1 text-xs transition-colors shrink-0">
-                    <Globe className="w-3.5 h-3.5 text-orange-600 shrink-0" />
-                    <label htmlFor="vendor-top-website-switcher" className="text-[10px] font-extrabold uppercase tracking-wider text-orange-800 hidden md:inline shrink-0">
-                      Website Switcher:
-                    </label>
-                    <select
-                      id="vendor-top-website-switcher"
-                      value={currentShop.shopId}
-                      onChange={(e) => {
-                        if (onSwitchShop) {
-                          onSwitchShop(e.target.value);
-                          showToast(`Website switched: ${allShops.find((s) => s.shopId === e.target.value)?.businessName || e.target.value}`);
-                        }
-                      }}
-                      className="bg-transparent font-black text-slate-900 text-xs focus:outline-none cursor-pointer pr-1"
-                      title="Switch active website"
-                    >
-                      {allShops.map((s) => (
-                        <option key={s.shopId} value={s.shopId}>
-                          {s.businessName} ({s.shopId})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
+                  <ShieldCheck className="w-3 h-3 text-emerald-600 shrink-0" />
+                  <span>My Store</span>
+                </span>
               </div>
             </div>
 
@@ -1476,7 +1492,7 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
           <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80">
             <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">WhatsApp Orders</div>
             <div className="text-xl sm:text-2xl font-black text-emerald-700 mt-1 font-['Outfit',sans-serif]">
-              {inquiries.length}
+              {filteredInquiries.length}
             </div>
             <div className="text-[11px] text-emerald-600 font-semibold mt-0.5">
               {filteredInquiries.filter((i) => i.status === 'UNREAD').length} New Pending
@@ -1685,7 +1701,7 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
                 </span>
               ) : (
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-700">
-                  {inquiries.length} Total
+                  {filteredInquiries.length} Total
                 </span>
               )}
             </div>
@@ -3769,34 +3785,284 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
                 </div>
               </div>
 
-              {/* Main Banner Upload */}
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
-                  Main Hero Banner Photo (Mobile & Desktop)
-                </label>
-                <div className="flex flex-col sm:flex-row items-center gap-4">
-                  <div className="w-full sm:w-64 h-32 rounded-xl bg-gray-100 overflow-hidden border border-gray-300 relative group">
-                    <img
-                      src={currentShop.banners[0] || 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800'}
-                      alt="Banner Preview"
-                      className="w-full h-full object-cover"
+              {/* 1. Desktop Banners Carousel (1, 2, 3) */}
+              <div className="space-y-3 pt-2">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="text-xs font-black uppercase tracking-wider text-slate-900">
+                      Desktop Hero Carousel Banners (Banner 1, 2, 3)
+                    </h4>
+                    <p className="text-[11px] text-gray-500">
+                      Desktop aur laptop screens ke liye horizontal wide banners (16:9 ya 21:9)
+                    </p>
+                  </div>
+                  <span className="text-[10px] font-bold text-orange-800 bg-orange-100 px-2 py-0.5 rounded">
+                    Desktop View
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {[0, 1, 2].map((idx) => {
+                    const bannerSrc = (currentShop.desktopBanners && currentShop.desktopBanners[idx]) || currentShop.banners[idx] || '';
+                    return (
+                      <div key={`desk-banner-${idx}`} className="border border-gray-200 rounded-xl p-3 bg-gray-50/50 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-slate-800">Desktop Banner #{idx + 1}</span>
+                          {bannerSrc && (
+                            <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">
+                              Uploaded
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="aspect-16/9 rounded-lg bg-gray-200 overflow-hidden border border-gray-300 relative group">
+                          {bannerSrc ? (
+                            <img src={bannerSrc} alt={`Desktop Banner ${idx + 1}`} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 text-xs">
+                              <ImageIcon className="w-6 h-6 mb-1 text-gray-300" />
+                              <span>No Banner</span>
+                            </div>
+                          )}
+                        </div>
+
+                        <label className="cursor-pointer w-full py-2 bg-white border border-gray-300 hover:bg-orange-50 text-slate-700 hover:text-orange-700 rounded text-[11px] font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors">
+                          <Upload className="w-3.5 h-3.5 text-orange-600" />
+                          <span>Upload Banner {idx + 1}</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => handleDesktopBannerUpload(e, idx)}
+                          />
+                        </label>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 2. Mobile Banners Carousel (1, 2, 3) */}
+              <div className="space-y-3 pt-3 border-t border-gray-100">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="text-xs font-black uppercase tracking-wider text-slate-900">
+                      Mobile Hero Carousel Banners (Banner 1, 2, 3)
+                    </h4>
+                    <p className="text-[11px] text-gray-500">
+                      Smartphones ke liye portrait banners (4:5 ya 9:16)
+                    </p>
+                  </div>
+                  <span className="text-[10px] font-bold text-purple-800 bg-purple-100 px-2 py-0.5 rounded">
+                    Mobile View
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {[0, 1, 2].map((idx) => {
+                    const bannerSrc = (currentShop.mobileBanners && currentShop.mobileBanners[idx]) || (currentShop.desktopBanners && currentShop.desktopBanners[idx]) || currentShop.banners[idx] || '';
+                    return (
+                      <div key={`mob-banner-${idx}`} className="border border-gray-200 rounded-xl p-3 bg-gray-50/50 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-slate-800">Mobile Banner #{idx + 1}</span>
+                          {bannerSrc && (
+                            <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">
+                              Uploaded
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="aspect-4/5 max-h-48 mx-auto rounded-lg bg-gray-200 overflow-hidden border border-gray-300 relative group">
+                          {bannerSrc ? (
+                            <img src={bannerSrc} alt={`Mobile Banner ${idx + 1}`} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 text-xs">
+                              <ImageIcon className="w-6 h-6 mb-1 text-gray-300" />
+                              <span>No Banner</span>
+                            </div>
+                          )}
+                        </div>
+
+                        <label className="cursor-pointer w-full py-2 bg-white border border-gray-300 hover:bg-purple-50 text-slate-700 hover:text-purple-700 rounded text-[11px] font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors">
+                          <Upload className="w-3.5 h-3.5 text-purple-600" />
+                          <span>Upload Mobile {idx + 1}</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => handleMobileBannerUpload(e, idx)}
+                          />
+                        </label>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 3. Social Media Accounts & Profile Links */}
+              <div className="space-y-3 pt-3 border-t border-gray-100">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="text-xs font-black uppercase tracking-wider text-slate-900">
+                      Social Media Accounts & Contact Profiles
+                    </h4>
+                    <p className="text-[11px] text-gray-500">
+                      Contact Us section mein clickable social media icons display honge
+                    </p>
+                  </div>
+                  <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded">
+                    Direct Links
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase text-slate-700 mb-1">
+                      WhatsApp Number / Link
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 9876543210"
+                      value={currentShop.socialLinks?.whatsapp || currentShop.whatsapp || ''}
+                      onChange={(e) => setCurrentShop({
+                        ...currentShop,
+                        whatsapp: e.target.value,
+                        socialLinks: { ...(currentShop.socialLinks || {}), whatsapp: e.target.value }
+                      })}
+                      className="w-full px-3 py-1.5 rounded border border-gray-300 text-xs focus:ring-2 focus:ring-orange-500"
                     />
                   </div>
 
-                  <label className="cursor-pointer px-4 py-3 bg-orange-50 border border-dashed border-orange-300 hover:bg-orange-100/70 text-orange-900 rounded-sm text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-colors">
-                    <Upload className="w-4 h-4 text-orange-600" />
-                    <span>Upload New Banner from Device</span>
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase text-slate-700 mb-1">
+                      Instagram Handle / URL
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. @shahi_handicrafts"
+                      value={currentShop.socialLinks?.instagram || ''}
+                      onChange={(e) => setCurrentShop({
+                        ...currentShop,
+                        socialLinks: { ...(currentShop.socialLinks || {}), instagram: e.target.value }
+                      })}
+                      className="w-full px-3 py-1.5 rounded border border-gray-300 text-xs focus:ring-2 focus:ring-orange-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase text-slate-700 mb-1">
+                      Facebook Page URL
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. https://facebook.com/myshop"
+                      value={currentShop.socialLinks?.facebook || ''}
+                      onChange={(e) => setCurrentShop({
+                        ...currentShop,
+                        socialLinks: { ...(currentShop.socialLinks || {}), facebook: e.target.value }
+                      })}
+                      className="w-full px-3 py-1.5 rounded border border-gray-300 text-xs focus:ring-2 focus:ring-orange-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase text-slate-700 mb-1">
+                      YouTube Channel / Video
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. https://youtube.com/@myshop"
+                      value={currentShop.socialLinks?.youtube || ''}
+                      onChange={(e) => setCurrentShop({
+                        ...currentShop,
+                        socialLinks: { ...(currentShop.socialLinks || {}), youtube: e.target.value }
+                      })}
+                      className="w-full px-3 py-1.5 rounded border border-gray-300 text-xs focus:ring-2 focus:ring-orange-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase text-slate-700 mb-1">
+                      Twitter / X Handle
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. @myshop"
+                      value={currentShop.socialLinks?.twitter || ''}
+                      onChange={(e) => setCurrentShop({
+                        ...currentShop,
+                        socialLinks: { ...(currentShop.socialLinks || {}), twitter: e.target.value }
+                      })}
+                      className="w-full px-3 py-1.5 rounded border border-gray-300 text-xs focus:ring-2 focus:ring-orange-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase text-slate-700 mb-1">
+                      LinkedIn Page URL
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. https://linkedin.com/company/myshop"
+                      value={currentShop.socialLinks?.linkedin || ''}
+                      onChange={(e) => setCurrentShop({
+                        ...currentShop,
+                        socialLinks: { ...(currentShop.socialLinks || {}), linkedin: e.target.value }
+                      })}
+                      className="w-full px-3 py-1.5 rounded border border-gray-300 text-xs focus:ring-2 focus:ring-orange-500"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* 4. Photo Gallery (Masonry Showcase Photos) */}
+              <div className="space-y-3 pt-3 border-t border-gray-100">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="text-xs font-black uppercase tracking-wider text-slate-900">
+                      Store Photo Gallery (Masonry Section Photos)
+                    </h4>
+                    <p className="text-[11px] text-gray-500">
+                      Store ki dukaan, showcase aur products ke photos upload karein
+                    </p>
+                  </div>
+                  <label className="cursor-pointer px-3 py-1.5 bg-cyan-600 hover:bg-cyan-700 text-white rounded text-[11px] font-bold uppercase tracking-wider flex items-center gap-1 transition-colors">
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Add Photo</span>
                     <input
                       type="file"
                       accept="image/*"
                       className="hidden"
-                      onChange={(e) => handleFileUpload(e, 'banner')}
+                      onChange={(e) => handleFileUpload(e, 'gallery')}
                     />
                   </label>
                 </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
+                  {(currentShop.galleryImages || []).map((imgUrl, gIdx) => (
+                    <div key={`dash-gal-${gIdx}`} className="aspect-square rounded-xl overflow-hidden border border-gray-200 relative group bg-gray-100">
+                      <img src={imgUrl} alt={`Gallery ${gIdx + 1}`} className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated = {
+                            ...currentShop,
+                            galleryImages: currentShop.galleryImages.filter((_, i) => i !== gIdx),
+                          };
+                          setCurrentShop(updated);
+                          handleSaveAll(updated);
+                        }}
+                        className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-red-600 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer shadow-xs"
+                        title="Delete Photo"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
 
-              {/* About Photo Upload */}
+              {/* 5. About Photo Upload */}
               <div className="pt-3 border-t border-gray-100">
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
                   About Us / Owner Photo

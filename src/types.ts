@@ -25,6 +25,7 @@ export interface VideoItem {
   id: string;
   title: string;
   youtubeUrl: string;
+  thumbnailUrl?: string;
 }
 
 export interface ReviewItem {
@@ -79,7 +80,9 @@ export interface Shop {
 
   // Branding & Media
   logoUrl: string;
-  banners: string[];
+  banners: string[]; // General/fallback banners
+  desktopBanners?: string[]; // Desktop hero carousel banners (1, 2, 3)
+  mobileBanners?: string[]; // Mobile hero carousel banners (1, 2, 3)
   bannerTitle?: string;
   bannerSubtitle?: string;
   aboutPhotoUrl: string;
@@ -117,6 +120,11 @@ export interface Shop {
     instagram?: string;
     facebook?: string;
     youtube?: string;
+    twitter?: string;
+    linkedin?: string;
+    whatsapp?: string;
+    googleMaps?: string;
+    website?: string;
   };
 
   // Website Connect & Custom Domain
@@ -327,6 +335,13 @@ export interface PortfolioSectionConfig {
   items: PortfolioItem[];
 }
 
+export interface GallerySectionConfig {
+  enabled: boolean;
+  title: string;
+  subtitle: string;
+  items?: string[]; // Optional specific image URLs, otherwise uses shop.galleryImages
+}
+
 export interface TeamMemberItem {
   id: string;
   name: string;
@@ -426,6 +441,7 @@ export interface ShopSectionsConfig {
   testimonials: TestimonialsSectionConfig;
   offers: OffersSectionConfig;
   videos?: VideoSectionConfig;
+  gallery?: GallerySectionConfig;
   portfolio: PortfolioSectionConfig;
   team: TeamSectionConfig;
   faq: FaqSectionConfig;

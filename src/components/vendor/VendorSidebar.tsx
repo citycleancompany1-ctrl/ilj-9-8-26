@@ -54,8 +54,6 @@ export interface VendorSidebarProps {
   onLogout: () => void;
   onVisitStore: () => void;
   unreadInquiriesCount?: number;
-  allShops?: Shop[];
-  onSwitchShop?: (shopId: string) => void;
 }
 
 interface MenuItem {
@@ -81,8 +79,6 @@ export const VendorSidebar: React.FC<VendorSidebarProps> = ({
   onLogout,
   onVisitStore,
   unreadInquiriesCount = 0,
-  allShops,
-  onSwitchShop,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({
@@ -393,34 +389,16 @@ export const VendorSidebar: React.FC<VendorSidebarProps> = ({
           </button>
         </div>
 
-        {/* Website Switcher Dropdown (when multiple websites exist) */}
-        {allShops && allShops.length > 1 && (
-          <div className="mt-2.5 pt-2.5 border-t border-slate-800/60">
-            <div className="flex items-center justify-between gap-1 mb-1">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
-                <Globe className="w-3 h-3 text-orange-400" />
-                <span>Switch Website:</span>
-              </span>
-              <span className="text-[9px] font-mono text-slate-500">
-                {allShops.length} Available
-              </span>
-            </div>
-            <select
-              value={shop.shopId}
-              onChange={(e) => {
-                if (onSwitchShop) onSwitchShop(e.target.value);
-              }}
-              className="w-full bg-[#1F2937] text-slate-200 border border-slate-700/80 rounded-lg px-2 py-1.5 text-xs font-semibold focus:outline-none focus:border-orange-500 cursor-pointer"
-              title="Switch to another website"
-            >
-              {allShops.map((s) => (
-                <option key={s.shopId} value={s.shopId}>
-                  {s.businessName} ({s.shopId})
-                </option>
-              ))}
-            </select>
+        {/* Dedicated Single-Vendor Secure Portal Indicator */}
+        <div className="mt-2.5 pt-2.5 border-t border-slate-800/60 flex items-center justify-between gap-1.5 text-[10px] text-slate-400">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0 animate-pulse"></span>
+            <span className="font-semibold text-slate-300 truncate">Dedicated Vendor Portal</span>
           </div>
-        )}
+          <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-slate-800 text-emerald-400 border border-emerald-900/50 shrink-0 font-bold">
+            Private
+          </span>
+        </div>
       </div>
 
       {/* 2. Search Menu Input */}

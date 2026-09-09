@@ -255,6 +255,7 @@ export default function App() {
         handleOpenAuth('LOGIN', 'Vendor Dashboard open karne ke liye kripya pehle Login karein.');
         return;
       }
+      setLoggedVendorShopId(session.shopId);
       setActiveShopId(null);
       setCurrentView('vendor-dashboard');
       window.history.pushState({}, '', '/vendor-dashboard');
@@ -345,8 +346,13 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Vendor updates their shop
+  // Vendor updates their shop - strictly secured to vendor's own shop
   const handleVendorUpdateShop = async (updatedShop: Shop) => {
+    const session = loadUserSession();
+    if (session.role !== 'VENDOR' || !session.shopId || session.shopId !== updatedShop.shopId) {
+      console.error('[Security] Blocked unauthorized attempt to update shop:', updatedShop.shopId);
+      return;
+    }
     // 1. Immediately persist this specific shop to Firestore cloud
     await saveShopToFirestore(updatedShop);
     // 2. Update local state & localStorage so this device reflects change immediately
@@ -358,23 +364,6 @@ export default function App() {
       savePlatformState(updatedState);
       return updatedState;
     });
-  };
-
-  // Switch active vendor website
-  const handleVendorSwitchShop = (newShopId: string) => {
-    const targetShop = platformState.shops.find(
-      (s) => s.shopId.toLowerCase() === newShopId.toLowerCase() || s.id.toLowerCase() === newShopId.toLowerCase()
-    );
-    if (targetShop) {
-      setLoggedVendorShopId(targetShop.shopId);
-      const session = loadUserSession();
-      saveUserSession({
-        ...session,
-        shopId: targetShop.shopId,
-        vendorName: targetShop.vendorName || session.vendorName,
-        email: targetShop.vendorEmail || session.email,
-      });
-    }
   };
 
   // Inquiry submission from Public Store
@@ -549,7 +538,7 @@ export default function App() {
           <ContactPage onAddLead={handleAddPlatformLead} />
         )}
 
-        {/* Vendor Dashboard (Strictly Protected) */}
+        {/* Vendor Dashboard (Strictly Protected - Isolated to Own Shop Only) */}
         {currentView === 'vendor-dashboard' && (
           currentRole === 'VENDOR' && currentVendorShop ? (
             <VendorDashboard
@@ -558,15 +547,13 @@ export default function App() {
               onLogout={handleLogout}
               onNavigateToShop={(sid) => handleNavigate('shop', sid)}
               onNavigateHome={() => handleNavigate('home')}
-              inquiries={platformState.inquiries}
+              inquiries={platformState.inquiries.filter((inq) => inq.shopId === currentVendorShop.shopId)}
               onUpdateInquiryStatus={handleUpdateInquiryStatus}
               adminPaymentQrUrl={platformState.adminPaymentQrUrl}
               adminUpiId={platformState.adminUpiId}
               adminAccountHolder={platformState.adminAccountHolder}
               adminPhone={platformState.customerCarePhone}
               adminWhatsapp={platformState.customerCareWhatsapp}
-              allShops={platformState.shops}
-              onSwitchShop={handleVendorSwitchShop}
             />
           ) : (
             <ProtectedAccessBanner

@@ -247,11 +247,18 @@ export function getDefaultSectionsConfig(shop: Partial<Shop> = {}): ShopSections
     // 9. Store Videos & Reels Showcase
     videos: {
       enabled: true,
-      title: 'Store Videos & YouTube Reels',
+      title: 'Store Videos & Product Demos',
       subtitle: 'Watch our products in action, store tour & customer experiences',
     },
 
-    // 10. Portfolio / Projects
+    // 10. Photo Gallery (Masonry Style Showcase)
+    gallery: {
+      enabled: true,
+      title: 'Store Photo Gallery',
+      subtitle: 'Hamari dukaan, taaza stock aur authentic photo showcase',
+    },
+
+    // 11. Portfolio / Projects
     portfolio: {
       enabled: true,
       title: 'Our Portfolio & Store Gallery',

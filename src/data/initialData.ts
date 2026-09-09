@@ -127,6 +127,17 @@ export const INITIAL_SHOPS: Shop[] = [
     banners: [
       'https://images.unsplash.com/photo-1542838132-92c53300491e?w=1200&auto=format&fit=crop&q=80',
       'https://images.unsplash.com/photo-1608686207856-001b95cf60ca?w=1200&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1588964895597-cfccd6e2dbf9?w=1200&auto=format&fit=crop&q=80',
+    ],
+    desktopBanners: [
+      'https://images.unsplash.com/photo-1542838132-92c53300491e?w=1600&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1608686207856-001b95cf60ca?w=1600&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1588964895597-cfccd6e2dbf9?w=1600&auto=format&fit=crop&q=80',
+    ],
+    mobileBanners: [
+      'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&h=1000&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1608686207856-001b95cf60ca?w=800&h=1000&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1588964895597-cfccd6e2dbf9?w=800&h=1000&fit=crop&q=80',
     ],
     bannerTitle: 'Apki Apni Vishwasniya Lala Ji Ki Dukaan',
     bannerSubtitle: 'Ghar baithe order karein shuddh Desi Ghee, Basmati Chawal, Taaza Masale aur Dailly Ration with Free Home Delivery!',
@@ -134,10 +145,14 @@ export const INITIAL_SHOPS: Shop[] = [
     aboutStory: 'Pichle 35 saalon se hum Varanasi ke parivaaron ko behtareen quality ka ration uplabdh kara rahe hain. Humare yahan har saaman shuddhata ki guarantee ke saath milta hai.',
     establishedYear: '1989',
     galleryImages: [
-      'https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=600&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1542838132-92c53300491e?w=600&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1608686207856-001b95cf60ca?w=600&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1588964895597-cfccd6e2dbf9?w=600&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1608686207856-001b95cf60ca?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1588964895597-cfccd6e2dbf9?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1556740738-b6a63e27c4df?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1556740749-887f6717d7e4?w=800&auto=format&fit=crop&q=80',
     ],
     paymentQrUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=upi://pay?pa=rameshkirana@sbi&pn=LalaJiMegaKirana&cu=INR',
     upiId: 'rameshkirana@sbi',
@@ -149,7 +164,18 @@ export const INITIAL_SHOPS: Shop[] = [
     videos: [
       { id: 'v1', title: 'Hamari Shuddhata Ki Pehchan — Taaza Masale', youtubeUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
       { id: 'v2', title: 'Desi Ghee & Basmati Chawal Ka Live Testing', youtubeUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
+      { id: 'v3', title: 'Dukaan Tour & Quality Packaging Process', youtubeUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
+      { id: 'v4', title: 'Customer Review & Happy Family Experience', youtubeUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
     ],
+    socialLinks: {
+      instagram: 'https://instagram.com/lalaji_kirana',
+      facebook: 'https://facebook.com/lalajikirana',
+      youtube: 'https://youtube.com/@lalajimegakirana',
+      twitter: 'https://twitter.com/lalajikirana',
+      linkedin: 'https://linkedin.com/company/lalaji-store',
+      whatsapp: 'https://wa.me/919876543210',
+      googleMaps: 'https://maps.google.com/?q=Godowlia+Varanasi',
+    },
     products: [
       {
         id: 'p1',

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Sparkles,
   PhoneCall,
@@ -19,6 +19,8 @@ import {
   MessageSquare,
   ChevronDown,
   ChevronUp,
+  ChevronLeft,
+  ChevronRight,
   MapPin,
   Mail,
   Phone,
@@ -30,10 +32,17 @@ import {
   Instagram,
   Facebook,
   Youtube,
+  Twitter,
+  Linkedin,
   ArrowUpRight,
   X,
   Copy,
-  Share2
+  Share2,
+  Play,
+  Maximize2,
+  Image as ImageIcon,
+  SlidersHorizontal,
+  Camera,
 } from 'lucide-react';
 import {
   Shop,
@@ -50,6 +59,9 @@ import {
   OffersSectionConfig,
   OfferBannerItem,
   PortfolioSectionConfig,
+  GallerySectionConfig,
+  VideoSectionConfig,
+  VideoItem,
   TeamSectionConfig,
   FaqSectionConfig,
   CtaSectionConfig,
@@ -60,7 +72,7 @@ import {
   ProductItem,
   CartItem,
 } from '../../types';
-import { getWhatsAppDirectUrl, formatINR } from '../../utils/mediaUpload';
+import { getWhatsAppDirectUrl, formatINR, getYouTubeEmbedUrl } from '../../utils/mediaUpload';
 import { StoreItemsCarouselSection } from './StoreItemsCarouselSection';
 
 // ==========================================
@@ -72,6 +84,42 @@ export const HeroSectionRenderer: React.FC<{
   onCtaClick?: () => void;
 }> = ({ config, shop, onCtaClick }) => {
   if (!config.enabled) return null;
+
+  // Resolve Desktop Banners (1, 2, or 3 banners)
+  const desktopBanners = (shop.desktopBanners && shop.desktopBanners.filter(Boolean).length > 0)
+    ? shop.desktopBanners.filter(Boolean)
+    : (shop.banners && shop.banners.filter(Boolean).length > 0)
+      ? shop.banners.filter(Boolean)
+      : config.backgroundImage
+        ? [config.backgroundImage]
+        : ['https://images.unsplash.com/photo-1542838132-92c53300491e?w=1600'];
+
+  // Resolve Mobile Banners (1, 2, or 3 banners - mobile optimized portrait/square)
+  const mobileBanners = (shop.mobileBanners && shop.mobileBanners.filter(Boolean).length > 0)
+    ? shop.mobileBanners.filter(Boolean)
+    : desktopBanners;
+
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+  const totalSlides = Math.max(desktopBanners.length, mobileBanners.length);
+
+  useEffect(() => {
+    if (totalSlides <= 1 || isPaused) return;
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % totalSlides);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [totalSlides, isPaused]);
+
+  const handlePrev = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setCurrentSlide((prev) => (prev - 1 + totalSlides) % totalSlides);
+  };
+
+  const handleNext = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setCurrentSlide((prev) => (prev + 1) % totalSlides);
+  };
 
   const handleCta = () => {
     if (config.ctaLink === 'whatsapp') {
@@ -99,47 +147,113 @@ export const HeroSectionRenderer: React.FC<{
   };
 
   return (
-    <section id="hero" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6">
+    <section 
+      id="hero" 
+      className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6"
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+    >
       <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-amber-50/90 via-orange-50/50 to-white text-slate-900 shadow-sm min-h-[420px] sm:min-h-[480px] border border-orange-200/80 flex items-center">
         
-        {/* Background Image with Light Elegant Atmosphere Overlay */}
-        {config.backgroundImage && (
-          <div className="absolute inset-0 z-0 pointer-events-none">
-            <img
-              src={config.backgroundImage}
-              alt={config.heading}
-              className="w-full h-full object-cover object-center opacity-15 sm:opacity-20 scale-105 transition-transform duration-1000 ease-out"
-            />
-            <div className="absolute inset-0 bg-gradient-to-r from-amber-50/95 via-orange-50/90 to-white/70" />
-            <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-transparent to-amber-50/50" />
-          </div>
+        {/* DESKTOP HERO BANNER CAROUSEL (Landscape 16:9 / 21:9) */}
+        <div className="hidden md:block absolute inset-0 z-0 overflow-hidden">
+          {desktopBanners.map((imgUrl, idx) => {
+            const isActive = idx === (currentSlide % desktopBanners.length);
+            return (
+              <div
+                key={`desk-banner-${idx}`}
+                className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
+                  isActive ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+                }`}
+              >
+                <img
+                  src={imgUrl}
+                  alt={`${shop.businessName} Desktop Banner ${idx + 1}`}
+                  className="w-full h-full object-cover object-center scale-102 transition-transform duration-7000 ease-out"
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-amber-50/95 via-orange-50/85 to-white/75" />
+                <div className="absolute inset-0 bg-gradient-to-t from-white/95 via-transparent to-amber-50/35" />
+              </div>
+            );
+          })}
+        </div>
+
+        {/* MOBILE HERO BANNER CAROUSEL (Portrait 4:5 / 9:16) */}
+        <div className="block md:hidden absolute inset-0 z-0 overflow-hidden">
+          {mobileBanners.map((imgUrl, idx) => {
+            const isActive = idx === (currentSlide % mobileBanners.length);
+            return (
+              <div
+                key={`mob-banner-${idx}`}
+                className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
+                  isActive ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+                }`}
+              >
+                <img
+                  src={imgUrl}
+                  alt={`${shop.businessName} Mobile Banner ${idx + 1}`}
+                  className="w-full h-full object-cover object-center"
+                />
+                <div className="absolute inset-0 bg-gradient-to-b from-white/95 via-amber-50/90 to-white/95" />
+              </div>
+            );
+          })}
+        </div>
+
+        {/* CAROUSEL CONTROLS: Left & Right Arrows (Only if multiple banners) */}
+        {totalSlides > 1 && (
+          <>
+            <button
+              type="button"
+              onClick={handlePrev}
+              aria-label="Previous Banner"
+              className="absolute left-3 sm:left-5 top-1/2 -translate-y-1/2 z-20 w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-white/90 hover:bg-white text-slate-800 border border-gray-200/90 shadow-md backdrop-blur-md flex items-center justify-center cursor-pointer transition-all hover:scale-105 active:scale-95"
+            >
+              <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6 text-slate-800" />
+            </button>
+
+            <button
+              type="button"
+              onClick={handleNext}
+              aria-label="Next Banner"
+              className="absolute right-3 sm:right-5 top-1/2 -translate-y-1/2 z-20 w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-white/90 hover:bg-white text-slate-800 border border-gray-200/90 shadow-md backdrop-blur-md flex items-center justify-center cursor-pointer transition-all hover:scale-105 active:scale-95"
+            >
+              <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6 text-slate-800" />
+            </button>
+          </>
         )}
 
-        {/* Hero Main Content */}
+        {/* Hero Main Content Overlay */}
         <div className="relative z-10 w-full p-6 sm:p-10 lg:p-14 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
           
           {/* Left: Text & Actions */}
           <div className="lg:col-span-7 space-y-4 sm:space-y-6">
             
-            {/* Top Badge & Verified Merchant Label */}
+            {/* Top Badge, Carousel Indicator & Verified Merchant Label */}
             <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 bg-orange-100/90 text-orange-800 border border-orange-200 text-[11px] font-black uppercase tracking-wider px-3 py-1 rounded-full shadow-xs">
+              <span className="inline-flex items-center gap-1.5 bg-orange-100/95 text-orange-900 border border-orange-200 text-[11px] font-black uppercase tracking-wider px-3 py-1 rounded-full shadow-xs backdrop-blur-xs">
                 <Sparkles className="w-3.5 h-3.5 text-orange-600" />
                 <span>{config.badge || 'Verified Direct Merchant'}</span>
               </span>
-              <span className="inline-flex items-center gap-1 bg-emerald-100/90 text-emerald-800 border border-emerald-200 text-[11px] font-bold px-2.5 py-0.5 rounded-full shadow-xs">
+              <span className="inline-flex items-center gap-1 bg-emerald-100/95 text-emerald-900 border border-emerald-200 text-[11px] font-bold px-2.5 py-0.5 rounded-full shadow-xs backdrop-blur-xs">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                 <span>0% Commission Direct Store</span>
               </span>
+
+              {totalSlides > 1 && (
+                <span className="inline-flex items-center gap-1 bg-slate-900/80 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full shadow-xs backdrop-blur-xs">
+                  <span>Banner {currentSlide + 1} / {totalSlides}</span>
+                </span>
+              )}
             </div>
 
             {/* Main Heading */}
-            <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black uppercase tracking-tight text-slate-950 font-['Outfit',sans-serif] leading-[1.12]">
+            <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black uppercase tracking-tight text-slate-950 font-['Outfit',sans-serif] leading-[1.12] drop-shadow-xs">
               {config.heading}
             </h1>
 
             {/* Subheading */}
-            <p className="text-xs sm:text-base text-slate-700 leading-relaxed max-w-2xl font-normal">
+            <p className="text-xs sm:text-base text-slate-800 leading-relaxed max-w-2xl font-medium drop-shadow-xs">
               {config.subheading}
             </p>
 
@@ -157,7 +271,7 @@ export const HeroSectionRenderer: React.FC<{
               <button
                 type="button"
                 onClick={handleSecondaryCta}
-                className="px-5 py-3.5 bg-white hover:bg-emerald-50 text-emerald-800 font-bold uppercase tracking-wider text-xs sm:text-sm rounded-xl border border-emerald-300 shadow-xs flex items-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                className="px-5 py-3.5 bg-white/95 hover:bg-emerald-50 text-emerald-900 font-bold uppercase tracking-wider text-xs sm:text-sm rounded-xl border border-emerald-300 shadow-xs flex items-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer backdrop-blur-xs"
               >
                 <PhoneCall className="w-4 h-4 text-emerald-600" />
                 <span>{config.secondaryCtaText || 'Direct WhatsApp Inquiry'}</span>
@@ -165,16 +279,16 @@ export const HeroSectionRenderer: React.FC<{
             </div>
 
             {/* Trust Badges Strip */}
-            <div className="pt-4 flex flex-wrap items-center gap-5 text-[11px] text-slate-700 border-t border-orange-200/80">
-              <span className="flex items-center gap-1.5 font-bold text-slate-800">
+            <div className="pt-4 flex flex-wrap items-center gap-5 text-[11px] text-slate-800 border-t border-orange-200/80">
+              <span className="flex items-center gap-1.5 font-bold text-slate-900">
                 <ShieldCheck className="w-4 h-4 text-emerald-600" />
                 <span>100% Genuine Quality</span>
               </span>
-              <span className="flex items-center gap-1.5 font-bold text-slate-800">
+              <span className="flex items-center gap-1.5 font-bold text-slate-900">
                 <Zap className="w-4 h-4 text-orange-600" />
                 <span>Direct 0% UPI Rates</span>
               </span>
-              <span className="flex items-center gap-1.5 font-bold text-slate-800">
+              <span className="flex items-center gap-1.5 font-bold text-slate-900">
                 <Clock className="w-4 h-4 text-blue-600" />
                 <span>Express Local Delivery</span>
               </span>
@@ -252,6 +366,29 @@ export const HeroSectionRenderer: React.FC<{
           </div>
 
         </div>
+
+        {/* BOTTOM DOT INDICATORS (If multiple banners) */}
+        {totalSlides > 1 && (
+          <div className="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 bg-black/25 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/20">
+            {Array.from({ length: totalSlides }).map((_, idx) => {
+              const isActive = idx === (currentSlide % totalSlides);
+              return (
+                <button
+                  key={`dot-${idx}`}
+                  type="button"
+                  onClick={() => setCurrentSlide(idx)}
+                  className={`transition-all rounded-full cursor-pointer ${
+                    isActive
+                      ? 'w-6 h-2 bg-orange-500 shadow-xs'
+                      : 'w-2 h-2 bg-white/70 hover:bg-white'
+                  }`}
+                  aria-label={`Go to banner ${idx + 1}`}
+                />
+              );
+            })}
+          </div>
+        )}
+
       </div>
     </section>
   );
@@ -619,73 +756,238 @@ export const BenefitsSectionRenderer: React.FC<{
 };
 
 // ==========================================
-// 8. TESTIMONIALS SECTION (Name + Text + Location)
+// 8. TESTIMONIALS SECTION (Carousel + View More Modal)
 // ==========================================
 export const TestimonialsSectionRenderer: React.FC<{
   config: TestimonialsSectionConfig;
-}> = ({ config }) => {
+  shop?: Shop;
+}> = ({ config, shop }) => {
+  const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+
   if (!config.enabled || !config.items || config.items.length === 0) return null;
 
+  const totalReviews = config.items.length;
+
+  // Auto-slide carousel every 5 seconds (only when not expanded)
+  useEffect(() => {
+    if (totalReviews <= 1 || isPaused || isExpanded) return;
+    const interval = setInterval(() => {
+      setCurrentReviewIndex((prev) => (prev + 1) % totalReviews);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [totalReviews, isPaused, isExpanded]);
+
+  const handlePrev = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setCurrentReviewIndex((prev) => (prev - 1 + totalReviews) % totalReviews);
+  };
+
+  const handleNext = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setCurrentReviewIndex((prev) => (prev + 1) % totalReviews);
+  };
+
+  // Get sliding window of reviews (1 for mobile, 2 for tablet, 3 for desktop)
+  const visibleReviews = [
+    config.items[currentReviewIndex % totalReviews],
+    config.items[(currentReviewIndex + 1) % totalReviews],
+    config.items[(currentReviewIndex + 2) % totalReviews],
+  ].filter(Boolean);
+
   return (
-    <section id="testimonials" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16">
-      <div className="text-center max-w-2xl mx-auto space-y-2 mb-8">
-        <div className="inline-flex items-center gap-1.5 bg-rose-100 text-rose-800 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-sm">
-          <MessageSquare className="w-3.5 h-3.5" /> Customer Reviews & Ratings
+    <section 
+      id="testimonials" 
+      className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16"
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+    >
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
+        <div className="text-center sm:text-left space-y-2">
+          <div className="inline-flex items-center gap-1.5 bg-rose-100 text-rose-800 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-sm">
+            <MessageSquare className="w-3.5 h-3.5" /> Customer Reviews & Ratings
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-slate-900 font-['Outfit',sans-serif]">
+            {config.title}
+          </h2>
+          {config.subtitle && (
+            <p className="text-xs sm:text-sm text-gray-500">{config.subtitle}</p>
+          )}
         </div>
-        <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-slate-900 font-['Outfit',sans-serif]">
-          {config.title}
-        </h2>
-        {config.subtitle && (
-          <p className="text-xs sm:text-sm text-gray-500">{config.subtitle}</p>
+
+        {/* Carousel Navigation Buttons */}
+        {!isExpanded && totalReviews > 1 && (
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handlePrev}
+              aria-label="Previous Review"
+              className="w-10 h-10 rounded-xl bg-white hover:bg-rose-50 text-slate-700 hover:text-rose-700 border border-gray-200 shadow-xs flex items-center justify-center transition-all hover:scale-105 active:scale-95 cursor-pointer"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <div className="text-xs font-mono font-bold text-gray-500 px-1">
+              {(currentReviewIndex % totalReviews) + 1} / {totalReviews}
+            </div>
+            <button
+              type="button"
+              onClick={handleNext}
+              aria-label="Next Review"
+              className="w-10 h-10 rounded-xl bg-white hover:bg-rose-50 text-slate-700 hover:text-rose-700 border border-gray-200 shadow-xs flex items-center justify-center transition-all hover:scale-105 active:scale-95 cursor-pointer"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          </div>
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {config.items.map((review, idx) => (
-          <div
-            key={review.id || idx}
-            className="bg-white rounded-2xl border border-gray-200 p-6 shadow-xs hover:shadow-md hover:border-rose-200 transition-all flex flex-col justify-between space-y-4"
-          >
-            <div className="space-y-3">
-              {/* Star Rating */}
-              <div className="flex items-center gap-1 text-amber-400">
-                {[...Array(review.rating || 5)].map((_, i) => (
-                  <Star key={i} className="w-4 h-4 fill-amber-400" />
-                ))}
-              </div>
-
-              {/* Review Text */}
-              <p className="text-xs sm:text-sm text-gray-700 italic leading-relaxed">
-                "{review.text}"
-              </p>
-            </div>
-
-            {/* Author info (Name + Location) */}
-            <div className="pt-3 border-t border-gray-100 flex items-center gap-3">
-              {review.avatarUrl ? (
-                <img
-                  src={review.avatarUrl}
-                  alt={review.name}
-                  className="w-10 h-10 rounded-full object-cover border border-gray-200"
-                />
-              ) : (
-                <div className="w-10 h-10 rounded-full bg-rose-100 text-rose-800 font-bold flex items-center justify-center text-xs">
-                  {review.name.charAt(0)}
+      {/* Reviews Content: Inline Expanded Grid OR Carousel */}
+      {isExpanded ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in duration-300">
+          {config.items.map((review, idx) => (
+            <div
+              key={`expanded-rev-${review.id || idx}`}
+              className="bg-white rounded-2xl border border-gray-200 p-6 shadow-xs hover:shadow-md hover:border-rose-300 transition-all flex flex-col justify-between space-y-4"
+            >
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1 text-amber-400">
+                    {[...Array(review.rating || 5)].map((_, i) => (
+                      <Star key={i} className="w-4 h-4 fill-amber-400" />
+                    ))}
+                  </div>
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                    <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Verified Buyer
+                  </span>
                 </div>
-              )}
-              <div>
-                <h4 className="text-xs font-black uppercase tracking-tight text-slate-900">
-                  {review.name}
-                </h4>
-                <p className="text-[11px] text-gray-500 flex items-center gap-1">
-                  <MapPin className="w-3 h-3 text-red-500" />
-                  <span>{review.location}</span>
+
+                <p className="text-xs sm:text-sm text-gray-700 italic leading-relaxed">
+                  "{review.text}"
                 </p>
               </div>
+
+              <div className="pt-3 border-t border-gray-100 flex items-center gap-3">
+                {review.avatarUrl ? (
+                  <img
+                    src={review.avatarUrl}
+                    alt={review.name}
+                    className="w-10 h-10 rounded-full object-cover border border-gray-200"
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-rose-100 text-rose-800 font-bold flex items-center justify-center text-xs">
+                    {review.name.charAt(0)}
+                  </div>
+                )}
+                <div>
+                  <h4 className="text-xs font-black uppercase tracking-tight text-slate-900">
+                    {review.name}
+                  </h4>
+                  <p className="text-[11px] text-gray-500 flex items-center gap-1">
+                    <MapPin className="w-3 h-3 text-red-500" />
+                    <span>{review.location}</span>
+                  </p>
+                </div>
+              </div>
             </div>
+          ))}
+        </div>
+      ) : (
+        <>
+          {/* Reviews Carousel Cards (1 on mobile, 2 on tablet, 3 on desktop) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {visibleReviews.map((review, idx) => {
+              // Hide 2nd item on small screens, hide 3rd item on tablet
+              const visibilityClass = idx === 0 
+                ? 'block' 
+                : idx === 1 
+                  ? 'hidden md:flex' 
+                  : 'hidden lg:flex';
+
+              return (
+                <div
+                  key={`carousel-rev-${review.id || idx}-${currentReviewIndex}`}
+                  className={`${visibilityClass} bg-white rounded-2xl border border-gray-200 p-6 shadow-xs hover:shadow-md hover:border-rose-300 transition-all flex-col justify-between space-y-4 animate-in fade-in duration-300`}
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1 text-amber-400">
+                        {[...Array(review.rating || 5)].map((_, i) => (
+                          <Star key={i} className="w-4 h-4 fill-amber-400" />
+                        ))}
+                      </div>
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                        <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Verified Buyer
+                      </span>
+                    </div>
+
+                    <p className="text-xs sm:text-sm text-gray-700 italic leading-relaxed line-clamp-4">
+                      "{review.text}"
+                    </p>
+                  </div>
+
+                  <div className="pt-3 border-t border-gray-100 flex items-center gap-3">
+                    {review.avatarUrl ? (
+                      <img
+                        src={review.avatarUrl}
+                        alt={review.name}
+                        className="w-10 h-10 rounded-full object-cover border border-gray-200"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-rose-100 text-rose-800 font-bold flex items-center justify-center text-xs">
+                        {review.name.charAt(0)}
+                      </div>
+                    )}
+                    <div>
+                      <h4 className="text-xs font-black uppercase tracking-tight text-slate-900">
+                        {review.name}
+                      </h4>
+                      <p className="text-[11px] text-gray-500 flex items-center gap-1">
+                        <MapPin className="w-3 h-3 text-red-500" />
+                        <span>{review.location}</span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
-        ))}
-      </div>
+
+          {/* Pagination Dots for Carousel */}
+          {totalReviews > 1 && (
+            <div className="flex items-center justify-center gap-1.5 mt-6">
+              {config.items.map((_, dotIdx) => (
+                <button
+                  key={`rev-dot-${dotIdx}`}
+                  type="button"
+                  onClick={() => setCurrentReviewIndex(dotIdx)}
+                  className={`transition-all rounded-full cursor-pointer ${
+                    dotIdx === (currentReviewIndex % totalReviews)
+                      ? 'w-6 h-2 bg-rose-600'
+                      : 'w-2 h-2 bg-gray-300 hover:bg-gray-400'
+                  }`}
+                  aria-label={`Go to review ${dotIdx + 1}`}
+                />
+              ))}
+            </div>
+          )}
+        </>
+      )}
+
+      {/* VIEW ALL BUTTON - Only rendered if reviews quantity > 3 (exceeds carousel page) or if currently expanded */}
+      {(totalReviews > 3 || isExpanded) && (
+        <div className="text-center pt-8">
+          <button
+            type="button"
+            onClick={() => setIsExpanded((prev) => !prev)}
+            className="px-6 py-3 bg-white hover:bg-rose-50 text-rose-900 border border-rose-200 font-black uppercase tracking-wider text-xs rounded-xl shadow-xs inline-flex items-center gap-2.5 transition-all hover:scale-102 cursor-pointer active:scale-95"
+          >
+            <Star className="w-4 h-4 text-amber-500 fill-amber-400" />
+            <span>{isExpanded ? 'Show Less Reviews' : `View All Customer Reviews (${totalReviews})`}</span>
+            {isExpanded ? <ChevronUp className="w-4 h-4 text-rose-600" /> : <ArrowRight className="w-4 h-4 text-rose-600" />}
+          </button>
+        </div>
+      )}
     </section>
   );
 };
@@ -904,8 +1206,12 @@ export const PortfolioSectionRenderer: React.FC<{
   config: PortfolioSectionConfig;
 }> = ({ config }) => {
   const [activeImage, setActiveImage] = useState<string | null>(null);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   if (!config.enabled || !config.items || config.items.length === 0) return null;
+
+  const totalProjects = config.items.length;
+  const displayedItems = isExpanded ? config.items : config.items.slice(0, 4);
 
   return (
     <section id="portfolio" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16">
@@ -921,8 +1227,8 @@ export const PortfolioSectionRenderer: React.FC<{
         )}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        {config.items.map((item, idx) => (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 animate-in fade-in duration-300">
+        {displayedItems.map((item, idx) => (
           <div
             key={item.id || idx}
             onClick={() => setActiveImage(item.imageUrl)}
@@ -959,6 +1265,21 @@ export const PortfolioSectionRenderer: React.FC<{
         ))}
       </div>
 
+      {/* VIEW ALL BUTTON - Only shown when total projects > 4 or if currently expanded */}
+      {(totalProjects > 4 || isExpanded) && (
+        <div className="text-center pt-8">
+          <button
+            type="button"
+            onClick={() => setIsExpanded((prev) => !prev)}
+            className="px-6 py-3 bg-white hover:bg-cyan-50 text-cyan-900 border border-cyan-200 font-black uppercase tracking-wider text-xs rounded-xl shadow-xs inline-flex items-center gap-2.5 transition-all hover:scale-102 cursor-pointer active:scale-95"
+          >
+            <Award className="w-4 h-4 text-cyan-600" />
+            <span>{isExpanded ? 'Show Less Projects' : `View All Projects (${totalProjects})`}</span>
+            {isExpanded ? <ChevronUp className="w-4 h-4 text-cyan-600" /> : <ArrowRight className="w-4 h-4 text-cyan-600" />}
+          </button>
+        </div>
+      )}
+
       {/* Lightbox Modal */}
       {activeImage && (
         <div
@@ -969,7 +1290,7 @@ export const PortfolioSectionRenderer: React.FC<{
             <img src={activeImage} alt="Gallery Full" className="w-full h-full object-contain" />
             <button
               onClick={() => setActiveImage(null)}
-              className="absolute top-4 right-4 p-2 bg-black/60 text-white rounded-full hover:bg-black"
+              className="absolute top-4 right-4 p-2 bg-black/60 text-white rounded-full hover:bg-black cursor-pointer"
             >
               ✕
             </button>
@@ -977,6 +1298,660 @@ export const PortfolioSectionRenderer: React.FC<{
         </div>
       )}
     </section>
+  );
+};
+
+// ==========================================
+// 10B. MASONRY GALLERY SECTION (With View More Lightbox)
+// ==========================================
+export const GallerySectionRenderer: React.FC<{
+  config?: GallerySectionConfig;
+  shop: Shop;
+}> = ({ config, shop }) => {
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const fallbackPhotos = [
+    'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800',
+    'https://images.unsplash.com/photo-1607344645866-009c320c5ab8?w=800',
+    'https://images.unsplash.com/photo-1555529669-e69e7aa0ba9a?w=800',
+    'https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=800',
+    'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=800',
+    'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?w=800',
+    'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800',
+    'https://images.unsplash.com/photo-1528698827591-e19ccd7bc23d?w=800',
+    'https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=800',
+    'https://images.unsplash.com/photo-1580828343064-fde4fc206bc6?w=800',
+  ];
+
+  // Resolve gallery photos: combine shop gallery images or fallback
+  const rawPhotos = shop.galleryImages && shop.galleryImages.filter(Boolean).length > 0
+    ? shop.galleryImages.filter(Boolean)
+    : fallbackPhotos;
+
+  // Ensure rich visual variety (at least 8 photos)
+  const allPhotos = rawPhotos.length < 8
+    ? [...rawPhotos, ...fallbackPhotos.slice(0, 8 - rawPhotos.length)]
+    : rawPhotos;
+
+  const totalPhotos = allPhotos.length;
+  const displayedPhotos = isExpanded ? allPhotos : allPhotos.slice(0, 8);
+
+  const title = config?.title || 'Store Photo Gallery';
+  const subtitle = config?.subtitle || 'Hamari dukaan, taaza stock aur shandar collection ka photo showcase';
+
+  // Different aspect ratios for authentic masonry staggering
+  const aspectClasses = [
+    'aspect-[3/4]',
+    'aspect-square',
+    'aspect-[4/5]',
+    'aspect-[16/11]',
+    'aspect-[3/4]',
+    'aspect-square',
+    'aspect-[4/3]',
+    'aspect-[4/5]',
+  ];
+
+  const handleOpenLightbox = (index: number) => {
+    setLightboxIndex(index);
+  };
+
+  const handlePrevLightbox = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (lightboxIndex !== null) {
+      setLightboxIndex((lightboxIndex - 1 + allPhotos.length) % allPhotos.length);
+    }
+  };
+
+  const handleNextLightbox = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (lightboxIndex !== null) {
+      setLightboxIndex((lightboxIndex + 1) % allPhotos.length);
+    }
+  };
+
+  // Keyboard navigation for lightbox
+  useEffect(() => {
+    if (lightboxIndex === null) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setLightboxIndex(null);
+      if (e.key === 'ArrowLeft') setLightboxIndex((prev) => (prev !== null ? (prev - 1 + allPhotos.length) % allPhotos.length : null));
+      if (e.key === 'ArrowRight') setLightboxIndex((prev) => (prev !== null ? (prev + 1) % allPhotos.length : null));
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [lightboxIndex, allPhotos.length]);
+
+  return (
+    <section id="gallery" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16">
+      {/* Section Header */}
+      <div className="text-center max-w-2xl mx-auto space-y-2 mb-8">
+        <div className="inline-flex items-center gap-1.5 bg-cyan-100 text-cyan-800 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-sm">
+          <Camera className="w-3.5 h-3.5 text-cyan-700" /> Store Photo Gallery (Masonry Style)
+        </div>
+        <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-slate-900 font-['Outfit',sans-serif]">
+          {title}
+        </h2>
+        <p className="text-xs sm:text-sm text-gray-500">{subtitle}</p>
+      </div>
+
+      {/* MASONRY PHOTO GRID */}
+      <div className="columns-1 sm:columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4">
+        {displayedPhotos.map((photoUrl, idx) => {
+          const aspect = aspectClasses[idx % aspectClasses.length];
+          return (
+            <div
+              key={`masonry-photo-${idx}`}
+              onClick={() => handleOpenLightbox(idx)}
+              className="break-inside-avoid group relative rounded-2xl overflow-hidden bg-gray-100 border border-gray-200 shadow-xs hover:shadow-xl hover:border-cyan-400 transition-all duration-300 cursor-pointer"
+            >
+              <div className={`w-full ${aspect} overflow-hidden relative`}>
+                <img
+                  src={photoUrl}
+                  alt={`${shop.businessName} Gallery Photo ${idx + 1}`}
+                  loading="lazy"
+                  className="w-full h-full object-cover object-center group-hover:scale-108 transition-transform duration-700 ease-out"
+                />
+
+                {/* Gradient Overlay & Hover Controls */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-between p-4">
+                  <div className="flex justify-end">
+                    <span className="w-8 h-8 rounded-full bg-white/30 backdrop-blur-md flex items-center justify-center text-white border border-white/40 shadow-xs">
+                      <Maximize2 className="w-4 h-4" />
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold text-cyan-300 uppercase tracking-wider">
+                      {shop.category || 'Store Showcase'}
+                    </span>
+                    <p className="text-xs font-bold text-white flex items-center gap-1.5 mt-0.5">
+                      <span>View High-Res Photo #{idx + 1}</span>
+                      <ArrowUpRight className="w-3.5 h-3.5" />
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* VIEW ALL BUTTON - Only shown when total photos > 8 or if currently expanded */}
+      {(totalPhotos > 8 || isExpanded) && (
+        <div className="text-center pt-8">
+          <button
+            type="button"
+            onClick={() => setIsExpanded((prev) => !prev)}
+            className="px-6 py-3 bg-white hover:bg-cyan-50 text-cyan-950 border border-cyan-300 font-black uppercase tracking-wider text-xs rounded-xl shadow-xs inline-flex items-center gap-2.5 transition-all hover:scale-102 cursor-pointer active:scale-95"
+          >
+            <ImageIcon className="w-4 h-4 text-cyan-600" />
+            <span>{isExpanded ? 'Show Less Photos' : `View All Gallery Photos (${totalPhotos})`}</span>
+            {isExpanded ? <ChevronUp className="w-4 h-4 text-cyan-600" /> : <ArrowRight className="w-4 h-4 text-cyan-600" />}
+          </button>
+        </div>
+      )}
+
+      {/* LIGHTBOX FULLSCREEN MODAL */}
+      {lightboxIndex !== null && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex flex-col items-center justify-between p-4 sm:p-6 animate-in fade-in duration-200"
+          onClick={() => setLightboxIndex(null)}
+        >
+          {/* Top Bar */}
+          <div 
+            className="w-full max-w-5xl flex items-center justify-between text-white pb-3 border-b border-white/20 z-10"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-bold text-cyan-400 font-mono">
+                Photo {lightboxIndex + 1} of {allPhotos.length}
+              </span>
+              <span className="hidden sm:inline text-xs text-white/70">• {shop.businessName}</span>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setLightboxIndex(null)}
+              className="w-9 h-9 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-colors cursor-pointer"
+              title="Close (Esc)"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Main Photo Center Container with Next/Prev Arrows */}
+          <div 
+            className="relative w-full max-w-5xl flex-1 flex items-center justify-center py-4 overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={handlePrevLightbox}
+              className="absolute left-2 sm:left-4 z-20 w-11 h-11 rounded-full bg-black/50 hover:bg-black/80 text-white border border-white/30 backdrop-blur-md flex items-center justify-center transition-all hover:scale-105 active:scale-95 cursor-pointer"
+              aria-label="Previous Photo"
+            >
+              <ChevronLeft className="w-6 h-6" />
+            </button>
+
+            <img
+              src={allPhotos[lightboxIndex]}
+              alt={`Photo ${lightboxIndex + 1}`}
+              className="max-h-[72vh] max-w-full object-contain rounded-xl shadow-2xl border border-white/10 select-none animate-in zoom-in-95 duration-200"
+            />
+
+            <button
+              type="button"
+              onClick={handleNextLightbox}
+              className="absolute right-2 sm:right-4 z-20 w-11 h-11 rounded-full bg-black/50 hover:bg-black/80 text-white border border-white/30 backdrop-blur-md flex items-center justify-center transition-all hover:scale-105 active:scale-95 cursor-pointer"
+              aria-label="Next Photo"
+            >
+              <ChevronRight className="w-6 h-6" />
+            </button>
+          </div>
+
+          {/* Bottom Thumbnail Strip */}
+          <div 
+            className="w-full max-w-5xl flex items-center justify-center gap-2 overflow-x-auto py-2 z-10"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {allPhotos.map((thumbUrl, idx) => (
+              <button
+                key={`thumb-${idx}`}
+                type="button"
+                onClick={() => setLightboxIndex(idx)}
+                className={`w-14 h-14 rounded-lg overflow-hidden shrink-0 border-2 transition-all cursor-pointer ${
+                  idx === lightboxIndex
+                    ? 'border-cyan-400 scale-105 shadow-md'
+                    : 'border-transparent opacity-50 hover:opacity-100'
+                }`}
+              >
+                <img src={thumbUrl} alt="thumbnail" className="w-full h-full object-cover" />
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </section>
+  );
+};
+
+// ==========================================
+// 10C. VIDEO SECTION (4 Videos Desktop Grid + Mobile Carousel + View More Modal)
+// ==========================================
+export const VideoSectionRenderer: React.FC<{
+  shop: Shop;
+  config?: VideoSectionConfig;
+}> = ({ shop, config }) => {
+  const [mobileSlideIndex, setMobileSlideIndex] = useState(0);
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const fallbackVideos: VideoItem[] = [
+    {
+      id: 'vid-demo-1',
+      title: 'Dukaan Tour & Premium Stock Showcase',
+      youtubeUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      thumbnailUrl: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800'
+    },
+    {
+      id: 'vid-demo-2',
+      title: 'Taaza Collection & Direct WhatsApp Ordering Guide',
+      youtubeUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      thumbnailUrl: 'https://images.unsplash.com/photo-1607344645866-009c320c5ab8?w=800'
+    },
+    {
+      id: 'vid-demo-3',
+      title: 'Customer Reviews & Quality Testing Process',
+      youtubeUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      thumbnailUrl: 'https://images.unsplash.com/photo-1555529669-e69e7aa0ba9a?w=800'
+    },
+    {
+      id: 'vid-demo-4',
+      title: 'Fast Dispatch & 0% UPI QR Payment Walkthrough',
+      youtubeUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      thumbnailUrl: 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=800'
+    },
+  ];
+
+  const rawVideos = shop.videos && shop.videos.length > 0 ? shop.videos : fallbackVideos;
+  // Ensure we have 4 videos for the desktop 4-column layout
+  const allVideos = rawVideos.length < 4
+    ? [...rawVideos, ...fallbackVideos.slice(0, 4 - rawVideos.length)]
+    : rawVideos;
+
+  // Desktop takes 4 videos in collapsed state
+  const desktopVideos = allVideos.slice(0, 4);
+
+  const handlePrevMobile = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setMobileSlideIndex((prev) => (prev - 1 + allVideos.length) % allVideos.length);
+  };
+
+  const handleNextMobile = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setMobileSlideIndex((prev) => (prev + 1) % allVideos.length);
+  };
+
+  return (
+    <section id="videos" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16">
+      {/* Section Header */}
+      <div className="text-center max-w-2xl mx-auto space-y-2 mb-8">
+        <div className="inline-flex items-center gap-1.5 bg-red-100 text-red-800 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-sm">
+          <Play className="w-3.5 h-3.5 text-red-600 fill-red-600" /> Video Demonstration & Highlights
+        </div>
+        <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-slate-900 font-['Outfit',sans-serif]">
+          {config?.title || 'Store Videos & Customer Tutorials'}
+        </h2>
+        <p className="text-xs sm:text-sm text-gray-500">
+          {config?.subtitle || 'Dukaan ki live video dekhein, taaza stock samjhein aur asaani se order karein'}
+        </p>
+      </div>
+
+      {isExpanded ? (
+        /* INLINE EXPANDED VIEW: ALL VIDEOS IN RESPONSIVE GRID */
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 animate-in fade-in duration-300">
+          {allVideos.map((vid, idx) => {
+            const embedUrl = getYouTubeEmbedUrl(vid.youtubeUrl) || vid.youtubeUrl;
+            return (
+              <div
+                key={`expanded-video-${vid.id || idx}`}
+                className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-xs hover:shadow-lg hover:border-red-300 transition-all flex flex-col justify-between"
+              >
+                <div className="aspect-16/9 bg-slate-900 overflow-hidden relative">
+                  {embedUrl.includes('youtube.com') || embedUrl.includes('youtu.be') ? (
+                    <iframe
+                      src={embedUrl}
+                      title={vid.title}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      className="w-full h-full border-0"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-slate-900 text-white">
+                      <Play className="w-10 h-10 text-red-500 fill-red-500" />
+                    </div>
+                  )}
+                </div>
+
+                <div className="p-4 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded">
+                      Video #{idx + 1}
+                    </span>
+                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">
+                      Verified Store
+                    </span>
+                  </div>
+                  <h3 className="text-xs sm:text-sm font-black uppercase text-slate-900 line-clamp-2">
+                    {vid.title}
+                  </h3>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <>
+          {/* 1. DESKTOP VIEW: EXACTLY 4 VIDEOS GRID */}
+          <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-5">
+            {desktopVideos.map((vid, idx) => {
+              const embedUrl = getYouTubeEmbedUrl(vid.youtubeUrl) || vid.youtubeUrl;
+              return (
+                <div
+                  key={`desktop-video-${vid.id || idx}`}
+                  className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-xs hover:shadow-lg hover:border-red-300 transition-all flex flex-col justify-between"
+                >
+                  <div className="aspect-16/9 bg-slate-900 overflow-hidden relative">
+                    {embedUrl.includes('youtube.com') || embedUrl.includes('youtu.be') ? (
+                      <iframe
+                        src={embedUrl}
+                        title={vid.title}
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        className="w-full h-full border-0"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-slate-900 text-white">
+                        <Play className="w-10 h-10 text-red-500 fill-red-500" />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="p-4 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-bold text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded">
+                        Video #{idx + 1}
+                      </span>
+                      <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">
+                        Verified Store
+                      </span>
+                    </div>
+                    <h3 className="text-xs sm:text-sm font-black uppercase text-slate-900 line-clamp-2">
+                      {vid.title}
+                    </h3>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* 2. MOBILE VIEW: INTERACTIVE VIDEO CAROUSEL */}
+          <div className="block md:hidden">
+            <div className="relative bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-md">
+              {/* Active Video Player */}
+              {(() => {
+                const currentVid = allVideos[mobileSlideIndex % allVideos.length];
+                const embedUrl = getYouTubeEmbedUrl(currentVid.youtubeUrl) || currentVid.youtubeUrl;
+                return (
+                  <div>
+                    <div className="aspect-16/9 bg-slate-900 overflow-hidden relative">
+                      {embedUrl.includes('youtube.com') || embedUrl.includes('youtu.be') ? (
+                        <iframe
+                          src={embedUrl}
+                          title={currentVid.title}
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                          className="w-full h-full border-0"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-slate-900 text-white">
+                          <Play className="w-12 h-12 text-red-500 fill-red-500" />
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="p-4 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold text-red-700 bg-red-50 border border-red-200 px-2.5 py-0.5 rounded-full">
+                          Video {(mobileSlideIndex % allVideos.length) + 1} of {allVideos.length}
+                        </span>
+                        <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                          Verified Store
+                        </span>
+                      </div>
+                      <h3 className="text-sm font-black uppercase text-slate-900">
+                        {currentVid.title}
+                      </h3>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Carousel Arrows */}
+              <div className="px-4 pb-4 flex items-center justify-between gap-3 pt-2 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={handlePrevMobile}
+                  className="flex-1 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-slate-800 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  <span>Previous Video</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleNextMobile}
+                  className="flex-1 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+                >
+                  <span>Next Video</span>
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Carousel Pagination Dots */}
+            <div className="flex items-center justify-center gap-1.5 mt-4">
+              {allVideos.map((_, dotIdx) => (
+                <button
+                  key={`mob-vid-dot-${dotIdx}`}
+                  type="button"
+                  onClick={() => setMobileSlideIndex(dotIdx)}
+                  className={`transition-all rounded-full cursor-pointer ${
+                    dotIdx === (mobileSlideIndex % allVideos.length)
+                      ? 'w-6 h-2 bg-red-600'
+                      : 'w-2 h-2 bg-gray-300'
+                  }`}
+                  aria-label={`Go to video ${dotIdx + 1}`}
+                />
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* VIEW ALL BUTTON - Only shown when total videos > 4 or if currently expanded */}
+      {(allVideos.length > 4 || isExpanded) && (
+        <div className="text-center pt-8">
+          <button
+            type="button"
+            onClick={() => setIsExpanded((prev) => !prev)}
+            className="px-6 py-3 bg-white hover:bg-red-50 text-red-950 border border-red-200 font-black uppercase tracking-wider text-xs rounded-xl shadow-xs inline-flex items-center gap-2.5 transition-all hover:scale-102 cursor-pointer active:scale-95"
+          >
+            <Play className="w-4 h-4 text-red-600 fill-red-600" />
+            <span>{isExpanded ? 'Show Less Videos' : `View All Videos & Tutorials (${allVideos.length})`}</span>
+            {isExpanded ? <ChevronUp className="w-4 h-4 text-red-600" /> : <ArrowRight className="w-4 h-4 text-red-600" />}
+          </button>
+        </div>
+      )}
+    </section>
+  );
+};
+
+// ==========================================
+// 10D. CONTACT US SOCIAL MEDIA CONNECT BLOCK
+// ==========================================
+export const ContactSocialMediaBlock: React.FC<{
+  shop: Shop;
+}> = ({ shop }) => {
+  const social = shop.socialLinks || {};
+
+  const socialChannels = [
+    {
+      id: 'whatsapp',
+      name: 'WhatsApp Chat',
+      label: 'Direct 1-on-1 Chat',
+      handle: shop.whatsapp || shop.phone || '+91 98765 43210',
+      url: getWhatsAppDirectUrl(shop.whatsapp || shop.phone, `Namaste ${shop.businessName}! I would like to connect with your store.`),
+      icon: PhoneCall,
+      color: 'bg-emerald-500 text-white hover:bg-emerald-600',
+      badgeBg: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+      dotColor: 'bg-emerald-500',
+    },
+    {
+      id: 'instagram',
+      name: 'Instagram',
+      label: 'Follow Store Reels & Posts',
+      handle: social.instagram ? (social.instagram.includes('instagram.com/') ? `@${social.instagram.split('instagram.com/')[1].replace('/', '')}` : social.instagram) : '@shahi_handicrafts',
+      url: social.instagram?.startsWith('http') ? social.instagram : `https://instagram.com/${(social.instagram || 'shahi_handicrafts').replace('@', '')}`,
+      icon: Instagram,
+      color: 'bg-gradient-to-r from-purple-500 via-pink-500 to-rose-500 text-white hover:opacity-90',
+      badgeBg: 'bg-pink-50 text-pink-800 border-pink-200',
+      dotColor: 'bg-pink-500',
+    },
+    {
+      id: 'facebook',
+      name: 'Facebook',
+      label: 'Official Store Page',
+      handle: 'Shahi Handicrafts Official',
+      url: social.facebook?.startsWith('http') ? social.facebook : 'https://facebook.com',
+      icon: Facebook,
+      color: 'bg-blue-600 text-white hover:bg-blue-700',
+      badgeBg: 'bg-blue-50 text-blue-800 border-blue-200',
+      dotColor: 'bg-blue-600',
+    },
+    {
+      id: 'youtube',
+      name: 'YouTube',
+      label: 'Watch Stock & Product Videos',
+      handle: 'Shahi Handicrafts Channel',
+      url: social.youtube?.startsWith('http') ? social.youtube : 'https://youtube.com',
+      icon: Youtube,
+      color: 'bg-red-600 text-white hover:bg-red-700',
+      badgeBg: 'bg-red-50 text-red-800 border-red-200',
+      dotColor: 'bg-red-600',
+    },
+    {
+      id: 'twitter',
+      name: 'X (Twitter)',
+      label: 'News & Announcements',
+      handle: social.twitter ? (social.twitter.startsWith('@') ? social.twitter : `@${social.twitter}`) : '@ShahiHandicrafts',
+      url: social.twitter?.startsWith('http') ? social.twitter : `https://twitter.com/${(social.twitter || 'ShahiHandicrafts').replace('@', '')}`,
+      icon: Twitter,
+      color: 'bg-slate-900 text-white hover:bg-black',
+      badgeBg: 'bg-slate-100 text-slate-800 border-slate-200',
+      dotColor: 'bg-slate-900',
+    },
+    {
+      id: 'linkedin',
+      name: 'LinkedIn',
+      label: 'Business & Wholesale Network',
+      handle: social.linkedin || 'Shahi Handicrafts Emporium',
+      url: social.linkedin?.startsWith('http') ? social.linkedin : 'https://linkedin.com',
+      icon: Linkedin,
+      color: 'bg-sky-700 text-white hover:bg-sky-800',
+      badgeBg: 'bg-sky-50 text-sky-800 border-sky-200',
+      dotColor: 'bg-sky-700',
+    },
+    {
+      id: 'maps',
+      name: 'Google Maps',
+      label: 'Store Location & Directions',
+      handle: `${shop.address || 'Bapu Bazaar'}, ${shop.city}`,
+      url: `https://maps.google.com/?q=${encodeURIComponent(`${shop.businessName} ${shop.address} ${shop.city}`)}`,
+      icon: MapPin,
+      color: 'bg-amber-600 text-white hover:bg-amber-700',
+      badgeBg: 'bg-amber-50 text-amber-800 border-amber-200',
+      dotColor: 'bg-amber-600',
+    },
+    {
+      id: 'phone',
+      name: 'Direct Phone Call',
+      label: 'Instant Support Helpline',
+      handle: shop.phone || '+91 98765 43210',
+      url: `tel:${shop.phone || '+919876543210'}`,
+      icon: Phone,
+      color: 'bg-orange-600 text-white hover:bg-orange-700',
+      badgeBg: 'bg-orange-50 text-orange-800 border-orange-200',
+      dotColor: 'bg-orange-600',
+    },
+  ];
+
+  return (
+    <div className="bg-white rounded-3xl border border-orange-200/90 p-6 sm:p-8 shadow-sm space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-4 border-b border-gray-100">
+        <div className="space-y-1">
+          <div className="inline-flex items-center gap-1.5 bg-orange-100 text-orange-800 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-sm">
+            <Share2 className="w-3.5 h-3.5" /> Social Media & Online Profiles
+          </div>
+          <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-slate-900 font-['Outfit',sans-serif]">
+            Connect With Us Across Social Media
+          </h3>
+          <p className="text-xs text-gray-500">
+            Humein social media par follow karein aur naye products ke updates paayein
+          </p>
+        </div>
+
+        <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full">
+          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Verified Accounts
+        </span>
+      </div>
+
+      {/* Social Buttons Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {socialChannels.map((chan) => {
+          const IconComp = chan.icon;
+          return (
+            <a
+              key={`social-chan-${chan.id}`}
+              href={chan.url}
+              target="_blank"
+              rel="noreferrer"
+              className="group p-4 rounded-2xl border border-gray-200 hover:border-orange-300 hover:shadow-md transition-all flex items-center justify-between gap-3 bg-white"
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <div className={`w-11 h-11 rounded-xl ${chan.color} flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform`}>
+                  <IconComp className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-xs font-black uppercase text-slate-900 truncate group-hover:text-orange-600 transition-colors">
+                    {chan.name}
+                  </div>
+                  <div className="text-[11px] text-gray-500 truncate">
+                    {chan.handle}
+                  </div>
+                </div>
+              </div>
+
+              <div className="w-7 h-7 rounded-full bg-gray-50 group-hover:bg-orange-50 text-gray-400 group-hover:text-orange-600 flex items-center justify-center shrink-0 transition-colors">
+                <ArrowUpRight className="w-4 h-4" />
+              </div>
+            </a>
+          );
+        })}
+      </div>
+    </div>
   );
 };
 
@@ -1044,8 +2019,12 @@ export const FaqSectionRenderer: React.FC<{
   config: FaqSectionConfig;
 }> = ({ config }) => {
   const [openIdx, setOpenIdx] = useState<number | null>(0);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   if (!config.enabled || !config.items || config.items.length === 0) return null;
+
+  const totalItems = config.items.length;
+  const displayedItems = isExpanded ? config.items : config.items.slice(0, 4);
 
   return (
     <section id="faq" className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mt-16">
@@ -1062,7 +2041,7 @@ export const FaqSectionRenderer: React.FC<{
       </div>
 
       <div className="space-y-3">
-        {config.items.map((item, idx) => {
+        {displayedItems.map((item, idx) => {
           const isOpen = openIdx === idx;
           return (
             <div
@@ -1091,6 +2070,21 @@ export const FaqSectionRenderer: React.FC<{
           );
         })}
       </div>
+
+      {/* VIEW ALL FAQS BUTTON - Only visible when items > 4 or if currently expanded */}
+      {(totalItems > 4 || isExpanded) && (
+        <div className="text-center pt-6">
+          <button
+            type="button"
+            onClick={() => setIsExpanded((prev) => !prev)}
+            className="px-6 py-3 bg-white hover:bg-sky-50 text-sky-950 border border-sky-200 font-black uppercase tracking-wider text-xs rounded-xl shadow-xs inline-flex items-center gap-2.5 transition-all hover:scale-102 cursor-pointer active:scale-95"
+          >
+            <HelpCircle className="w-4 h-4 text-sky-600" />
+            <span>{isExpanded ? 'Show Less Questions' : `View All Questions & Answers (${totalItems})`}</span>
+            {isExpanded ? <ChevronUp className="w-4 h-4 text-sky-600" /> : <ArrowRight className="w-4 h-4 text-sky-600" />}
+          </button>
+        </div>
+      )}
     </section>
   );
 };
