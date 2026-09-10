@@ -39,7 +39,8 @@ import {
   FileText,
   Receipt,
   Link2,
-  Download
+  Download,
+  Menu
 } from 'lucide-react';
 import { Shop, AdvertisementPopup, PricingPackage, TutorialVideo, PlatformLead, PlatformState } from '../../types';
 import { fileToBase64, formatINR, generateShopId, getWhatsAppDirectUrl, getYouTubeEmbedUrl, getYouTubeThumbnail, formatDisplayDate, calculateDaysRemaining, getOneYearExpiryDate } from '../../utils/mediaUpload';
@@ -55,12 +56,14 @@ import { ConnectWebsiteModal } from './ConnectWebsiteModal';
 import { DataExportManager } from './DataExportManager';
 import { VendorDataExportModal } from './VendorDataExportModal';
 import { AdminDomainManagement } from './AdminDomainManagement';
+import { AdminSidebar, AdminTabKey } from './AdminSidebar';
 
 interface SuperAdminDashboardProps {
   state: PlatformState;
   onUpdateState: (newState: PlatformState) => void;
   onLogout: () => void;
   onNavigateToShop: (shopId: string) => void;
+  onNavigateHome?: () => void;
 }
 
 export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
@@ -68,8 +71,10 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
   onUpdateState,
   onLogout,
   onNavigateToShop,
+  onNavigateHome,
 }) => {
-  const [activeTab, setActiveTab] = useState<'SHOPS' | 'DOMAINS' | 'DATA_EXPORT' | 'BILLING' | 'SECTIONS' | 'POPUPS' | 'PRICING' | 'VIDEOS' | 'LEADS' | 'PLATFORM_SETTINGS'>('SHOPS');
+  const [activeTab, setActiveTab] = useState<AdminTabKey>('SHOPS');
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   
   // Website Add & Connect Modals
   const [showAddShopModal, setShowAddShopModal] = useState(false);
@@ -184,16 +189,39 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
 
   // Shop Status Handlers
   const handleUpdateShopStatus = (shopId: string, newStatus: Shop['status']) => {
+    const todayStr = new Date().toISOString().split('T')[0];
     const updatedShops = state.shops.map((s) => {
       if (s.shopId === shopId) {
-        const updated = { ...s, status: newStatus, updatedAt: new Date().toISOString() };
+        let updatedInvoices = s.invoices;
+        if (newStatus === 'PUBLISHED' && s.invoices && s.invoices.length > 0) {
+          updatedInvoices = s.invoices.map((inv) => ({
+            ...inv,
+            paymentStatus: 'PAID' as const,
+            paidAt: inv.paidAt || new Date().toISOString(),
+          }));
+        }
+        const updated: Shop = {
+          ...s,
+          status: newStatus,
+          invoices: updatedInvoices,
+          activeDate: (newStatus === 'PUBLISHED' && !s.activeDate) ? todayStr : s.activeDate,
+          updatedAt: new Date().toISOString(),
+        };
         saveShopToFirestore(updated);
         return updated;
       }
       return s;
     });
     onUpdateState({ ...state, shops: updatedShops });
-    showToast(`Store status updated to ${newStatus}`);
+    if (newStatus === 'PUBLISHED') {
+      showToast(`✅ Payment Verified! Store status is now PUBLISHED & LIVE.`);
+    } else {
+      showToast(`Store status updated to ${newStatus}`);
+    }
+  };
+
+  const handleVerifyPaymentAndPublish = (shop: Shop) => {
+    handleUpdateShopStatus(shop.shopId, 'PUBLISHED');
   };
 
   const handleToggleFeatured = (shopId: string) => {
@@ -301,71 +329,127 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div className="min-h-screen bg-[#F8FAFC] flex flex-col lg:flex-row text-slate-900 font-sans">
       
-      {/* Top Admin Header Bar (Clean Light Theme) */}
-      <div className="bg-white text-slate-900 rounded-2xl p-6 sm:p-8 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border border-gray-200">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-orange-600 text-white flex items-center justify-center font-black shadow-md shadow-orange-600/20">
-            <ShieldCheck className="w-7 h-7" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl sm:text-2xl font-black uppercase tracking-tight font-['Outfit',sans-serif] text-slate-900">
-                IndianLalaJi Super Admin Panel
-              </h1>
-              <span className="text-[10px] bg-orange-100 text-orange-800 font-black tracking-wider uppercase px-2.5 py-0.5 rounded-full border border-orange-200">
-                MASTER CONTROL
-              </span>
+      {/* 1. Super Admin Dedicated Left Sidebar (Desktop: 270px, Mobile: Slide-in Drawer) */}
+      <AdminSidebar
+        state={state}
+        activeTab={activeTab}
+        onSelectTab={(tab) => {
+          setActiveTab(tab);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
+        isOpenMobile={isMobileSidebarOpen}
+        onCloseMobile={() => setIsMobileSidebarOpen(false)}
+        onLogout={onLogout}
+        onOpenAddWebsite={() => setShowAddShopModal(true)}
+        onToggleGlobalPopup={handleToggleGlobalPopup}
+        onNavigateHome={onNavigateHome}
+      />
+
+      {/* 2. Main Content Area */}
+      <div className="flex-1 min-w-0 flex flex-col min-h-screen">
+        
+        {/* Sticky Top Header Bar with Mobile Hamburger, Breadcrumbs & Quick Actions */}
+        <header className="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-gray-200 px-4 sm:px-6 py-3 shadow-2xs">
+          <div className="flex items-center justify-between gap-3">
+            
+            {/* Left: Mobile Hamburger & Breadcrumbs */}
+            <div className="flex items-center gap-3 min-w-0">
+              <button
+                type="button"
+                id="admin-mobile-hamburger-btn"
+                onClick={() => setIsMobileSidebarOpen(true)}
+                className="lg:hidden p-2 -ml-1 rounded-xl text-slate-700 hover:text-slate-950 hover:bg-gray-100 transition-colors cursor-pointer shrink-0"
+                aria-label="Open admin sidebar menu"
+              >
+                <Menu className="w-5 h-5 text-slate-800" />
+              </button>
+
+              <div className="flex items-center gap-2 min-w-0 flex-wrap">
+                <span className="font-black text-xs sm:text-sm tracking-tight text-slate-900 font-['Outfit',sans-serif] uppercase truncate flex items-center gap-1.5">
+                  <span className="text-orange-600 font-extrabold">INDIANLALAJI</span>
+                  <span className="text-gray-300">/</span>
+                  <span className="text-slate-600 font-semibold hidden sm:inline">Super Admin</span>
+                  <span className="text-gray-300 hidden sm:inline">/</span>
+                  <span className="text-slate-950 truncate font-black">
+                    {activeTab === 'SHOPS' && 'Vendors & Stores'}
+                    {activeTab === 'DOMAINS' && 'Custom Domains & DNS'}
+                    {activeTab === 'DATA_EXPORT' && 'Data Export Hub'}
+                    {activeTab === 'BILLING' && 'Billing & Website Earnings'}
+                    {activeTab === 'SECTIONS' && 'Website Sections'}
+                    {activeTab === 'POPUPS' && 'Advertisement Popups'}
+                    {activeTab === 'PRICING' && '1-Year Pricing Packages'}
+                    {activeTab === 'VIDEOS' && 'Homepage Video Guides'}
+                    {activeTab === 'LEADS' && 'Platform Inquiries & Leads'}
+                    {activeTab === 'PLATFORM_SETTINGS' && 'Platform Settings'}
+                  </span>
+                </span>
+
+                <span className="hidden sm:inline-flex text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-100 text-orange-800 border border-orange-200 shrink-0">
+                  MASTER CONTROL
+                </span>
+              </div>
             </div>
-            <p className="text-xs text-gray-500 mt-0.5">
-              Logged in as <strong className="text-slate-800">R. K. Mehra</strong> (Rkmehra331996@gmail.com)
-            </p>
+
+            {/* Right: Quick Action Controls */}
+            <div className="flex items-center gap-2 shrink-0">
+              {/* Add Store Button */}
+              <button
+                onClick={() => setShowAddShopModal(true)}
+                className="hidden sm:flex px-3 py-1.5 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white rounded-lg text-xs font-black uppercase tracking-wider items-center gap-1.5 shadow-xs cursor-pointer transition-all"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>+ Add Store</span>
+              </button>
+
+              {/* Quick Export Data Hub Shortcut */}
+              <button
+                onClick={() => setActiveTab('DATA_EXPORT')}
+                className={`hidden md:flex px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider transition-all items-center gap-1.5 cursor-pointer ${
+                  activeTab === 'DATA_EXPORT'
+                    ? 'bg-orange-600 text-white shadow-xs'
+                    : 'bg-orange-50 text-orange-800 hover:bg-orange-100 border border-orange-200'
+                }`}
+                title="Pure Portal, All Vendors & Specific Vendor Data Download Hub"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Export Hub</span>
+              </button>
+
+              {/* Global Popup Master ON/OFF Switch */}
+              <div className="flex items-center gap-1.5 bg-gray-50 px-2.5 py-1 rounded-lg border border-gray-200">
+                <span className="hidden xl:inline text-[11px] font-bold uppercase tracking-wider text-slate-700">POPUP:</span>
+                <button
+                  id="global-popup-toggle-btn"
+                  onClick={handleToggleGlobalPopup}
+                  className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-1 cursor-pointer ${
+                    state.globalPopupEnabled
+                      ? 'bg-emerald-600 text-white shadow-xs hover:bg-emerald-700'
+                      : 'bg-red-600 text-white shadow-xs hover:bg-red-700'
+                  }`}
+                >
+                  <Power className="w-3 h-3" />
+                  <span>{state.globalPopupEnabled ? 'ON' : 'OFF'}</span>
+                </button>
+              </div>
+
+              {/* Exit Admin */}
+              <button
+                onClick={onLogout}
+                className="px-3 py-1.5 bg-gray-100 hover:bg-red-50 text-slate-700 hover:text-red-700 text-xs font-bold uppercase tracking-wider rounded-lg transition-colors flex items-center gap-1.5 border border-gray-200 cursor-pointer"
+                title="Exit Super Admin Panel"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Exit</span>
+              </button>
+            </div>
+
           </div>
-        </div>
+        </header>
 
-        {/* Global Popup Master ON/OFF Switch (STEP 33) & Logout */}
-        <div className="flex flex-wrap items-center gap-3">
-          
-          {/* Quick Export Data Hub Shortcut */}
-          <button
-            onClick={() => setActiveTab('DATA_EXPORT')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'DATA_EXPORT'
-                ? 'bg-orange-600 text-white shadow-xs'
-                : 'bg-orange-50 text-orange-800 hover:bg-orange-100 border border-orange-200'
-            }`}
-            title="Pure Portal, All Vendors & Specific Vendor Data Download Hub"
-          >
-            <Download className="w-4 h-4" />
-            <span>📥 Export Data Hub</span>
-          </button>
-
-          <div className="flex items-center gap-2 bg-gray-50 px-3.5 py-2 rounded-xl border border-gray-200">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-700">GLOBAL POPUP:</span>
-            <button
-              id="global-popup-toggle-btn"
-              onClick={handleToggleGlobalPopup}
-              className={`px-3 py-1 rounded-lg text-xs font-black uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer ${
-                state.globalPopupEnabled
-                  ? 'bg-emerald-600 text-white shadow-xs hover:bg-emerald-700'
-                  : 'bg-red-600 text-white shadow-xs hover:bg-red-700'
-              }`}
-            >
-              <Power className="w-3.5 h-3.5" />
-              <span>{state.globalPopupEnabled ? '🟢 ON' : '🔴 OFF'}</span>
-            </button>
-          </div>
-
-          <button
-            onClick={onLogout}
-            className="px-4 py-2 bg-gray-100 hover:bg-red-50 text-slate-700 hover:text-red-700 text-xs font-bold uppercase tracking-wider rounded-xl transition-colors flex items-center gap-1.5 border border-gray-200 cursor-pointer"
-          >
-            <LogOut className="w-4 h-4" />
-            <span>Exit Admin</span>
-          </button>
-        </div>
-      </div>
+        {/* Dashboard Main Workspace Container */}
+        <div className="flex-1 p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl w-full mx-auto">
 
       {/* KPI METRICS CARDS */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -534,6 +618,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
                     <th className="py-3.5 px-4">Shop ID & Business</th>
                     <th className="py-3.5 px-4">Owner & Contact</th>
                     <th className="py-3.5 px-4">Category & City</th>
+                    <th className="py-3.5 px-4">Purchased Price & Plan</th>
                     <th className="py-3.5 px-4">1-Yr Subscription (Active / Expiry)</th>
                     <th className="py-3.5 px-4">Status & Security</th>
                     <th className="py-3.5 px-4">Showcase</th>
@@ -586,6 +671,46 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
                         <div className="text-[11px] text-gray-400">{shop.city}, {shop.state}</div>
                       </td>
 
+                      {/* Purchased Price & Plan */}
+                      <td className="py-3.5 px-4">
+                        <div className="space-y-1">
+                          <div className="flex items-baseline gap-1">
+                            <span className="font-mono font-black text-sm text-slate-900">
+                              {formatINR(shop.planPrice ?? 1499)}
+                            </span>
+                            <span className="text-[10px] text-gray-500 font-semibold">/ yr</span>
+                          </div>
+                          <div className="text-[10px] truncate max-w-[130px] text-gray-500 font-medium" title={shop.planName || '1-Year Official LalaJi Store Plan'}>
+                            {shop.planName || '1-Year Official Plan'}
+                          </div>
+                          <div>
+                            {(() => {
+                              const activeOfficialRate = state.pricingPackages?.[0]?.price ?? 1499;
+                              const boughtRate = shop.planPrice ?? 1499;
+                              if (boughtRate === activeOfficialRate) {
+                                return (
+                                  <span className="inline-flex items-center gap-1 text-[9px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded">
+                                    Current Rate
+                                  </span>
+                                );
+                              } else if (boughtRate < activeOfficialRate) {
+                                return (
+                                  <span className="inline-flex items-center gap-1 text-[9px] font-bold text-blue-800 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded" title={`Customer purchased at ₹${boughtRate}. Current platform rate is ₹${activeOfficialRate}.`}>
+                                    Old Rate (₹{boughtRate})
+                                  </span>
+                                );
+                              } else {
+                                return (
+                                  <span className="inline-flex items-center gap-1 text-[9px] font-bold text-purple-800 bg-purple-50 border border-purple-200 px-1.5 py-0.5 rounded" title={`Customer purchased at ₹${boughtRate}. Current platform rate is ₹${activeOfficialRate}.`}>
+                                    Custom / High Rate (₹{boughtRate})
+                                  </span>
+                                );
+                              }
+                            })()}
+                          </div>
+                        </div>
+                      </td>
+
                       {/* 1-Yr Subscription & Active / Expiry Dates */}
                       <td className="py-3.5 px-4">
                         {(() => {
@@ -622,22 +747,35 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
                         <select
                           value={shop.status}
                           onChange={(e) => handleUpdateShopStatus(shop.shopId, e.target.value as any)}
-                          className={`px-2.5 py-1 rounded-sm text-xs font-bold uppercase tracking-wider border ${
+                          className={`w-full px-2.5 py-1 rounded-sm text-xs font-bold uppercase tracking-wider border ${
                             shop.status === 'PUBLISHED'
                               ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
                               : shop.status === 'PENDING_APPROVAL'
-                              ? 'bg-orange-50 text-orange-900 border-orange-300'
+                              ? 'bg-amber-50 text-amber-900 border-amber-300'
                               : shop.status === 'HOLD'
                               ? 'bg-blue-50 text-blue-800 border-blue-300'
+                              : shop.status === 'DRAFT'
+                              ? 'bg-purple-50 text-purple-800 border-purple-300'
                               : 'bg-gray-100 text-slate-700 border-gray-300'
                           }`}
                         >
-                          <option value="PUBLISHED">🟢 PUBLISHED (Active)</option>
+                          <option value="DRAFT">📝 DRAFT (Verification Pending)</option>
                           <option value="PENDING_APPROVAL">🟡 PENDING APPROVAL</option>
+                          <option value="PUBLISHED">🟢 PUBLISHED (Active)</option>
                           <option value="HOLD">🔵 ON HOLD</option>
-                          <option value="DRAFT">📝 DRAFT</option>
                           <option value="REJECTED">🔴 REJECTED</option>
                         </select>
+                        {(shop.status === 'DRAFT' || shop.status === 'PENDING_APPROVAL') && (
+                          <button
+                            type="button"
+                            onClick={() => handleVerifyPaymentAndPublish(shop)}
+                            className="mt-1.5 w-full inline-flex items-center justify-center gap-1 px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[10px] font-black uppercase tracking-wider shadow-xs cursor-pointer transition-all"
+                            title="Verify payment and publish this store immediately"
+                          >
+                            <CheckCircle2 className="w-3 h-3" />
+                            <span>Verify & Publish</span>
+                          </button>
+                        )}
                       </td>
 
                       {/* Toggle Showcase on Live Stores */}
@@ -952,6 +1090,23 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
                     />
                   </div>
                 </div>
+              </div>
+
+              {/* Dynamic Pricing & Historical Price Guarantee Policy */}
+              <div className="p-3.5 bg-blue-50/80 rounded-xl border border-blue-200 text-xs text-blue-950 space-y-1.5">
+                <div className="font-bold flex items-center gap-1.5 text-blue-900">
+                  <CheckCircle2 className="w-4 h-4 text-blue-600 shrink-0" />
+                  <span>Dynamic Pricing & Historical Price Lock</span>
+                </div>
+                <p className="text-[11px] text-blue-900 leading-relaxed">
+                  ✓ <strong>Naye Vendors (New Registrations):</strong> Price update karne ke baad naye registration aur plan buy iss naye rate <strong>(₹{planForm.price})</strong> pe honge, aur unke invoice me yeh new price generate hoga.
+                </p>
+                <p className="text-[11px] text-blue-900 leading-relaxed">
+                  ✓ <strong>Purane Customers (Historical Vendors):</strong> Jinhone pehle buy kiya tha, unke invoice aur subscription me vahi original rate locked rahega jo khareedne ke waqt tha.
+                </p>
+                <p className="text-[11px] text-blue-900 leading-relaxed">
+                  ✓ <strong>Super Admin Transparency:</strong> Dashboard table me har vendor ke saamne uska exact purchased rate aur badge (Current Rate vs Old Rate) dikhta hai.
+                </p>
               </div>
 
               <div>
@@ -1949,9 +2104,37 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between pt-1 border-t border-gray-200">
+                <div className="grid grid-cols-2 gap-3 pt-2 border-t border-gray-200">
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-700 mb-1">
+                      Purchased Plan Price (₹)
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-2.5 top-1.5 text-xs text-gray-500 font-bold">₹</span>
+                      <input
+                        type="number"
+                        value={editingShop.planPrice ?? 1499}
+                        onChange={(e) => setEditingShop({ ...editingShop, planPrice: Number(e.target.value) })}
+                        className="w-full pl-6 pr-2 py-1.5 rounded-lg border border-gray-300 bg-white text-slate-900 text-xs font-mono font-bold"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-700 mb-1">
+                      Plan Name
+                    </label>
+                    <input
+                      type="text"
+                      value={editingShop.planName || '1-Year Official LalaJi Store Plan'}
+                      onChange={(e) => setEditingShop({ ...editingShop, planName: e.target.value })}
+                      className="w-full px-2.5 py-1.5 rounded-lg border border-gray-300 bg-white text-slate-900 text-xs"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-1">
                   <span className="text-[10px] text-slate-600">
-                    Plan: {editingShop.planName || '1-Year Official LalaJi Store Plan'}
+                    Active Platform Rate: ₹{state.pricingPackages?.[0]?.price ?? 1499}
                   </span>
                   <button
                     type="button"
@@ -2046,6 +2229,12 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
           </div>
         </div>
       )}
+
+        </div>
+        {/* End of Dashboard Main Workspace Container */}
+
+      </div>
+      {/* End of Main Content Area */}
 
       {/* VENDOR DELETION CONFIRMATION MODAL */}
       {shopToDelete && (

@@ -535,7 +535,14 @@ export const AdminBillingManager: React.FC<AdminBillingManagerProps> = ({
               Subscription Billing & Revenue Ledger ({filteredRecords.length})
             </h3>
           </div>
-          <span className="text-xs text-gray-500 font-medium">1-Year Store Hosting Package (₹1,499)</span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gray-500 font-medium hidden sm:inline">
+              Active Rate: <strong className="text-slate-900 font-mono">₹{state.pricingPackages?.[0]?.price ?? 1499}</strong>
+            </span>
+            <span className="text-[10px] bg-blue-50 text-blue-800 border border-blue-200 px-2 py-0.5 rounded font-bold">
+              Historical Rates Preserved
+            </span>
+          </div>
         </div>
 
         <div className="overflow-x-auto">
@@ -603,7 +610,13 @@ export const AdminBillingManager: React.FC<AdminBillingManagerProps> = ({
                         <div className="font-black text-slate-900 font-['Outfit',sans-serif] text-sm">
                           {formatINR(record.amount)}
                         </div>
-                        <div className="text-[10px] text-gray-400">Direct Store Payment</div>
+                        <div className="text-[10px] font-semibold">
+                          {record.amount === (state.pricingPackages?.[0]?.price ?? 1499) ? (
+                            <span className="text-emerald-700">Official Rate</span>
+                          ) : (
+                            <span className="text-blue-700">Locked Rate</span>
+                          )}
+                        </div>
                       </td>
 
                       {/* Status & Quick Toggle */}

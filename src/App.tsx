@@ -370,11 +370,14 @@ export default function App() {
   };
 
   // Admin login success
-  const handleAdminLoginSuccess = () => {
+  const handleAdminLoginSuccess = (adminEmail?: string, adminName?: string) => {
+    const activeEmail = adminEmail || 'RKMEHRA331996@GMAIL.COM';
+    const activeName = adminName || (activeEmail.toLowerCase().includes('pageguru') ? 'Page Guru' : 'R. K. Mehra');
     saveUserSession({
       role: 'ADMIN',
       shopId: null,
-      email: 'admin@indianlalaji.com',
+      email: activeEmail,
+      vendorName: activeName,
       loginAt: Date.now(),
     });
     setCurrentRole('ADMIN');
@@ -514,7 +517,8 @@ export default function App() {
 
   const isPublicShopView =
     currentView === 'shop' ||
-    (currentView === 'vendor-dashboard' && currentRole === 'VENDOR' && Boolean(currentVendorShop));
+    (currentView === 'vendor-dashboard' && currentRole === 'VENDOR' && Boolean(currentVendorShop)) ||
+    (currentView === 'admin-dashboard' && currentRole === 'ADMIN');
 
   return (
     <div className="min-h-screen flex flex-col bg-[#FCF9F5] text-[#1A1A1A] font-sans selection:bg-orange-500 selection:text-white">
@@ -637,6 +641,7 @@ export default function App() {
               onUpdateState={handleUpdateState}
               onLogout={handleLogout}
               onNavigateToShop={(sid) => handleNavigate('shop', sid)}
+              onNavigateHome={() => handleNavigate('home')}
             />
           ) : (
             <ProtectedAccessBanner
@@ -685,6 +690,9 @@ export default function App() {
         authPromptNotice={authPromptNotice}
         prefilledShopId={prefilledShopId}
         shops={platformState.shops}
+        pricingPackages={platformState.pricingPackages}
+        activePlanPrice={platformState.pricingPackages?.[0]?.price ?? 1499}
+        activePlanName={platformState.pricingPackages?.[0]?.name ?? '1-Year Official LalaJi Store Plan'}
         onRegisterShop={(newShop) => {
           handleUpdateState({
             ...platformState,

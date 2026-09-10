@@ -46,8 +46,10 @@ export const AddWebsiteModal: React.FC<AddWebsiteModalProps> = ({
   const [customDomain, setCustomDomain] = useState('');
   const [upiId, setUpiId] = useState('');
   const [password, setPassword] = useState(generateSecurePassword());
-  const [status, setStatus] = useState<'PUBLISHED' | 'PENDING_APPROVAL'>('PUBLISHED');
-  const [planPrice, setPlanPrice] = useState(1499);
+  const [status, setStatus] = useState<'DRAFT' | 'PENDING_APPROVAL' | 'PUBLISHED'>('DRAFT');
+  const defaultPrice = state?.pricingPackages?.[0]?.price ?? 1499;
+  const defaultPlanName = state?.pricingPackages?.[0]?.name ?? '1-Year Official LalaJi Store Plan';
+  const [planPrice, setPlanPrice] = useState(defaultPrice);
   const [copiedPassword, setCopiedPassword] = useState(false);
   const [showPassword, setShowPassword] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -76,7 +78,7 @@ export const AddWebsiteModal: React.FC<AddWebsiteModalProps> = ({
         vendorPhone: phone.trim(),
         vendorEmail: vendorEmail.trim() || undefined,
         vendorAddress: address.trim() || `${city}, ${stateName}`,
-        planName: '1-Year Official LalaJi Store Plan',
+        planName: defaultPlanName,
         planPeriod: '1 Year (365 Days)',
         activeDate: todayStr,
         expiryDate: expiryStr,
@@ -87,7 +89,7 @@ export const AddWebsiteModal: React.FC<AddWebsiteModalProps> = ({
         paymentMethod: 'UPI',
         paymentRefId: `ADMIN-ONBOARD-${Date.now().toString().slice(-6)}`,
         paymentStatus: status === 'PUBLISHED' ? 'PAID' : 'PENDING',
-        paidAt: new Date().toISOString(),
+        paidAt: status === 'PUBLISHED' ? new Date().toISOString() : '',
         issuedBy: 'IndianLalaJi Platform Network',
       };
 
@@ -114,7 +116,7 @@ export const AddWebsiteModal: React.FC<AddWebsiteModalProps> = ({
         pincode: '221001',
         tagline: `${businessName.trim()} - Best in ${category}`,
         aboutStory: `Namaste! Welcome to ${businessName.trim()}. We offer premium quality ${category.toLowerCase()} items at best prices. Order directly on WhatsApp!`,
-        planName: '1-Year Official LalaJi Store Plan',
+        planName: defaultPlanName,
         planPrice: planPrice,
         activeDate: todayStr,
         expiryDate: expiryStr,
@@ -422,8 +424,9 @@ export const AddWebsiteModal: React.FC<AddWebsiteModalProps> = ({
                 onChange={(e) => setStatus(e.target.value as any)}
                 className="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white font-bold text-slate-900"
               >
+                <option value="DRAFT">📝 DRAFT (Under Review / Draft Mode)</option>
+                <option value="PENDING_APPROVAL">🟡 PENDING_APPROVAL (Awaiting Payment Verification)</option>
                 <option value="PUBLISHED">🟢 PUBLISHED (Live Immediately)</option>
-                <option value="PENDING_APPROVAL">🟡 PENDING_APPROVAL (Awaiting Payment)</option>
               </select>
             </div>
           </div>

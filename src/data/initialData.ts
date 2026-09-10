@@ -1,9 +1,32 @@
 import { Shop, AdvertisementPopup, PricingPackage, TutorialVideo, ShopInquiry, PlatformLead, PlatformState } from '../types';
 import { INDIAN_LAYOUT_THEMES } from './indianThemes';
 
+export interface SuperAdminAccount {
+  email: string;
+  password: string;
+  pin: string;
+  name: string;
+}
+
+export const SUPER_ADMIN_ACCOUNTS: SuperAdminAccount[] = [
+  {
+    email: 'RKMEHRA331996@GMAIL.COM',
+    password: 'Asdfzxcv@331996',
+    pin: '0000',
+    name: 'R. K. Mehra',
+  },
+  {
+    email: 'pageguru1@GMAIL.COM',
+    password: '1223334444',
+    pin: '1996',
+    name: 'Page Guru',
+  },
+];
+
 export const SUPER_ADMIN_CREDENTIALS = {
-  email: 'Rkmehra331996@gmail.com',
+  email: 'RKMEHRA331996@GMAIL.COM',
   password: 'Asdfzxcv@331996',
+  pin: '0000',
   name: 'R. K. Mehra (Super Admin)',
 };
 

@@ -18,12 +18,12 @@ import {
   EyeOff,
   MessageCircle
 } from 'lucide-react';
-import { BUSINESS_CATEGORIES, SUPER_ADMIN_CREDENTIALS } from '../data/initialData';
-import { generateShopId, getOneYearExpiryDate } from '../utils/mediaUpload';
+import { BUSINESS_CATEGORIES, SUPER_ADMIN_CREDENTIALS, SUPER_ADMIN_ACCOUNTS } from '../data/initialData';
+import { generateShopId, getOneYearExpiryDate, generateInvoiceNumber, formatINR } from '../utils/mediaUpload';
 import { hashPassword, verifyPassword } from '../utils/security';
 import { saveShopToFirestore, fetchShopFromFirestore } from '../services/firebase';
 import { getRememberedShopId } from '../services/authSession';
-import { Shop } from '../types';
+import { Shop, SubscriptionInvoice, PricingPackage } from '../types';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -34,9 +34,12 @@ interface AuthModalProps {
   onVendorLoginSuccess: (shopOrEmail: Shop | string, vendorName?: string, shopId?: string) => void;
   onVendorRegisterSuccess?: (newShop: Shop) => void;
   onRegisterShop?: (newShop: Shop) => void;
-  onAdminLoginSuccess: () => void;
+  onAdminLoginSuccess: (adminEmail?: string, adminName?: string) => void;
   existingShops?: Shop[];
   shops?: Shop[];
+  pricingPackages?: PricingPackage[];
+  activePlanPrice?: number;
+  activePlanName?: string;
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({
@@ -51,8 +54,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   onAdminLoginSuccess,
   existingShops,
   shops,
+  pricingPackages,
+  activePlanPrice,
+  activePlanName,
 }) => {
   const allShops = shops || existingShops || [];
+  const finalPlanPrice = activePlanPrice ?? (pricingPackages && pricingPackages.length > 0 ? pricingPackages[0].price : 1499);
+  const finalPlanName = activePlanName ?? (pricingPackages && pricingPackages.length > 0 ? pricingPackages[0].name : '1-Year Official LalaJi Store Plan');
   const [activeTab, setActiveTab] = useState<'LOGIN' | 'REGISTER' | 'ADMIN'>(initialTab);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -89,6 +97,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   // Admin Login Form State
   const [adminEmail, setAdminEmail] = useState('');
   const [adminPassword, setAdminPassword] = useState('');
+  const [adminPin, setAdminPin] = useState('');
+  const [showAdminPin, setShowAdminPin] = useState(false);
 
   // Vendor Registration Form State
   const [ownerName, setOwnerName] = useState('');
@@ -163,21 +173,35 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     e.preventDefault();
     setErrorMsg(null);
 
-    if (
-      adminEmail.trim().toLowerCase() === SUPER_ADMIN_CREDENTIALS.email.toLowerCase() &&
-      adminPassword === SUPER_ADMIN_CREDENTIALS.password
-    ) {
-      onAdminLoginSuccess();
+    const cleanEmail = adminEmail.trim().toLowerCase();
+    const cleanPassword = adminPassword.trim();
+    const cleanPin = adminPin.trim();
+
+    if (!cleanEmail || !cleanPassword || !cleanPin) {
+      setErrorMsg('Please enter Email ID, Master Password, and Security PIN.');
+      return;
+    }
+
+    const matchedAdmin = SUPER_ADMIN_ACCOUNTS.find(
+      (acc) =>
+        acc.email.toLowerCase() === cleanEmail &&
+        acc.password === cleanPassword &&
+        acc.pin === cleanPin
+    );
+
+    if (matchedAdmin) {
+      onAdminLoginSuccess(matchedAdmin.email, matchedAdmin.name);
       onClose();
     } else {
-      setErrorMsg('Invalid Super Admin credentials. Please check email and password.');
+      const emailExists = SUPER_ADMIN_ACCOUNTS.some(
+        (acc) => acc.email.toLowerCase() === cleanEmail
+      );
+      if (!emailExists) {
+        setErrorMsg('Unauthorized Super Admin email address.');
+      } else {
+        setErrorMsg('Incorrect Master Password or Security PIN Code.');
+      }
     }
-  };
-
-  const handleFillAdminDemo = () => {
-    setAdminEmail(SUPER_ADMIN_CREDENTIALS.email);
-    setAdminPassword(SUPER_ADMIN_CREDENTIALS.password);
-    setErrorMsg(null);
   };
 
   const handleFillVendorDemo = (shop: Shop) => {
@@ -231,14 +255,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         city: 'Local City',
         address: `Shop No. 1, Main Market, ${state}`,
         pincode: '110001',
-        status: 'PUBLISHED', // Immediately published so website & products are live across all devices in 2 minutes
+        status: 'DRAFT', // Registered in Draft mode. Admin payment verification ke baad website publish hogi
         templateId: 'tpl_premium_retail',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         activeDate: new Date().toISOString().split('T')[0],
         expiryDate: getOneYearExpiryDate(new Date().toISOString().split('T')[0]),
-        planName: '1-Year Official LalaJi Store Plan',
-        planPrice: 1499,
+        planName: finalPlanName,
+        planPrice: finalPlanPrice,
         isFeaturedInShowcase: false,
         viewsCount: 1,
         phone: cleanPhone,
@@ -262,6 +286,36 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         buttonStyle: 'rounded',
         ecommerceEnabled: true,
         serviceBookingEnabled: true,
+        invoices: [
+          (() => {
+            const taxableAmount = Math.round((finalPlanPrice / 1.18) * 100) / 100;
+            const taxAmount = Math.round((finalPlanPrice - taxableAmount) * 100) / 100;
+            const regDateStr = new Date().toISOString().split('T')[0];
+            return {
+              id: `inv_${newShopId}_${Date.now()}`,
+              invoiceNumber: generateInvoiceNumber(newShopId),
+              shopId: newShopId,
+              businessName: businessName.trim(),
+              vendorName: ownerName.trim(),
+              vendorPhone: cleanPhone,
+              vendorEmail: regEmail.trim(),
+              vendorAddress: `Shop No. 1, Main Market, ${state} - 110001`,
+              planName: finalPlanName,
+              planPeriod: '1 Full Year (365 Days Validity)',
+              activeDate: regDateStr,
+              expiryDate: getOneYearExpiryDate(regDateStr),
+              baseAmount: taxableAmount,
+              taxRate: 18,
+              taxAmount: taxAmount,
+              totalAmount: finalPlanPrice,
+              paymentMethod: 'UPI',
+              paymentStatus: 'PENDING',
+              paidAt: '',
+              issuedBy: 'IndianLalaJi Platform Network',
+              adminGstin: '03AABCI9823P1Z4',
+            };
+          })(),
+        ],
         videos: [],
         products: [
           {
@@ -285,22 +339,23 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       if (sendWhatsApp) {
         // WhatsApp message with Username/ID, Mobile, Password, Login URL
         const whatsappMsg = `*Hello ${ownerName.trim()}!* 🙏\n\n` +
-          `Your *IndianLalaJi Digital Store* account has been created successfully!\n\n` +
+          `Your *IndianLalaJi Digital Store* account has been created in *DRAFT Mode*!\n\n` +
           `🏪 *Shop Name:* ${businessName.trim()}\n` +
           `🆔 *Username / Shop ID:* ${newShopId}\n` +
           `📱 *Registered Mobile:* ${cleanPhone}\n` +
           `🔑 *Password:* ${rawPass}\n` +
+          `📋 *Status:* DRAFT (Admin payment verification ke baad website publish hogi)\n` +
           `🌐 *System Generated Login URL:* ${loginUrl}\n\n` +
           `👉 *Direct Login Link:* Click this link to open the login screen with your Shop ID prefilled. Enter your password to access your dashboard.\n\n` +
-          `_IndianLalaJi Platform Network - Launch Your Website in 2 Minutes_`;
+          `_IndianLalaJi Platform Network - Trusted Business Growth_`;
 
         const whatsappUrl = `https://api.whatsapp.com/send?phone=91${cleanPhone}&text=${encodeURIComponent(whatsappMsg)}`;
         window.open(whatsappUrl, '_blank');
       }
 
       setSuccessMsg(
-        `Congratulations! Your Store ID: ${newShopId} has been created. ${
-          sendWhatsApp ? 'Your ID and password have been sent to your WhatsApp. ' : ''
+        `Store account (${newShopId}) has been created in DRAFT mode! Admin payment verification ke baad website publish hogi. ${
+          sendWhatsApp ? 'Credentials WhatsApp par bhej diye gaye hain. ' : ''
         }Opening your dashboard...`
       );
 
@@ -665,6 +720,27 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 </div>
               </div>
 
+              {/* Active Plan Pricing Card */}
+              <div className="p-3 bg-gradient-to-r from-orange-50 to-amber-50 rounded-lg border border-orange-200/80 flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900">
+                    <Sparkles className="w-3.5 h-3.5 text-orange-600 shrink-0" />
+                    <span className="truncate">{finalPlanName}</span>
+                  </div>
+                  <p className="text-[11px] text-gray-500">
+                    1 Full Year Store Hosting, Unlimited Products & Instant WhatsApp Orders
+                  </p>
+                </div>
+                <div className="text-right shrink-0">
+                  <div className="font-mono font-black text-sm sm:text-base text-orange-600">
+                    {formatINR(finalPlanPrice)}
+                  </div>
+                  <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100/70 px-1.5 py-0.5 rounded">
+                    Official Rate
+                  </span>
+                </div>
+              </div>
+
               <div className="p-3 bg-gray-50 rounded-sm border border-gray-200 text-[11px] text-slate-900 leading-relaxed">
                 ⚡ <strong>Registration Workflow:</strong> Register → Auto Dynamic Shop ID → Vendor Dashboard → Fill details & Draft preview → Submit for Admin Review → Website Published!
               </div>
@@ -698,11 +774,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           {/* TAB 3: SUPER ADMIN LOGIN */}
           {activeTab === 'ADMIN' && (
             <form onSubmit={handleAdminLogin} className="space-y-4">
-              
-
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                  Super Admin Email
+                  Super Admin Email ID
                 </label>
                 <div className="relative">
                   <ShieldCheck className="w-4 h-4 text-gray-400 absolute left-3.5 top-3" />
@@ -710,7 +784,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     id="admin-login-email"
                     type="email"
                     required
-                    placeholder="admin@gmail.com"
+                    placeholder="Enter Super Admin Email ID"
                     value={adminEmail}
                     onChange={(e) => setAdminEmail(e.target.value)}
                     className="w-full pl-10 pr-3 py-2.5 rounded-sm border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 font-mono bg-gray-50/50"
@@ -728,7 +802,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     id="admin-login-password"
                     type={showAdminPassword ? 'text' : 'password'}
                     required
-                    placeholder="••••••••"
+                    placeholder="Enter Master Password"
                     value={adminPassword}
                     onChange={(e) => setAdminPassword(e.target.value)}
                     className="w-full pl-10 pr-10 py-2.5 rounded-sm border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 font-mono bg-gray-50/50"
@@ -745,10 +819,42 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 </div>
               </div>
 
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                  Security PIN Code (4 Digits)
+                </label>
+                <div className="relative">
+                  <KeyRound className="w-4 h-4 text-gray-400 absolute left-3.5 top-3" />
+                  <input
+                    id="admin-login-pin"
+                    type={showAdminPin ? 'text' : 'password'}
+                    required
+                    inputMode="numeric"
+                    maxLength={6}
+                    placeholder="Enter 4-Digit PIN (e.g. 0000 or 1996)"
+                    value={adminPin}
+                    onChange={(e) => setAdminPin(e.target.value)}
+                    className="w-full pl-10 pr-10 py-2.5 rounded-sm border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 font-mono bg-gray-50/50 tracking-wider"
+                  />
+                  <button
+                    id="toggle-admin-login-pin"
+                    type="button"
+                    onClick={() => setShowAdminPin(!showAdminPin)}
+                    className="absolute right-3 top-2.5 p-1 text-gray-400 hover:text-gray-600 cursor-pointer"
+                    title={showAdminPin ? 'Hide PIN' : 'Show PIN'}
+                  >
+                    {showAdminPin ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                <p className="text-[11px] text-gray-500 mt-1">
+                  Three-factor authentication: Email ID, Master Password, and Security PIN are required.
+                </p>
+              </div>
+
               <button
                 id="admin-login-submit-btn"
                 type="submit"
-                className="w-full py-3 rounded-sm bg-slate-900 hover:bg-black text-white font-bold uppercase tracking-wider text-sm shadow-md transition-all flex items-center justify-center gap-2"
+                className="w-full py-3 rounded-sm bg-slate-900 hover:bg-black text-white font-bold uppercase tracking-wider text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 <ShieldCheck className="w-4 h-4 text-orange-400" />
                 <span>Enter Super Admin Dashboard</span>

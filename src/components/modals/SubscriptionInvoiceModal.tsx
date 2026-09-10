@@ -37,12 +37,13 @@ export const SubscriptionInvoiceModal: React.FC<SubscriptionInvoiceModalProps> =
 }) => {
   if (isOpen === false || !shop) return null;
 
-  // Generate fallback invoice data if not provided
-  const basePrice = shop.planPrice || 1499;
-  const taxableAmount = Math.round((basePrice / 1.18) * 100) / 100;
-  const taxAmount = Math.round((basePrice - taxableAmount) * 100) / 100;
+  // Priority: if custom invoice passed, or shop has stored invoice, use that exact invoice record
+  const storedInvoice = invoice || (shop.invoices && shop.invoices.length > 0 ? shop.invoices[0] : null);
+  const basePrice = storedInvoice?.totalAmount || shop.planPrice || 1499;
+  const taxableAmount = storedInvoice?.baseAmount || Math.round((basePrice / 1.18) * 100) / 100;
+  const taxAmount = storedInvoice?.taxAmount || Math.round((basePrice - taxableAmount) * 100) / 100;
 
-  const activeInvoice: SubscriptionInvoice = invoice || {
+  const activeInvoice: SubscriptionInvoice = storedInvoice || {
     id: `inv_${shop.id || shop.shopId || Date.now()}`,
     invoiceNumber: generateInvoiceNumber(shop.shopId || '000000'),
     shopId: shop.shopId || '',
