@@ -493,12 +493,30 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
     }
   };
 
+  const handleRemoveDesktopBanner = (index: number) => {
+    const currentList = [...(currentShop.desktopBanners || currentShop.banners || [])];
+    if (index < currentList.length) {
+      currentList[index] = '';
+      while (currentList.length > 0 && !currentList[currentList.length - 1]) {
+        currentList.pop();
+      }
+      const updated = {
+        ...currentShop,
+        desktopBanners: currentList,
+        banners: currentList,
+      };
+      setCurrentShop(updated);
+      handleSaveAll(updated);
+      showToast(`Desktop Banner #${index + 1} remove ho gaya.`);
+    }
+  };
+
   const handleMobileBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
     const file = e.target.files?.[0];
     if (!file) return;
     try {
       const base64 = await fileToBase64(file);
-      const currentList = [...(currentShop.mobileBanners || currentShop.banners || [])];
+      const currentList = [...(currentShop.mobileBanners || [])];
       while (currentList.length <= index) currentList.push('');
       currentList[index] = base64;
       const updated = {
@@ -511,6 +529,23 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
     } catch (err) {
       console.error(err);
       alert('Image upload error');
+    }
+  };
+
+  const handleRemoveMobileBanner = (index: number) => {
+    const currentList = [...(currentShop.mobileBanners || [])];
+    if (index < currentList.length) {
+      currentList[index] = '';
+      while (currentList.length > 0 && !currentList[currentList.length - 1]) {
+        currentList.pop();
+      }
+      const updated = {
+        ...currentShop,
+        mobileBanners: currentList,
+      };
+      setCurrentShop(updated);
+      handleSaveAll(updated);
+      showToast(`Mobile Banner #${index + 1} remove ho gaya.`);
     }
   };
 
@@ -4194,114 +4229,152 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
                 </div>
               </div>
 
-              {/* 1. Desktop Banners Carousel (1, 2, 3) */}
+              {/* 1. Desktop Banners Carousel (Max 4 Banners) */}
               <div className="space-y-3 pt-2">
                 <div className="flex items-center justify-between">
                   <div>
                     <h4 className="text-xs font-black uppercase tracking-wider text-slate-900">
-                      Desktop Hero Carousel Banners (Banner 1, 2, 3)
+                      Desktop Hero Carousel Banners (Maximum 4 Banners)
                     </h4>
                     <p className="text-[11px] text-gray-500">
-                      Desktop aur laptop screens ke liye horizontal wide banners (16:9 ya 21:9)
+                      Desktop aur laptop screens ke liye horizontal wide banners (16:9 ya 21:9). Automatically carousel slider mein show honge.
                     </p>
                   </div>
                   <span className="text-[10px] font-bold text-orange-800 bg-orange-100 px-2 py-0.5 rounded">
-                    Desktop View
+                    Desktop View (Max 4)
                   </span>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  {[0, 1, 2].map((idx) => {
-                    const bannerSrc = (currentShop.desktopBanners && currentShop.desktopBanners[idx]) || currentShop.banners[idx] || '';
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {[0, 1, 2, 3].map((idx) => {
+                    const bannerSrc = (currentShop.desktopBanners && currentShop.desktopBanners[idx]) || (idx === 0 ? currentShop.banners?.[0] : '') || '';
                     return (
-                      <div key={`desk-banner-${idx}`} className="border border-gray-200 rounded-xl p-3 bg-gray-50/50 space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-bold text-slate-800">Desktop Banner #{idx + 1}</span>
+                      <div key={`desk-banner-${idx}`} className="border border-gray-200 rounded-xl p-3 bg-gray-50/50 space-y-2 flex flex-col justify-between">
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-slate-800">Desktop Banner #{idx + 1}</span>
+                            {bannerSrc ? (
+                              <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                                Uploaded
+                              </span>
+                            ) : (
+                              <span className="text-[9px] font-medium text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">
+                                Empty
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="aspect-16/9 rounded-lg bg-gray-200 overflow-hidden border border-gray-300 relative group">
+                            {bannerSrc ? (
+                              <img src={bannerSrc} alt={`Desktop Banner ${idx + 1}`} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 text-xs">
+                                <ImageIcon className="w-6 h-6 mb-1 text-gray-300" />
+                                <span>No Banner</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 pt-1">
+                          <label className="cursor-pointer flex-1 py-2 bg-white border border-gray-300 hover:bg-orange-50 text-slate-700 hover:text-orange-700 rounded text-[11px] font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors shadow-2xs">
+                            <Upload className="w-3.5 h-3.5 text-orange-600 shrink-0" />
+                            <span>{bannerSrc ? `Change #${idx + 1}` : `Upload #${idx + 1}`}</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => handleDesktopBannerUpload(e, idx)}
+                            />
+                          </label>
+
                           {bannerSrc && (
-                            <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">
-                              Uploaded
-                            </span>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveDesktopBanner(idx)}
+                              className="p-2 bg-white border border-rose-200 hover:bg-rose-50 text-rose-600 rounded transition-colors shadow-2xs cursor-pointer"
+                              title={`Desktop Banner #${idx + 1} Remove Karein`}
+                            >
+                              <Trash2 className="w-3.5 h-3.5 text-rose-500" />
+                            </button>
                           )}
                         </div>
-
-                        <div className="aspect-16/9 rounded-lg bg-gray-200 overflow-hidden border border-gray-300 relative group">
-                          {bannerSrc ? (
-                            <img src={bannerSrc} alt={`Desktop Banner ${idx + 1}`} className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 text-xs">
-                              <ImageIcon className="w-6 h-6 mb-1 text-gray-300" />
-                              <span>No Banner</span>
-                            </div>
-                          )}
-                        </div>
-
-                        <label className="cursor-pointer w-full py-2 bg-white border border-gray-300 hover:bg-orange-50 text-slate-700 hover:text-orange-700 rounded text-[11px] font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors">
-                          <Upload className="w-3.5 h-3.5 text-orange-600" />
-                          <span>Upload Banner {idx + 1}</span>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={(e) => handleDesktopBannerUpload(e, idx)}
-                          />
-                        </label>
                       </div>
                     );
                   })}
                 </div>
               </div>
 
-              {/* 2. Mobile Banners Carousel (1, 2, 3) */}
-              <div className="space-y-3 pt-3 border-t border-gray-100">
+              {/* 2. Mobile Banners Carousel (Max 3 Banners) */}
+              <div className="space-y-3 pt-4 border-t border-gray-100">
                 <div className="flex items-center justify-between">
                   <div>
                     <h4 className="text-xs font-black uppercase tracking-wider text-slate-900">
-                      Mobile Hero Carousel Banners (Banner 1, 2, 3)
+                      Mobile Hero Carousel Banners (Maximum 3 Banners)
                     </h4>
                     <p className="text-[11px] text-gray-500">
-                      Smartphones ke liye portrait banners (4:5 ya 9:16)
+                      Smartphones ke liye separate portrait banners (4:5 ya 9:16). Mobile device par sirf ye banners show honge, desktop banners use nahi honge.
                     </p>
                   </div>
                   <span className="text-[10px] font-bold text-purple-800 bg-purple-100 px-2 py-0.5 rounded">
-                    Mobile View
+                    Mobile View (Max 3)
                   </span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   {[0, 1, 2].map((idx) => {
-                    const bannerSrc = (currentShop.mobileBanners && currentShop.mobileBanners[idx]) || (currentShop.desktopBanners && currentShop.desktopBanners[idx]) || currentShop.banners[idx] || '';
+                    const bannerSrc = currentShop.mobileBanners?.[idx] || '';
                     return (
-                      <div key={`mob-banner-${idx}`} className="border border-gray-200 rounded-xl p-3 bg-gray-50/50 space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-bold text-slate-800">Mobile Banner #{idx + 1}</span>
+                      <div key={`mob-banner-${idx}`} className="border border-gray-200 rounded-xl p-3 bg-gray-50/50 space-y-2 flex flex-col justify-between">
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-slate-800">Mobile Banner #{idx + 1}</span>
+                            {bannerSrc ? (
+                              <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                                Uploaded
+                              </span>
+                            ) : (
+                              <span className="text-[9px] font-medium text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">
+                                Empty
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="aspect-4/5 max-h-48 mx-auto rounded-lg bg-gray-200 overflow-hidden border border-gray-300 relative group">
+                            {bannerSrc ? (
+                              <img src={bannerSrc} alt={`Mobile Banner ${idx + 1}`} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 text-xs">
+                                <ImageIcon className="w-6 h-6 mb-1 text-gray-300" />
+                                <span>No Banner</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 pt-1">
+                          <label className="cursor-pointer flex-1 py-2 bg-white border border-gray-300 hover:bg-purple-50 text-slate-700 hover:text-purple-700 rounded text-[11px] font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors shadow-2xs">
+                            <Upload className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                            <span>{bannerSrc ? `Change #${idx + 1}` : `Upload #${idx + 1}`}</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => handleMobileBannerUpload(e, idx)}
+                            />
+                          </label>
+
                           {bannerSrc && (
-                            <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">
-                              Uploaded
-                            </span>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveMobileBanner(idx)}
+                              className="p-2 bg-white border border-rose-200 hover:bg-rose-50 text-rose-600 rounded transition-colors shadow-2xs cursor-pointer"
+                              title={`Mobile Banner #${idx + 1} Remove Karein`}
+                            >
+                              <Trash2 className="w-3.5 h-3.5 text-rose-500" />
+                            </button>
                           )}
                         </div>
-
-                        <div className="aspect-4/5 max-h-48 mx-auto rounded-lg bg-gray-200 overflow-hidden border border-gray-300 relative group">
-                          {bannerSrc ? (
-                            <img src={bannerSrc} alt={`Mobile Banner ${idx + 1}`} className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 text-xs">
-                              <ImageIcon className="w-6 h-6 mb-1 text-gray-300" />
-                              <span>No Banner</span>
-                            </div>
-                          )}
-                        </div>
-
-                        <label className="cursor-pointer w-full py-2 bg-white border border-gray-300 hover:bg-purple-50 text-slate-700 hover:text-purple-700 rounded text-[11px] font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors">
-                          <Upload className="w-3.5 h-3.5 text-purple-600" />
-                          <span>Upload Mobile {idx + 1}</span>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={(e) => handleMobileBannerUpload(e, idx)}
-                          />
-                        </label>
                       </div>
                     );
                   })}

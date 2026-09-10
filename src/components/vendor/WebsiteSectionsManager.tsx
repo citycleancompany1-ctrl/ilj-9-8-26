@@ -884,6 +884,7 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
                     onDeleteItem: handleDeleteItem,
                     onToggleStock: handleToggleStock,
                     onToggleHidePrice: handleToggleHidePrice,
+                    onUpdateShop,
                   })}
                   
                   {/* Bottom Save Bar for this section */}
@@ -1249,6 +1250,7 @@ function renderSectionEditor(
     onDeleteItem: (itemId: string, name: string) => void;
     onToggleStock: (itemId: string) => void;
     onToggleHidePrice: (itemId: string) => void;
+    onUpdateShop?: (updated: Shop) => void;
   }
 ) {
   switch (key) {
@@ -1339,39 +1341,219 @@ function renderSectionEditor(
               />
             </div>
 
-            <div className="sm:col-span-2">
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                Banner Background Image
-              </label>
-              <div className="flex items-center gap-3">
-                {data.backgroundImage && (
-                  <img
-                    src={data.backgroundImage}
-                    alt="Hero Banner"
-                    className="w-20 h-12 object-cover rounded border border-gray-300"
-                  />
-                )}
-                <label className="px-3.5 py-2 bg-white hover:bg-gray-50 border border-gray-300 rounded text-xs font-bold text-slate-800 flex items-center gap-1.5 cursor-pointer shadow-2xs">
-                  <Upload className="w-3.5 h-3.5 text-orange-600" />
-                  <span>Upload Banner Photo</span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={async (e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        try {
-                          const base64 = await fileToBase64(file, 1200, 800);
-                          update({ backgroundImage: base64 });
-                          showToast('Hero banner image updated!');
-                        } catch (err) {
-                          showToast('Image upload failed');
-                        }
-                      }
-                    }}
-                  />
-                </label>
+            {/* Desktop Hero Carousel Banners (Max 4) */}
+            <div className="sm:col-span-2 pt-3 border-t border-gray-100 space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-xs font-black uppercase tracking-wider text-slate-900">
+                    Desktop Hero Slider Banners (Maximum 4 Banners)
+                  </h4>
+                  <p className="text-[11px] text-gray-500">
+                    Desktop aur laptop screens ke liye horizontal wide banners (16:9 ya 21:9). Carousel slider mein auto-slide honge.
+                  </p>
+                </div>
+                <span className="text-[10px] font-bold text-orange-800 bg-orange-100 px-2 py-0.5 rounded">
+                  Desktop (Max 4)
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                {[0, 1, 2, 3].map((idx) => {
+                  const bannerSrc = (shop.desktopBanners && shop.desktopBanners[idx]) || (idx === 0 ? (shop.banners?.[0] || data.backgroundImage) : '') || '';
+                  return (
+                    <div key={`desk-sec-banner-${idx}`} className="border border-gray-200 rounded-xl p-2.5 bg-gray-50/50 space-y-2 flex flex-col justify-between">
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between text-[11px]">
+                          <span className="font-bold text-slate-800">Banner #{idx + 1}</span>
+                          {bannerSrc ? (
+                            <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                              Uploaded
+                            </span>
+                          ) : (
+                            <span className="text-[9px] font-medium text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">
+                              Empty
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="aspect-16/9 rounded-lg bg-gray-200 overflow-hidden border border-gray-300 relative group">
+                          {bannerSrc ? (
+                            <img src={bannerSrc} alt={`Desktop Banner ${idx + 1}`} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 text-xs">
+                              <ImageIcon className="w-5 h-5 mb-0.5 text-gray-300" />
+                              <span className="text-[10px]">No Banner</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 pt-1">
+                        <label className="cursor-pointer flex-1 py-1.5 bg-white border border-gray-300 hover:bg-orange-50 text-slate-700 hover:text-orange-700 rounded text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-1 transition-colors shadow-2xs">
+                          <Upload className="w-3 h-3 text-orange-600 shrink-0" />
+                          <span>{bannerSrc ? `Change` : `Upload`}</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              try {
+                                const base64 = await fileToBase64(file, 1600, 800);
+                                const currentList = [...(shop.desktopBanners || shop.banners || [])];
+                                while (currentList.length <= idx) currentList.push('');
+                                currentList[idx] = base64;
+                                const updated = {
+                                  ...shop,
+                                  desktopBanners: currentList,
+                                  banners: currentList,
+                                };
+                                actions?.onUpdateShop?.(updated);
+                                showToast(`Desktop Banner #${idx + 1} updated!`);
+                              } catch (err) {
+                                showToast('Image upload failed');
+                              }
+                            }}
+                          />
+                        </label>
+
+                        {bannerSrc && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const currentList = [...(shop.desktopBanners || shop.banners || [])];
+                              if (idx < currentList.length) {
+                                currentList[idx] = '';
+                                while (currentList.length > 0 && !currentList[currentList.length - 1]) {
+                                  currentList.pop();
+                                }
+                                const updated = {
+                                  ...shop,
+                                  desktopBanners: currentList,
+                                  banners: currentList,
+                                };
+                                actions?.onUpdateShop?.(updated);
+                                showToast(`Desktop Banner #${idx + 1} removed.`);
+                              }
+                            }}
+                            className="p-1.5 bg-white border border-rose-200 hover:bg-rose-50 text-rose-600 rounded transition-colors shadow-2xs cursor-pointer"
+                            title={`Remove Banner #${idx + 1}`}
+                          >
+                            <Trash2 className="w-3.5 h-3.5 text-rose-500" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Mobile Hero Carousel Banners (Max 3) */}
+            <div className="sm:col-span-2 pt-3 border-t border-gray-100 space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-xs font-black uppercase tracking-wider text-slate-900">
+                    Mobile Hero Slider Banners (Maximum 3 Banners)
+                  </h4>
+                  <p className="text-[11px] text-gray-500">
+                    Smartphones ke liye separate portrait banners (4:5 ya 9:16). Mobile par sirf ye show honge.
+                  </p>
+                </div>
+                <span className="text-[10px] font-bold text-purple-800 bg-purple-100 px-2 py-0.5 rounded">
+                  Mobile (Max 3)
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {[0, 1, 2].map((idx) => {
+                  const bannerSrc = shop.mobileBanners?.[idx] || '';
+                  return (
+                    <div key={`mob-sec-banner-${idx}`} className="border border-gray-200 rounded-xl p-2.5 bg-gray-50/50 space-y-2 flex flex-col justify-between">
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between text-[11px]">
+                          <span className="font-bold text-slate-800">Mobile Banner #{idx + 1}</span>
+                          {bannerSrc ? (
+                            <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                              Uploaded
+                            </span>
+                          ) : (
+                            <span className="text-[9px] font-medium text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">
+                              Empty
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="aspect-4/5 max-h-40 mx-auto rounded-lg bg-gray-200 overflow-hidden border border-gray-300 relative group">
+                          {bannerSrc ? (
+                            <img src={bannerSrc} alt={`Mobile Banner ${idx + 1}`} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 text-xs">
+                              <ImageIcon className="w-5 h-5 mb-0.5 text-gray-300" />
+                              <span className="text-[10px]">No Banner</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 pt-1">
+                        <label className="cursor-pointer flex-1 py-1.5 bg-white border border-gray-300 hover:bg-purple-50 text-slate-700 hover:text-purple-700 rounded text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-1 transition-colors shadow-2xs">
+                          <Upload className="w-3 h-3 text-purple-600 shrink-0" />
+                          <span>{bannerSrc ? `Change` : `Upload`}</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              try {
+                                const base64 = await fileToBase64(file, 900, 1200);
+                                const currentList = [...(shop.mobileBanners || [])];
+                                while (currentList.length <= idx) currentList.push('');
+                                currentList[idx] = base64;
+                                const updated = {
+                                  ...shop,
+                                  mobileBanners: currentList,
+                                };
+                                actions?.onUpdateShop?.(updated);
+                                showToast(`Mobile Banner #${idx + 1} updated!`);
+                              } catch (err) {
+                                showToast('Image upload failed');
+                              }
+                            }}
+                          />
+                        </label>
+
+                        {bannerSrc && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const currentList = [...(shop.mobileBanners || [])];
+                              if (idx < currentList.length) {
+                                currentList[idx] = '';
+                                while (currentList.length > 0 && !currentList[currentList.length - 1]) {
+                                  currentList.pop();
+                                }
+                                const updated = {
+                                  ...shop,
+                                  mobileBanners: currentList,
+                                };
+                                actions?.onUpdateShop?.(updated);
+                                showToast(`Mobile Banner #${idx + 1} removed.`);
+                              }
+                            }}
+                            className="p-1.5 bg-white border border-rose-200 hover:bg-rose-50 text-rose-600 rounded transition-colors shadow-2xs cursor-pointer"
+                            title={`Remove Mobile Banner #${idx + 1}`}
+                          >
+                            <Trash2 className="w-3.5 h-3.5 text-rose-500" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>

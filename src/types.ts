@@ -90,8 +90,8 @@ export interface Shop {
   // Branding & Media
   logoUrl: string;
   banners: string[]; // General/fallback banners
-  desktopBanners?: string[]; // Desktop hero carousel banners (1, 2, 3)
-  mobileBanners?: string[]; // Mobile hero carousel banners (1, 2, 3)
+  desktopBanners?: string[]; // Desktop hero carousel banners (maximum 4)
+  mobileBanners?: string[]; // Mobile hero carousel banners (maximum 3)
   bannerTitle?: string;
   bannerSubtitle?: string;
   aboutPhotoUrl: string;

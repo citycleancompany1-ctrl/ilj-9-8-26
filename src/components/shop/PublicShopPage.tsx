@@ -55,6 +55,7 @@ import {
   HeroSectionRenderer,
   AboutSectionRenderer,
   FeaturesSectionRenderer,
+  BenefitsSectionRenderer,
   ServicesSectionRenderer,
   CoursesSectionRenderer,
   OffersSectionRenderer,
@@ -774,6 +775,11 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
         <FeaturesSectionRenderer config={sectionsConfig.features} />
       )}
 
+      {/* BENEFITS / WHY CHOOSE US SECTION (ON/OFF & Custom Builder Config) */}
+      {sectionsConfig && sectionsConfig.benefits && sectionsConfig.benefits.enabled && (
+        <BenefitsSectionRenderer config={sectionsConfig.benefits} />
+      )}
+
       {/* 4. SERVICES SECTION (Rendered from Store's Services Catalogue) */}
       {catalogServices.length > 0 && (
         <ServicesSectionRenderer
@@ -1047,7 +1053,7 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
                     className="w-full py-3.5 bg-orange-600 hover:bg-orange-700 text-white font-bold uppercase tracking-wider text-xs rounded-xl shadow-md flex items-center justify-center gap-2 transition-all hover:scale-101 cursor-pointer"
                   >
                     <Send className="w-4 h-4" />
-                    <span>Submit Direct Inquiry to {shop.businessName}</span>
+                    <span>Submit Direct Inquiry </span>
                   </button>
                 </form>
               )}
