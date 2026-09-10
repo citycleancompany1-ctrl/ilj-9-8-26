@@ -1,24 +1,22 @@
 import React, { useState, useRef } from 'react';
 import {
-  ShieldCheck,
   Download,
   Upload,
   RotateCcw,
-  Plus,
-  Trash2,
-  Calendar,
-  Package,
-  FileJson,
   CheckCircle2,
   AlertTriangle,
-  Clock,
-  ExternalLink,
+  FileJson,
+  ShieldCheck,
+  Package,
   Layers,
-  Database,
   Sparkles,
+  Settings,
+  Image as ImageIcon,
+  FolderTree,
+  X,
+  FileCheck
 } from 'lucide-react';
-import { Shop, VendorWebsiteBackup } from '../../types';
-import { formatDisplayDate } from '../../utils/mediaUpload';
+import { Shop } from '../../types';
 
 interface VendorBackupsManagerProps {
   shop: Shop;
@@ -26,77 +24,91 @@ interface VendorBackupsManagerProps {
   showToast: (msg: string) => void;
 }
 
+interface ParsedBackupData {
+  fileName: string;
+  fileSize: string;
+  businessName: string;
+  shopId: string;
+  productsCount: number;
+  categoriesCount: number;
+  themeId: string;
+  backupDate: string;
+  rawShopData: Shop;
+}
+
 export const VendorBackupsManager: React.FC<VendorBackupsManagerProps> = ({
   shop,
   onUpdateShop,
   showToast,
 }) => {
-  const [snapshotLabel, setSnapshotLabel] = useState<string>('');
-  const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
-  const [selectedBackupForRestore, setSelectedBackupForRestore] = useState<VendorWebsiteBackup | null>(null);
-  const [importedBackupPreview, setImportedBackupPreview] = useState<VendorWebsiteBackup | null>(null);
+  const [uploadedBackup, setUploadedBackup] = useState<ParsedBackupData | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
+  const [isDragOver, setIsDragOver] = useState<boolean>(false);
+  const [showConfirmRestoreModal, setShowConfirmRestoreModal] = useState<boolean>(false);
+  const [isRestoring, setIsRestoring] = useState<boolean>(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const backups: VendorWebsiteBackup[] = shop.backups || [];
-
-  // 1. CREATE NEW SNAPSHOT BACKUP
-  const handleCreateSnapshot = () => {
-    const backupId = `bkp_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
-    const newBackup: VendorWebsiteBackup = {
-      backupId,
-      shopId: shop.shopId,
-      businessName: shop.businessName,
-      createdAt: new Date().toISOString(),
-      version: '1.0',
-      description: snapshotLabel.trim() || `Manual Snapshot (${new Date().toLocaleDateString()})`,
-      data: JSON.parse(JSON.stringify(shop)),
-    };
-
-    const updatedBackups = [newBackup, ...backups];
-    const updatedShop: Shop = {
-      ...shop,
-      backups: updatedBackups,
-      updatedAt: new Date().toISOString(),
-    };
-
-    onUpdateShop(updatedShop);
-    setSnapshotLabel('');
-    setShowCreateModal(false);
-    showToast(`✅ Store snapshot "${newBackup.description}" create ho gaya!`);
+  // Helper to resolve categories count
+  const getCategoriesCount = (targetShop: Partial<Shop>): number => {
+    if (targetShop.customCategories && targetShop.customCategories.length > 0) {
+      return targetShop.customCategories.length;
+    }
+    const catsFromProducts = new Set(
+      targetShop.products?.map((p) => p.category).filter(Boolean)
+    );
+    return catsFromProducts.size || (targetShop as any).categories?.length || 0;
   };
 
-  // 2. EXPORT AS JSON DOWNLOAD
-  const handleExportJson = (backupData?: Shop, customFileName?: string) => {
-    const dataToExport = backupData || shop;
-    const exportObject: VendorWebsiteBackup = {
-      backupId: `export_${Date.now()}`,
-      shopId: shop.shopId,
-      businessName: shop.businessName,
-      createdAt: new Date().toISOString(),
-      version: '1.0',
-      description: `Exported on ${new Date().toLocaleString()}`,
-      data: JSON.parse(JSON.stringify(dataToExport)),
-    };
+  const currentCategoriesCount = getCategoriesCount(shop);
 
-    const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(
-      JSON.stringify(exportObject, null, 2)
-    )}`;
-    const downloadAnchor = document.createElement('a');
-    downloadAnchor.setAttribute('href', jsonString);
-    const fileName =
-      customFileName ||
-      `${shop.shopId}_backup_${new Date().toISOString().split('T')[0]}.json`;
-    downloadAnchor.setAttribute('download', fileName);
-    document.body.appendChild(downloadAnchor);
-    downloadAnchor.click();
-    downloadAnchor.remove();
+  // 1. EXPORT & DOWNLOAD COMPLETE STORE BACKUP
+  const handleDownloadBackup = () => {
+    try {
+      // Create deep clone of complete shop data
+      const completeData = JSON.parse(JSON.stringify(shop));
 
-    showToast(`📥 Backup file "${fileName}" download ho gayi!`);
+      const exportPayload = {
+        platform: 'IndianLalaJi',
+        version: '2.0',
+        exportedAt: new Date().toISOString(),
+        shopId: shop.shopId,
+        businessName: shop.businessName,
+        stats: {
+          productsCount: shop.products?.length || 0,
+          categoriesCount: currentCategoriesCount,
+          galleryCount: (shop.galleryImages?.length || 0) + (shop.banners?.length || 0),
+          themeId: shop.themeId || 'Bharat Royal',
+        },
+        data: completeData,
+      };
+
+      const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(
+        JSON.stringify(exportPayload, null, 2)
+      )}`;
+
+      const sanitizedShopName = (shop.businessName || 'store')
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '_')
+        .slice(0, 25);
+      const dateStamp = new Date().toISOString().slice(0, 10);
+      const fileName = `indianlalaji_${sanitizedShopName}_${shop.shopId}_backup_${dateStamp}.json`;
+
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute('href', jsonString);
+      downloadAnchor.setAttribute('download', fileName);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+
+      showToast(`📥 Store backup file "${fileName}" successfully download ho gayi!`);
+    } catch (err) {
+      console.error('Failed to export backup:', err);
+      showToast('❌ Backup download karne me error aaya. Kripya punah prayas karein.');
+    }
   };
 
-  // 3. TRIGGER IMPORT FILE SELECTOR
+  // 2. TRIGGER FILE SELECTOR
   const handleTriggerFileSelect = () => {
     setImportError(null);
     if (fileInputRef.current) {
@@ -105,93 +117,140 @@ export const VendorBackupsManager: React.FC<VendorBackupsManagerProps> = ({
     }
   };
 
-  // 4. PROCESS IMPORTED JSON FILE
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  // Helper to format file size
+  const formatFileSize = (bytes: number): string => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+  };
 
+  // 3. PARSE & VALIDATE UPLOADED BACKUP FILE
+  const processBackupFile = (file: File) => {
     setImportError(null);
-    const reader = new FileReader();
 
+    if (!file.name.endsWith('.json') && file.type !== 'application/json') {
+      setImportError('Kripya sirf valid .json format wali backup file upload karein.');
+      return;
+    }
+
+    const reader = new FileReader();
     reader.onload = (event) => {
       try {
         const text = event.target?.result as string;
         const parsed = JSON.parse(text);
 
-        // Validate structure: must either be a VendorWebsiteBackup or a raw Shop object
+        // Detect shop data either wrapped in `data` or raw shop object
         let shopData: Shop | null = null;
-        let backupInfo: VendorWebsiteBackup;
+        let backupDate = new Date().toISOString();
 
-        if (parsed.data && parsed.data.shopId && parsed.data.businessName) {
+        if (parsed.data && (parsed.data.shopId || parsed.data.businessName)) {
           shopData = parsed.data;
-          backupInfo = parsed;
-        } else if (parsed.shopId && parsed.businessName) {
+          backupDate = parsed.exportedAt || parsed.createdAt || backupDate;
+        } else if (parsed.shopId || parsed.businessName) {
           shopData = parsed;
-          backupInfo = {
-            backupId: `imported_${Date.now()}`,
-            shopId: parsed.shopId,
-            businessName: parsed.businessName,
-            createdAt: parsed.updatedAt || new Date().toISOString(),
-            version: '1.0',
-            description: `Imported Backup (${file.name})`,
-            data: parsed,
-          };
+          backupDate = parsed.updatedAt || parsed.createdAt || backupDate;
         } else {
-          setImportError('Invalid backup file! File must contain valid IndianLalaJi shop data.');
+          setImportError('Amanay (Invalid) backup file! Is file me IndianLalaJi store ka valid data nahi mila.');
           return;
         }
 
-        setImportedBackupPreview(backupInfo);
+        const parsedResult: ParsedBackupData = {
+          fileName: file.name,
+          fileSize: formatFileSize(file.size),
+          businessName: shopData.businessName || 'Dukaan Store',
+          shopId: shopData.shopId || shop.shopId,
+          productsCount: shopData.products?.length || 0,
+          categoriesCount: getCategoriesCount(shopData),
+          themeId: shopData.themeId || 'Bharat Royal',
+          backupDate,
+          rawShopData: shopData,
+        };
+
+        setUploadedBackup(parsedResult);
+        showToast(`✅ Backup file "${file.name}" successfully upload aur verify ho gayi!`);
       } catch (err) {
-        console.error('Failed to parse backup JSON:', err);
-        setImportError('Could not parse JSON file. Please ensure it is a valid backup file.');
+        console.error('Error reading JSON file:', err);
+        setImportError('JSON file ko read karne me samasya aayi. Kripya valid backup file check karein.');
       }
+    };
+
+    reader.onerror = () => {
+      setImportError('File padhne me error aaya. Kripya punah koshish karein.');
     };
 
     reader.readAsText(file);
   };
 
-  // 5. RESTORE STORE FROM BACKUP (EITHER IMPORTED OR SNAPSHOT)
-  const handleConfirmRestore = (backupToRestore: VendorWebsiteBackup) => {
-    const restoredData = backupToRestore.data;
-
-    // Retain backups list and credentials of the current shop so login is uninterrupted
-    const mergedShop: Shop = {
-      ...restoredData,
-      id: shop.id,
-      shopId: shop.shopId, // preserve vendor shopId
-      vendorId: shop.vendorId,
-      vendorEmail: shop.vendorEmail,
-      vendorPassword: shop.vendorPassword,
-      passwordHash: shop.passwordHash,
-      backups: shop.backups, // preserve backup history
-      updatedAt: new Date().toISOString(),
-    };
-
-    onUpdateShop(mergedShop);
-    setSelectedBackupForRestore(null);
-    setImportedBackupPreview(null);
-    showToast(`🎉 Website data successfully restore ho gaya (${backupToRestore.description || 'Snapshot'})!`);
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      processBackupFile(file);
+    }
   };
 
-  // 6. DELETE SNAPSHOT
-  const handleDeleteSnapshot = (backupId: string) => {
-    if (!window.confirm('Kya aap yeh snapshot backup delete karna chahte hain?')) return;
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
 
-    const filtered = backups.filter((b) => b.backupId !== backupId);
-    const updatedShop: Shop = {
-      ...shop,
-      backups: filtered,
-      updatedAt: new Date().toISOString(),
-    };
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  };
 
-    onUpdateShop(updatedShop);
-    showToast('🗑️ Backup snapshot delete ho gaya.');
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      processBackupFile(file);
+    }
+  };
+
+  // 4. CONFIRM AND RESTORE STORE BACKUP
+  const handleExecuteRestore = () => {
+    if (!uploadedBackup) return;
+
+    setIsRestoring(true);
+
+    try {
+      const restored = uploadedBackup.rawShopData;
+
+      // Safely merge restored data, preserving authentication credentials & shopId
+      const mergedShop: Shop = {
+        ...restored,
+        id: shop.id,
+        shopId: shop.shopId, // preserve current shop identity
+        vendorId: shop.vendorId,
+        vendorEmail: shop.vendorEmail,
+        vendorPassword: shop.vendorPassword,
+        passwordHash: shop.passwordHash,
+        backups: shop.backups, // preserve internal history
+        updatedAt: new Date().toISOString(),
+      };
+
+      onUpdateShop(mergedShop);
+      setShowConfirmRestoreModal(false);
+      setIsRestoring(false);
+      showToast(`🎉 Store backup successfully restore ho gaya! Sabhi products, categories aur settings update ho gaye hain.`);
+    } catch (err) {
+      console.error('Error restoring backup:', err);
+      setIsRestoring(false);
+      showToast('❌ Backup restore karne me error aaya. Kripya dobara prayas karein.');
+    }
+  };
+
+  const handleClearUploadedBackup = () => {
+    setUploadedBackup(null);
+    setImportError(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   return (
-    <div className="space-y-6">
-      {/* Hidden File Input for Import */}
+    <div className="space-y-8 max-w-5xl">
+      {/* Hidden File Input */}
       <input
         type="file"
         ref={fileInputRef}
@@ -200,391 +259,405 @@ export const VendorBackupsManager: React.FC<VendorBackupsManagerProps> = ({
         className="hidden"
       />
 
-      {/* Top Banner */}
-      <div className="bg-gradient-to-r from-slate-900 via-sky-950 to-slate-900 text-white rounded-2xl p-6 border border-sky-500/30 shadow-lg relative overflow-hidden">
-        <div className="absolute -right-8 -bottom-8 opacity-10 pointer-events-none text-sky-400">
-          <Database className="w-52 h-52" />
-        </div>
-
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/40 text-xs font-bold uppercase tracking-wider mb-2">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              Isolated Website Backups & Cloud Protection
-            </div>
-            <h2 className="text-2xl font-black tracking-tight text-white font-['Outfit',sans-serif]">
-              Store Backups, Export & 1-Click Restore
-            </h2>
-            <p className="text-xs sm:text-sm text-gray-300 mt-1 max-w-2xl leading-relaxed">
-              Aapke store ka complete data (products, prices, photo gallery, banners, themes aur settings) hamesha safe rahe. Kabhi bhi snapshot banayein, JSON file download karein ya pehle ke backup par 1-click me restore karein.
-            </p>
+      {/* Main Header Card */}
+      <div className="bg-white rounded-2xl border border-gray-200 p-6 sm:p-8 shadow-xs relative overflow-hidden">
+        <div className="max-w-3xl space-y-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-orange-50 border border-orange-200 text-orange-700 text-xs font-bold uppercase tracking-wider">
+            <ShieldCheck className="w-4 h-4 text-orange-600" />
+            <span>Store Data Backup & 1-Click Restore</span>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2.5 shrink-0">
-            <button
-              type="button"
-              onClick={() => setShowCreateModal(true)}
-              className="px-4 py-2.5 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 shadow-sm transition-all cursor-pointer"
-            >
-              <Plus className="w-4 h-4" />
-              Create Snapshot
-            </button>
+          <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight font-['Outfit',sans-serif]">
+            स्टोर बैकअप एवं रीस्टोर (Backup & Restore)
+          </h2>
 
-            <button
-              type="button"
-              onClick={() => handleExportJson()}
-              className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer"
-            >
-              <Download className="w-4 h-4" />
-              Export JSON
-            </button>
-
-            <button
-              type="button"
-              onClick={handleTriggerFileSelect}
-              className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 shadow-sm transition-all cursor-pointer"
-            >
-              <Upload className="w-4 h-4" />
-              Import Backup
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Import Error Notice */}
-      {importError && (
-        <div className="p-4 bg-red-50 border border-red-200 text-red-900 rounded-xl text-xs font-semibold flex items-center gap-3">
-          <AlertTriangle className="w-5 h-5 text-red-600 shrink-0" />
-          <span>{importError}</span>
-        </div>
-      )}
-
-      {/* Backup Statistics Overview */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-xs">
-          <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Total Snapshots</span>
-          <p className="text-2xl font-black text-slate-900 mt-1">{backups.length}</p>
-        </div>
-
-        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-xs">
-          <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Live Products</span>
-          <p className="text-2xl font-black text-slate-900 mt-1">{shop.products?.length || 0}</p>
-        </div>
-
-        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-xs">
-          <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Store Theme</span>
-          <p className="text-base font-black text-indigo-600 mt-1 truncate">
-            {shop.themeId || 'Bharat Royal'}
+          <p className="text-sm text-gray-600 leading-relaxed">
+            Apni dukaan ka complete offline backup download karein aur zaroorat padne par backup file upload karke 1-click me pura store restore karein. Aapka sara data bilkul surakshit rahega.
           </p>
-        </div>
 
-        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-xs">
-          <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Last Synced</span>
-          <p className="text-xs font-bold text-slate-700 mt-2">
-            {shop.updatedAt ? formatDisplayDate(shop.updatedAt) : 'Just Now'}
-          </p>
+          {/* Current Store Summary Pills */}
+          <div className="pt-2 flex flex-wrap items-center gap-3 text-xs text-gray-700 font-medium">
+            <div className="inline-flex items-center gap-1.5 bg-gray-50 border border-gray-200 px-3 py-1.5 rounded-lg">
+              <span className="text-gray-400">Store:</span>
+              <strong className="text-slate-900">{shop.businessName}</strong>
+            </div>
+            <div className="inline-flex items-center gap-1.5 bg-gray-50 border border-gray-200 px-3 py-1.5 rounded-lg">
+              <Package className="w-3.5 h-3.5 text-orange-600" />
+              <strong className="text-slate-900">{shop.products?.length || 0}</strong>
+              <span className="text-gray-500">Products</span>
+            </div>
+            <div className="inline-flex items-center gap-1.5 bg-gray-50 border border-gray-200 px-3 py-1.5 rounded-lg">
+              <FolderTree className="w-3.5 h-3.5 text-indigo-600" />
+              <strong className="text-slate-900">{currentCategoriesCount}</strong>
+              <span className="text-gray-500">Categories</span>
+            </div>
+            <div className="inline-flex items-center gap-1.5 bg-gray-50 border border-gray-200 px-3 py-1.5 rounded-lg">
+              <Layers className="w-3.5 h-3.5 text-emerald-600" />
+              <strong className="text-slate-900">{shop.themeId || 'Bharat Royal'}</strong>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Snapshot Backups List */}
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-        <div className="p-5 border-b border-gray-100 flex items-center justify-between">
-          <div>
-            <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
-              <Clock className="w-4 h-4 text-sky-600" />
-              Saved Snapshot Backups ({backups.length})
-            </h3>
-            <p className="text-xs text-gray-500 mt-0.5">
-              Yeh backups aapke store ke point-in-time state ko preserve karte hain. Kisi bhi backup par Restore daba kar data wapas laa sakte hain.
-            </p>
-          </div>
+      {/* Grid containing Export Backup & Import Backup */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-          <button
-            type="button"
-            onClick={() => setShowCreateModal(true)}
-            className="text-xs font-bold text-sky-600 hover:text-sky-700 flex items-center gap-1 cursor-pointer"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            New Snapshot
-          </button>
-        </div>
-
-        {backups.length === 0 ? (
-          <div className="p-12 text-center text-gray-500 space-y-3">
-            <div className="w-14 h-14 mx-auto rounded-full bg-sky-50 text-sky-500 flex items-center justify-center">
-              <Database className="w-7 h-7" />
-            </div>
-            <h4 className="text-sm font-bold text-slate-800">Abhi tak koi snapshot backup create nahi kiya gaya</h4>
-            <p className="text-xs max-w-md mx-auto text-gray-500">
-              Upar diye gaye <strong>"Create Snapshot"</strong> button par click karke apne store ka pehla safe backup point banayein.
-            </p>
-            <button
-              type="button"
-              onClick={() => setShowCreateModal(true)}
-              className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold rounded-xl cursor-pointer"
-            >
-              Create First Snapshot Now
-            </button>
-          </div>
-        ) : (
-          <div className="divide-y divide-gray-100">
-            {backups.map((backup, idx) => {
-              const bData = backup.data;
-              return (
-                <div
-                  key={backup.backupId || idx}
-                  className="p-4 sm:p-5 hover:bg-slate-50/70 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-                >
-                  <div className="space-y-1.5 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-bold text-sm text-slate-900">
-                        {backup.description || `Backup Snapshot #${idx + 1}`}
-                      </span>
-                      <span className="px-2 py-0.5 text-[10px] font-bold bg-sky-100 text-sky-800 rounded-full">
-                        v{backup.version || '1.0'}
-                      </span>
-                      {idx === 0 && (
-                        <span className="px-2 py-0.5 text-[10px] font-bold bg-emerald-100 text-emerald-800 rounded-full flex items-center gap-1">
-                          <Sparkles className="w-3 h-3" /> Latest Snapshot
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="flex items-center gap-4 text-xs text-gray-500 flex-wrap">
-                      <span className="flex items-center gap-1">
-                        <Calendar className="w-3.5 h-3.5" />
-                        {backup.createdAt ? new Date(backup.createdAt).toLocaleString() : 'Unknown Date'}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Package className="w-3.5 h-3.5 text-slate-400" />
-                        {bData.products?.length || 0} Products
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Layers className="w-3.5 h-3.5 text-slate-400" />
-                        Theme: {bData.themeId || 'Bharat Royal'}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedBackupForRestore(backup)}
-                      className="px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
-                      title="Restore this snapshot"
-                    >
-                      <RotateCcw className="w-3.5 h-3.5" />
-                      Restore
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        handleExportJson(
-                          bData,
-                          `${shop.shopId}_snapshot_${backup.backupId}.json`
-                        )
-                      }
-                      className="p-2 bg-gray-100 hover:bg-gray-200 text-slate-700 rounded-xl text-xs font-semibold transition-all cursor-pointer"
-                      title="Download JSON file"
-                    >
-                      <Download className="w-4 h-4" />
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteSnapshot(backup.backupId)}
-                      className="p-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-xs font-semibold transition-all cursor-pointer"
-                      title="Delete snapshot"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      {/* CREATE SNAPSHOT MODAL */}
-      {showCreateModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in duration-200">
-            <div className="flex items-center justify-between pb-2 border-b border-gray-100">
-              <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
-                <Database className="w-5 h-5 text-sky-600" />
-                Create Store Snapshot
-              </h3>
-              <button
-                type="button"
-                onClick={() => setShowCreateModal(false)}
-                className="text-gray-400 hover:text-gray-600 text-sm font-bold"
-              >
-                ✕
-              </button>
-            </div>
-
-            <p className="text-xs text-gray-600 leading-relaxed">
-              Yeh snapshot aapke sabhi <strong>products ({shop.products?.length || 0})</strong>, images, sections config aur layout theme ka accurate point-in-time record save karega.
-            </p>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                Snapshot Label / Description (Optional)
-              </label>
-              <input
-                type="text"
-                value={snapshotLabel}
-                onChange={(e) => setSnapshotLabel(e.target.value)}
-                placeholder="e.g. Before Price Update / Festival Catalog"
-                className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500"
-              />
-            </div>
-
-            <div className="flex items-center justify-end gap-2 pt-3 border-t border-gray-100">
-              <button
-                type="button"
-                onClick={() => setShowCreateModal(false)}
-                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-slate-700 rounded-xl text-xs font-bold cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleCreateSnapshot}
-                className="px-5 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 cursor-pointer shadow-sm"
-              >
-                <Plus className="w-4 h-4" />
-                Save Snapshot
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* CONFIRM RESTORE MODAL (FROM SNAPSHOT) */}
-      {selectedBackupForRestore && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in duration-200">
-            <div className="flex items-center gap-3 text-amber-600">
-              <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
-                <RotateCcw className="w-5 h-5 text-amber-700" />
+        {/* ============================================================ */}
+        {/* 1. EXPORT BACKUP → DOWNLOAD BACKUP */}
+        {/* ============================================================ */}
+        <div className="bg-white rounded-2xl border border-gray-200 p-6 sm:p-7 shadow-xs flex flex-col justify-between space-y-6">
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-orange-50 border border-orange-100 flex items-center justify-center text-orange-600 shrink-0">
+                <Download className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-base font-black text-slate-900">Restore Store from Snapshot?</h3>
+                <span className="text-[11px] font-black uppercase tracking-wider text-orange-600 bg-orange-50 px-2 py-0.5 rounded">
+                  STEP 1
+                </span>
+                <h3 className="text-lg font-black text-slate-900 font-['Outfit',sans-serif]">
+                  Export Backup → Download Backup
+                </h3>
+              </div>
+            </div>
+
+            <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
+              Apne complete store ka offline backup JSON file me download karein. Isme products, categories, photos, banners, theme styling, 16 website sections, custom sections aur business settings shamil rahenge.
+            </p>
+
+            {/* Checklist of what's included */}
+            <div className="bg-gray-50 rounded-xl p-4 border border-gray-200 space-y-2.5 text-xs text-gray-700">
+              <div className="font-bold text-slate-900 flex items-center gap-1.5 pb-1 border-b border-gray-200">
+                <Sparkles className="w-3.5 h-3.5 text-orange-600" />
+                <span>Backup me shamil features:</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <span>{shop.products?.length || 0} Products & Prices</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <span>{currentCategoriesCount} Categories</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <span>Theme: {shop.themeId || 'Royal'}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <span>Photos & Banners</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <span>16 Website Sections</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <span>WhatsApp & Settings</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <button
+              id="export-backup-download-btn"
+              type="button"
+              onClick={handleDownloadBackup}
+              className="w-full py-3.5 px-5 bg-slate-900 hover:bg-black active:scale-[0.99] text-white rounded-xl text-xs sm:text-sm font-bold uppercase tracking-wider flex items-center justify-center gap-2.5 shadow-md hover:shadow-lg transition-all cursor-pointer"
+            >
+              <Download className="w-4 h-4 text-orange-400" />
+              <span>Download Backup File (.JSON)</span>
+            </button>
+            <p className="text-[11px] text-gray-500 text-center mt-2">
+              File aapke computer/mobile ke Downloads folder me save hogi.
+            </p>
+          </div>
+        </div>
+
+        {/* ============================================================ */}
+        {/* 2. IMPORT BACKUP → UPLOAD BACKUP */}
+        {/* ============================================================ */}
+        <div className="bg-white rounded-2xl border border-gray-200 p-6 sm:p-7 shadow-xs flex flex-col justify-between space-y-6">
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
+                <Upload className="w-6 h-6" />
+              </div>
+              <div>
+                <span className="text-[11px] font-black uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">
+                  STEP 2
+                </span>
+                <h3 className="text-lg font-black text-slate-900 font-['Outfit',sans-serif]">
+                  Import Backup → Upload Backup
+                </h3>
+              </div>
+            </div>
+
+            <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
+              Apni pehle se download ki hui IndianLalaJi backup file (.json) yahan upload karein. File upload hote hi details verify ho jayengi.
+            </p>
+
+            {/* Drag & Drop Upload Zone */}
+            <div
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              onClick={handleTriggerFileSelect}
+              className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all ${
+                isDragOver
+                  ? 'border-emerald-500 bg-emerald-50/50'
+                  : 'border-gray-300 hover:border-emerald-500 hover:bg-gray-50/80'
+              }`}
+            >
+              <div className="w-12 h-12 mx-auto rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mb-3">
+                <Upload className="w-6 h-6" />
+              </div>
+              <div className="text-xs sm:text-sm font-bold text-slate-900">
+                Click karke Backup JSON File Chunein
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                ya file yahan Drag & Drop karein (.json format only)
+              </p>
+            </div>
+
+            {/* Import Error Message */}
+            {importError && (
+              <div className="p-3.5 bg-red-50 border border-red-200 rounded-xl text-xs text-red-800 flex items-start gap-2.5">
+                <AlertTriangle className="w-4 h-4 text-red-600 mt-0.5 shrink-0" />
+                <span>{importError}</span>
+              </div>
+            )}
+          </div>
+
+          <div>
+            <button
+              id="import-backup-upload-btn"
+              type="button"
+              onClick={handleTriggerFileSelect}
+              className="w-full py-3.5 px-5 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white rounded-xl text-xs sm:text-sm font-bold uppercase tracking-wider flex items-center justify-center gap-2.5 shadow-md hover:shadow-lg transition-all cursor-pointer"
+            >
+              <Upload className="w-4 h-4" />
+              <span>Upload Backup File</span>
+            </button>
+            <p className="text-[11px] text-gray-500 text-center mt-2">
+              File upload karne ke baad neeche verify karein aur Restore karein.
+            </p>
+          </div>
+        </div>
+
+      </div>
+
+      {/* ============================================================ */}
+      {/* 3. RESTORE BACKUP (APPEARS WHEN FILE IS UPLOADED & VERIFIED) */}
+      {/* ============================================================ */}
+      {uploadedBackup && (
+        <div className="bg-white rounded-2xl border-2 border-emerald-500 p-6 sm:p-8 shadow-lg space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-100">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-sm">
+                <FileCheck className="w-6 h-6" />
+              </div>
+              <div>
+                <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[11px] font-black uppercase tracking-wider mb-1">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>STEP 3 • Backup File Ready to Restore</span>
+                </div>
+                <h3 className="text-xl font-black text-slate-900 font-['Outfit',sans-serif]">
+                  3. Restore Backup (स्टोर रीस्टोर करें)
+                </h3>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleClearUploadedBackup}
+              className="text-xs font-semibold text-gray-500 hover:text-red-600 flex items-center gap-1 px-3 py-1.5 bg-gray-100 hover:bg-red-50 rounded-lg transition-colors cursor-pointer self-start sm:self-auto"
+            >
+              <X className="w-3.5 h-3.5" />
+              <span>Remove / Doosri File Chunein</span>
+            </button>
+          </div>
+
+          <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
+            Aapki backup file safaltapoorvak read kar li gayi hai. Kripya details check karein aur neeche <strong>"Restore Backup"</strong> button par click karke store me data apply karein:
+          </p>
+
+          {/* Backup Summary Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs">
+            <div className="space-y-1">
+              <span className="text-gray-500 block">Uploaded File:</span>
+              <span className="font-bold text-slate-900 block truncate" title={uploadedBackup.fileName}>
+                {uploadedBackup.fileName}
+              </span>
+              <span className="text-[10px] text-gray-400">Size: {uploadedBackup.fileSize}</span>
+            </div>
+
+            <div className="space-y-1">
+              <span className="text-gray-500 block">Store Name:</span>
+              <span className="font-bold text-slate-900 block truncate">
+                {uploadedBackup.businessName}
+              </span>
+              <span className="text-[10px] text-gray-400 font-mono">ID: {uploadedBackup.shopId}</span>
+            </div>
+
+            <div className="space-y-1">
+              <span className="text-gray-500 block">Products to Restore:</span>
+              <span className="text-base font-black text-emerald-700 block">
+                {uploadedBackup.productsCount} Products
+              </span>
+              <span className="text-[10px] text-gray-400">{uploadedBackup.categoriesCount} Categories</span>
+            </div>
+
+            <div className="space-y-1">
+              <span className="text-gray-500 block">Theme & Layout:</span>
+              <span className="font-bold text-indigo-700 block truncate">
+                {uploadedBackup.themeId}
+              </span>
+              <span className="text-[10px] text-gray-400">16 Sections Config</span>
+            </div>
+          </div>
+
+          {/* Safety Notice */}
+          <div className="p-4 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900 flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" />
+            <div className="space-y-1 leading-relaxed">
+              <span className="font-bold">सुरक्षा सूचना (Safety Information):</span>
+              <p>
+                Restore karne par aapke live store ke vartamaan products, categories, theme aur settings is backup file se replace ho jayenge. Aapke vendor login credentials aur store URL surakshit rahenge.
+              </p>
+            </div>
+          </div>
+
+          {/* Primary Action Button */}
+          <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="text-xs text-gray-500">
+              Restore se pehle confirmation popup aayega.
+            </div>
+
+            <button
+              id="trigger-restore-confirm-btn"
+              type="button"
+              onClick={() => setShowConfirmRestoreModal(true)}
+              className="w-full sm:w-auto px-8 py-3.5 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white rounded-xl text-xs sm:text-sm font-black uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition-all cursor-pointer"
+            >
+              <RotateCcw className="w-4 h-4" />
+              <span>Restore Backup Now (रीस्टोर करें)</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================ */}
+      {/* CONFIRMATION MODAL BEFORE RESTORE */}
+      {/* ============================================================ */}
+      {showConfirmRestoreModal && uploadedBackup && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 sm:p-7 shadow-2xl space-y-5 border border-gray-200">
+            {/* Modal Header */}
+            <div className="flex items-center gap-3.5">
+              <div className="w-12 h-12 rounded-xl bg-amber-100 border border-amber-200 flex items-center justify-center shrink-0">
+                <RotateCcw className="w-6 h-6 text-amber-700" />
+              </div>
+              <div>
+                <h3 className="text-lg sm:text-xl font-black text-slate-900 font-['Outfit',sans-serif]">
+                  Kya aap store restore karna chahte hain?
+                </h3>
                 <p className="text-xs text-gray-500">
-                  {selectedBackupForRestore.description}
+                  Confirm Store Backup Restoration
                 </p>
               </div>
             </div>
 
-            <div className="p-3.5 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900 space-y-1">
-              <p className="font-bold">⚠️ Dhyan Dein:</p>
-              <p>
-                Aapka current store data is snapshot ke data se replace ho jayega ({selectedBackupForRestore.data.products?.length || 0} products, sections aur theme restore honge). Aapke login credentials surakshit rahenge.
+            {/* Warning Message */}
+            <div className="p-4 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900 space-y-2">
+              <div className="font-bold flex items-center gap-1.5 text-amber-950">
+                <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                <span>⚠️ Dhyan Dein (Please Note):</span>
+              </div>
+              <p className="leading-relaxed">
+                Yeh action aapke live store ke current data ko is backup file ke data se replace kar dega:
               </p>
+              <ul className="list-disc list-inside space-y-1 pl-1 text-amber-950 font-medium">
+                <li><strong>{uploadedBackup.productsCount} Products</strong> restore honge</li>
+                <li><strong>{uploadedBackup.categoriesCount} Categories</strong> restore hongi</li>
+                <li>Theme <strong>"{uploadedBackup.themeId}"</strong> aur website sections restore honge</li>
+                <li>Aapke login credentials bilkul surakshit rahenge</li>
+              </ul>
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100">
+            {/* Backup Details Box */}
+            <div className="bg-gray-50 p-3.5 rounded-xl border border-gray-200 text-xs text-gray-600 space-y-1">
+              <div className="flex justify-between">
+                <span className="text-gray-500">Backup File:</span>
+                <span className="font-bold text-slate-900 truncate max-w-[240px]">{uploadedBackup.fileName}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Store Name in Backup:</span>
+                <span className="font-bold text-slate-900">{uploadedBackup.businessName}</span>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-gray-100">
               <button
+                id="cancel-restore-modal-btn"
                 type="button"
-                onClick={() => setSelectedBackupForRestore(null)}
-                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-slate-700 rounded-xl text-xs font-bold cursor-pointer"
+                onClick={() => setShowConfirmRestoreModal(false)}
+                disabled={isRestoring}
+                className="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-slate-700 rounded-xl text-xs font-bold transition-colors cursor-pointer"
               >
-                Cancel
+                Nahi, Cancel Karein
               </button>
+
               <button
+                id="confirm-restore-modal-btn"
                 type="button"
-                onClick={() => handleConfirmRestore(selectedBackupForRestore)}
-                className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 cursor-pointer shadow-sm"
+                onClick={handleExecuteRestore}
+                disabled={isRestoring}
+                className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 shadow-md transition-all cursor-pointer disabled:opacity-50"
               >
-                <CheckCircle2 className="w-4 h-4" />
-                Yes, Restore Now
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* IMPORT PREVIEW & RESTORE MODAL */}
-      {importedBackupPreview && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in duration-200">
-            <div className="flex items-center justify-between pb-2 border-b border-gray-100">
-              <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
-                <FileJson className="w-5 h-5 text-emerald-600" />
-                Backup File Ready to Import
-              </h3>
-              <button
-                type="button"
-                onClick={() => setImportedBackupPreview(null)}
-                className="text-gray-400 hover:text-gray-600 text-sm font-bold"
-              >
-                ✕
-              </button>
-            </div>
-
-            <p className="text-xs text-gray-600">
-              File ko successfully read kar liya gaya hai. Kripya details verify karein:
-            </p>
-
-            <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-2 text-xs">
-              <div className="flex justify-between">
-                <span className="text-gray-500">Business Name:</span>
-                <span className="font-bold text-slate-900">{importedBackupPreview.businessName}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-500">Shop ID:</span>
-                <span className="font-mono font-bold text-slate-900">{importedBackupPreview.shopId}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-500">Total Products:</span>
-                <span className="font-bold text-slate-900">{importedBackupPreview.data.products?.length || 0}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-500">Category:</span>
-                <span className="font-bold text-slate-900">{importedBackupPreview.data.category || 'General'}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-500">Theme:</span>
-                <span className="font-bold text-indigo-600">{importedBackupPreview.data.themeId || 'Bharat Royal'}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-500">Backup Date:</span>
-                <span className="font-bold text-slate-700">
-                  {importedBackupPreview.createdAt ? new Date(importedBackupPreview.createdAt).toLocaleString() : 'N/A'}
-                </span>
-              </div>
-            </div>
-
-            <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200 text-xs text-emerald-900 flex items-start gap-2">
-              <ShieldCheck className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
-              <span>
-                "Restore Store Now" click karte hi aapke live store me yeh backup apply ho jayega.
-              </span>
-            </div>
-
-            <div className="flex items-center justify-end gap-2 pt-3 border-t border-gray-100">
-              <button
-                type="button"
-                onClick={() => setImportedBackupPreview(null)}
-                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-slate-700 rounded-xl text-xs font-bold cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={() => handleConfirmRestore(importedBackupPreview)}
-                className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 cursor-pointer shadow-sm"
-              >
-                <CheckCircle2 className="w-4 h-4" />
-                Restore Store Now
+                {isRestoring ? (
+                  <>
+                    <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Restoring Store...</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>Haan, Backup Restore Karein</span>
+                  </>
+                )}
               </button>
             </div>
           </div>
         </div>
       )}
+
+      {/* Additional Informational Note at Bottom */}
+      <div className="p-5 bg-slate-50 rounded-2xl border border-slate-200 text-xs text-slate-600 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-orange-100 text-orange-700 flex items-center justify-center shrink-0">
+            <FileJson className="w-4 h-4" />
+          </div>
+          <div>
+            <strong className="text-slate-900 block">Offline Backup File Format:</strong>
+            <span className="text-gray-500">
+              Backup standard .json format me hota hai jise aap kisi bhi samay apne system me safe rakh sakte hain.
+            </span>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleDownloadBackup}
+          className="text-xs font-bold text-orange-600 hover:text-orange-700 underline underline-offset-2 shrink-0 cursor-pointer"
+        >
+          Fresh Backup Download Karein →
+        </button>
+      </div>
+
     </div>
   );
 };

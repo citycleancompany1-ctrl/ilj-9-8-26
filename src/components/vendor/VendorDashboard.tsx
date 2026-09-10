@@ -394,7 +394,7 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
         return { title: 'Custom Domain Setup', category: 'SETTINGS', desc: 'Connect your own www.yourdomain.com with free SSL' };
       case 'settings_backups':
       case 'settings_backup':
-        return { title: 'Data Backups & Export/Import', category: 'SETTINGS', desc: 'Download full catalogue backup and restore when needed' };
+        return { title: 'Store Backup & Restore', category: 'SETTINGS', desc: 'Export & download complete store backup and upload to restore' };
       case 'settings_storage':
         return { title: 'Vendor Storage (200 MB Limit)', category: 'SETTINGS', desc: 'Monitor your 200 MB storage usage, media assets, and optimization' };
       default:
@@ -4983,63 +4983,7 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
           </div>
         )}
 
-        {/* STORE DATA BACKUPS VIEW */}
-        {activeNav === 'settings_backups' && (
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-xs overflow-hidden p-6 space-y-6 animate-in fade-in duration-200">
-            <div className="pb-5 border-b border-gray-100">
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold uppercase tracking-wider mb-2">
-                <Database className="w-3.5 h-3.5" />
-                <span>Store Data Security & Backup</span>
-              </div>
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 font-['Outfit',sans-serif]">
-                Store Backups (डेटा बैकअप व सुरक्षा)
-              </h2>
-              <p className="text-xs text-gray-500 mt-1">
-                Apni dukaan ke saare products, services, photos aur configuration ka offline JSON backup download karein.
-              </p>
-            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
-              <div className="p-5 bg-gray-50 rounded-2xl border border-gray-200 space-y-3 flex flex-col justify-between">
-                <div>
-                  <div className="text-sm font-bold text-slate-900">Export Complete Store Backup</div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Download complete store catalogue, pricing, and settings as a secure .json file.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(currentShop, null, 2));
-                    const downloadAnchor = document.createElement('a');
-                    downloadAnchor.setAttribute("href", dataStr);
-                    downloadAnchor.setAttribute("download", `lalaji_backup_${currentShop.shopId}_${new Date().toISOString().slice(0,10)}.json`);
-                    document.body.appendChild(downloadAnchor);
-                    downloadAnchor.click();
-                    downloadAnchor.remove();
-                  }}
-                  className="w-full py-2.5 bg-slate-900 hover:bg-black text-white text-xs font-bold uppercase tracking-wider rounded-sm flex items-center justify-center gap-2 shadow-xs cursor-pointer"
-                >
-                  <Download className="w-4 h-4 text-orange-400" />
-                  <span>Download Backup File</span>
-                </button>
-              </div>
-
-              <div className="p-5 bg-gray-50 rounded-2xl border border-gray-200 space-y-3 flex flex-col justify-between">
-                <div>
-                  <div className="text-sm font-bold text-slate-900">Cloud Sync Status</div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    All changes are automatically saved to your browser and IndianLalaJi local store storage.
-                  </p>
-                </div>
-                <div className="flex items-center gap-2 text-xs font-bold text-emerald-700 bg-emerald-100/60 p-2.5 rounded-sm border border-emerald-200">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                  <span>100% Up-to-date & Safe</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* SUPPORT & HELP CENTER VIEW */}
         {(activeNav === 'support' || activeNav === 'help') && (

@@ -194,7 +194,7 @@ export const VendorSidebar: React.FC<VendorSidebarProps> = ({
         emoji: '⚙',
         icon: Settings,
         subItems: [
-          { id: 'settings_backup', label: 'Store Backup', icon: Database },
+          { id: 'settings_backup', label: 'Backup & Restore', icon: Database },
           { id: 'settings_storage', label: 'Storage', icon: HardDrive },
           { id: 'settings_account', label: 'Account Settings', icon: Settings },
         ],
