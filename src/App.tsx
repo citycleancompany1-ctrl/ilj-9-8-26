@@ -29,8 +29,11 @@ import {
   subscribeToShop,
   subscribeToPlatformConfig, 
   savePlatformStateToFirestore, 
+  savePlatformConfigToFirestore,
   saveShopToFirestore,
-  fetchShopFromFirestore
+  fetchShopFromFirestore,
+  isCloudQuotaExhausted,
+  subscribeToQuotaStatus
 } from './services/firebase';
 import { 
   loadUserSession, 
@@ -41,46 +44,6 @@ import {
 import { ProtectedAccessBanner } from './components/common/ProtectedAccessBanner';
 import { updateShopSeoMeta, resetPlatformSeoMeta } from './utils/seo';
 import { initGoogleTranslate } from './utils/googleTranslate';
-
-// Custom Domain resolver helper
-export const resolveShopFromDomain = (shops: Shop[], rawHostOrDomain?: string | null): Shop | null => {
-  if (!rawHostOrDomain) return null;
-  const clean = (d: string) =>
-    d
-      .toLowerCase()
-      .trim()
-      .replace(/^https?:\/\//i, '')
-      .replace(/^www\./i, '')
-      .replace(/\/.*$/, '')
-      .replace(/:\d+$/, '');
-
-  const target = clean(rawHostOrDomain);
-  if (!target) return null;
-
-  // Standard platform hostnames and dev environments
-  const ignoredHosts = [
-    'localhost',
-    '127.0.0.1',
-    '0.0.0.0',
-    'indianlalaji.com',
-  ];
-  if (
-    ignoredHosts.includes(target) ||
-    target.endsWith('.run.app') ||
-    target.endsWith('.web.app') ||
-    target.endsWith('.firebaseapp.com') ||
-    target.endsWith('.vercel.app')
-  ) {
-    return null;
-  }
-
-  return (
-    shops.find((s) => {
-      if (!s.customDomain) return false;
-      return clean(s.customDomain) === target;
-    }) || null
-  );
-};
 
 export default function App() {
   // Global platform state from localStorage with Firestore real-time sync
@@ -120,11 +83,7 @@ export default function App() {
     const unsubShops = subscribeToShops((cloudShops) => {
       if (cloudShops && cloudShops.length > 0) {
         setPlatformState((prev) => {
-          // Cloud shops are primary, but keep any local shops not yet synced to prevent dropping newly registered shops
-          const cloudMap = new Map(cloudShops.map((s) => [s.shopId, s]));
-          const localOnly = prev.shops.filter((s) => !cloudMap.has(s.shopId));
-          const mergedShops = [...localOnly, ...cloudShops];
-          const updatedState = { ...prev, shops: mergedShops };
+          const updatedState = { ...prev, shops: cloudShops };
           savePlatformState(updatedState);
           return updatedState;
         });
@@ -152,11 +111,21 @@ export default function App() {
     };
   }, []);
 
+  // Cloud quota status state
+  const [isQuotaPaused, setIsQuotaPaused] = useState<boolean>(() => isCloudQuotaExhausted());
+
+  useEffect(() => {
+    const unsubQuota = subscribeToQuotaStatus((exhausted) => {
+      setIsQuotaPaused(exhausted);
+    });
+    return () => unsubQuota();
+  }, []);
+
   // Sync state changes with localStorage and Firestore Cloud
   const handleUpdateState = (newState: PlatformState) => {
     setPlatformState(newState);
     savePlatformState(newState);
-    savePlatformStateToFirestore(newState);
+    savePlatformConfigToFirestore(newState);
   };
 
   // Sync route on mount / popstate / hashchange & multi-tab storage sync
@@ -178,15 +147,6 @@ export default function App() {
           setPrefilledShopId(directShopId);
         }
         setIsAuthOpen(true);
-      }
-
-      // 0. Check Custom Domain routing (via URL simulation ?domain=... / ?customDomain=... OR real window.location.hostname)
-      const domainParam = searchParams.get('domain') || searchParams.get('customDomain');
-      const customDomainShop = resolveShopFromDomain(platformState.shops, domainParam || window.location.hostname);
-      if (customDomainShop && !isLoginAction && !path.startsWith('/admin') && !path.startsWith('/vendor-dashboard')) {
-        setCurrentView('shop');
-        setActiveShopId(customDomainShop.shopId);
-        return;
       }
 
       const shopParam = searchParams.get('shop') || (!isLoginAction ? searchParams.get('shopId') : null) || searchParams.get('id');
@@ -289,20 +249,7 @@ export default function App() {
       window.removeEventListener('hashchange', handleUrlChange);
       window.removeEventListener('storage', handleStorageSync);
     };
-  }, [platformState.shops]);
-
-  // Auto-resolve custom domain when shops finish syncing from cloud
-  useEffect(() => {
-    if (platformState.shops.length > 0 && currentView === 'home' && !activeShopId) {
-      const searchParams = new URLSearchParams(window.location.search);
-      const domainParam = searchParams.get('domain') || searchParams.get('customDomain');
-      const customDomainShop = resolveShopFromDomain(platformState.shops, domainParam || window.location.hostname);
-      if (customDomainShop) {
-        setCurrentView('shop');
-        setActiveShopId(customDomainShop.shopId);
-      }
-    }
-  }, [platformState.shops, currentView, activeShopId]);
+  }, []);
 
   // Navigation handler
   const handleNavigate = (view: string, shopIdParam?: string) => {
@@ -528,13 +475,8 @@ export default function App() {
     }
   }, [currentView, currentPublicShop]);
 
-  const isCustomDomainHost = Boolean(
-    resolveShopFromDomain(platformState.shops, window.location.hostname)
-  );
-
   const isPublicShopView =
     currentView === 'shop' ||
-    isCustomDomainHost ||
     (currentView === 'vendor-dashboard' && currentRole === 'VENDOR' && Boolean(currentVendorShop));
 
   return (
@@ -554,6 +496,17 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="flex-1">
+        {/* Offline-first persistence notice if Firestore daily quota is paused */}
+        {isQuotaPaused && (currentView === 'vendor-dashboard' || currentView === 'admin-dashboard') && (
+          <div className="bg-amber-50 border-b border-amber-200 px-4 py-2 text-xs md:text-sm text-amber-900 text-center font-medium flex items-center justify-center gap-2">
+            <span>⚡</span>
+            <span>
+              <strong>Cloud Sync Notice:</strong> Daily free write quota is paused by cloud provider. 
+              <strong> Offline-First Local Storage</strong> is active — all your store updates, catalog changes, and settings are safely preserved.
+            </span>
+          </div>
+        )}
+
         {currentView === 'home' && (
           <HomePage
             shops={platformState.shops}
@@ -660,13 +613,7 @@ export default function App() {
             shopId={activeShopId || undefined}
             popups={platformState.popups}
             globalPopupEnabled={platformState.globalPopupEnabled}
-            onNavigateHome={() => {
-              if (isCustomDomainHost) {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              } else {
-                handleNavigate('home');
-              }
-            }}
+            onNavigateHome={() => handleNavigate('home')}
             onOpenVendorLogin={() => handleOpenAuth('LOGIN')}
             onSubmitInquiry={handleSubmitShopInquiry}
             isVendorOrAdminPreview={
@@ -698,13 +645,9 @@ export default function App() {
         prefilledShopId={prefilledShopId}
         shops={platformState.shops}
         onRegisterShop={(newShop) => {
-          setPlatformState((prev) => {
-            const updated = {
-              ...prev,
-              shops: [newShop, ...prev.shops.filter((s) => s.shopId !== newShop.shopId)],
-            };
-            savePlatformState(updated);
-            return updated;
+          handleUpdateState({
+            ...platformState,
+            shops: [newShop, ...platformState.shops],
           });
         }}
         onVendorLoginSuccess={handleVendorLoginSuccess}

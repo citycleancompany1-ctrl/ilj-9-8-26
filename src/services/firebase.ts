@@ -9,8 +9,7 @@ import {
   deleteDoc,
   onSnapshot,
   Firestore,
-  writeBatch,
-  getDocFromServer
+  writeBatch
 } from 'firebase/firestore';
 import { Shop, PlatformState } from '../types';
 import firebaseConfigRaw from '../../firebase-applet-config.json';
@@ -36,13 +35,90 @@ export const db: Firestore =
     ? getFirestore(app, firebaseConfigRaw.firestoreDatabaseId)
     : getFirestore(app);
 
-// Connection test on boot
-async function testConnection() {
+// ============================================================================
+// Quota & Error Handling Circuit Breaker
+// ============================================================================
+export function isQuotaExhaustionError(error: unknown): boolean {
+  if (!error) return false;
+  const err = error as { code?: string; message?: string };
+  const code = String(err.code || '');
+  const message = String(err.message || error);
+  return (
+    code === 'resource-exhausted' ||
+    message.includes('resource-exhausted') ||
+    message.includes('Quota limit exceeded') ||
+    message.includes('Free daily write units') ||
+    message.includes('quota metric') ||
+    message.includes('maximum backoff delay')
+  );
+}
+
+// Check if quota was marked exhausted in session
+let isQuotaExhaustedState: boolean = (() => {
   try {
-    await getDocFromServer(doc(db, 'test', 'connection'));
+    const raw = sessionStorage.getItem('ilj_firestore_quota_exhausted');
+    if (raw) {
+      const data = JSON.parse(raw);
+      // Keep circuit breaker active for 2 hours to prevent backoff spam
+      if (Date.now() - (data.timestamp || 0) < 2 * 60 * 60 * 1000) {
+        return true;
+      }
+    }
+  } catch {}
+  return false;
+})();
+
+const quotaListeners = new Set<(exhausted: boolean) => void>();
+
+export function isCloudQuotaExhausted(): boolean {
+  return isQuotaExhaustedState;
+}
+
+export function subscribeToQuotaStatus(listener: (exhausted: boolean) => void): () => void {
+  quotaListeners.add(listener);
+  listener(isQuotaExhaustedState);
+  return () => {
+    quotaListeners.delete(listener);
+  };
+}
+
+export function markQuotaExhausted(contextNotice?: string): void {
+  if (!isQuotaExhaustedState) {
+    isQuotaExhaustedState = true;
+    try {
+      sessionStorage.setItem(
+        'ilj_firestore_quota_exhausted',
+        JSON.stringify({
+          timestamp: Date.now(),
+          date: new Date().toISOString(),
+          context: contextNotice || 'quota-exceeded',
+        })
+      );
+    } catch {}
+    console.warn(
+      `[Firestore Circuit Breaker] Daily write quota is currently reached on the free-tier cloud database. ` +
+      `Seamlessly switched to Offline-First Local Storage mode. All user updates, products, orders, and inquiries ` +
+      `are 100% saved in browser local storage. (${contextNotice || 'quota limit'})`
+    );
+    quotaListeners.forEach((fn) => {
+      try { fn(true); } catch {}
+    });
+  }
+}
+
+// Safe connection test on boot
+async function testConnection() {
+  if (isQuotaExhaustedState) return;
+  try {
+    const testDocRef = doc(db, PLATFORM_CONFIG_COLLECTION, GLOBAL_CONFIG_DOC);
+    await getDoc(testDocRef);
   } catch (error) {
+    if (isQuotaExhaustionError(error)) {
+      markQuotaExhausted('testConnection');
+      return;
+    }
     if (error instanceof Error && error.message.includes('the client is offline')) {
-      console.error("Please check your Firebase configuration.");
+      console.warn('[Firestore] Client is in offline mode.');
     }
   }
 }
@@ -52,39 +128,33 @@ const SHOPS_COLLECTION = 'shops';
 const PLATFORM_CONFIG_COLLECTION = 'platform_config';
 const GLOBAL_CONFIG_DOC = 'global_settings';
 
-// Helper for resilient Firestore operations with timeout
-function withTimeout<T>(promise: Promise<T>, timeoutMs: number = 4000): Promise<T> {
-  return Promise.race([
-    promise,
-    new Promise<T>((_, reject) =>
-      setTimeout(() => reject(new Error(`Firestore operation timed out after ${timeoutMs}ms`)), timeoutMs)
-    ),
-  ]);
-}
-
 /**
  * Save a single shop to Firestore (called when vendor or admin edits a shop)
  */
 export async function saveShopToFirestore(shop: Shop): Promise<void> {
   if (!shop || !shop.shopId) return;
+  if (isQuotaExhaustedState) {
+    // Quota reached: don't attempt network call to avoid backoff delays and console error spam
+    return;
+  }
   try {
     const docRef = doc(db, SHOPS_COLLECTION, shop.shopId);
-    // Sanitize shop object to prevent undefined values in Firestore
     const sanitized = JSON.parse(JSON.stringify(shop));
-    await withTimeout(
-      setDoc(
-        docRef,
-        {
-          ...sanitized,
-          updatedAt: new Date().toISOString(),
-        },
-        { merge: true }
-      ),
-      5000
+    await setDoc(
+      docRef,
+      {
+        ...sanitized,
+        updatedAt: new Date().toISOString(),
+      },
+      { merge: true }
     );
     console.log(`[Firestore] Shop ${shop.shopId} synced to cloud successfully.`);
   } catch (error) {
-    console.warn(`[Firestore] Warning saving shop ${shop.shopId} to cloud (will remain stored in local persistence):`, error);
+    if (isQuotaExhaustionError(error)) {
+      markQuotaExhausted(`saveShop:${shop.shopId}`);
+      return;
+    }
+    console.warn(`[Firestore] Notice while saving shop ${shop.shopId}:`, error);
   }
 }
 
@@ -93,12 +163,17 @@ export async function saveShopToFirestore(shop: Shop): Promise<void> {
  */
 export async function deleteShopFromFirestore(shopId: string): Promise<void> {
   if (!shopId) return;
+  if (isQuotaExhaustedState) return;
   try {
     const docRef = doc(db, SHOPS_COLLECTION, shopId);
-    await withTimeout(deleteDoc(docRef), 5000);
+    await deleteDoc(docRef);
     console.log(`[Firestore] Shop ${shopId} deleted from cloud.`);
   } catch (error) {
-    console.warn(`[Firestore] Warning deleting shop ${shopId} from cloud:`, error);
+    if (isQuotaExhaustionError(error)) {
+      markQuotaExhausted(`deleteShop:${shopId}`);
+      return;
+    }
+    console.warn(`[Firestore] Notice deleting shop ${shopId}:`, error);
   }
 }
 
@@ -114,7 +189,11 @@ export async function fetchShopFromFirestore(shopId: string): Promise<Shop | nul
       return snap.data() as Shop;
     }
   } catch (error) {
-    console.error(`[Firestore] Error fetching shop ${shopId}:`, error);
+    if (isQuotaExhaustionError(error)) {
+      markQuotaExhausted(`fetchShop:${shopId}`);
+      return null;
+    }
+    console.warn(`[Firestore] Notice fetching shop ${shopId}:`, error);
   }
   return null;
 }
@@ -139,12 +218,21 @@ export function subscribeToShop(shopId: string, onUpdate: (shop: Shop) => void):
         }
       },
       (err) => {
-        console.warn(`[Firestore] Real-time shop listener error for ${shopId}:`, err);
+        if (isQuotaExhaustionError(err)) {
+          markQuotaExhausted(`subscribeToShop:${shopId}`);
+          try { unsubscribe(); } catch {}
+          return;
+        }
+        console.warn(`[Firestore] Real-time shop listener notice for ${shopId}:`, err);
       }
     );
     return unsubscribe;
   } catch (e) {
-    console.error(`[Firestore] Failed to attach single shop listener for ${shopId}:`, e);
+    if (isQuotaExhaustionError(e)) {
+      markQuotaExhausted(`subscribeToShopCatch:${shopId}`);
+      return () => {};
+    }
+    console.warn(`[Firestore] Failed to attach single shop listener for ${shopId}:`, e);
     return () => {};
   }
 }
@@ -153,6 +241,7 @@ export function subscribeToShop(shopId: string, onUpdate: (shop: Shop) => void):
  * Save platform global settings to Firestore (popups, packages, tutorials, leads, inquiries)
  */
 export async function savePlatformConfigToFirestore(state: Partial<PlatformState>): Promise<void> {
+  if (isQuotaExhaustedState) return;
   try {
     const configRef = doc(db, PLATFORM_CONFIG_COLLECTION, GLOBAL_CONFIG_DOC);
     const payload: Record<string, unknown> = {
@@ -181,21 +270,30 @@ export async function savePlatformConfigToFirestore(state: Partial<PlatformState
     if (state.saasBackups !== undefined) payload.saasBackups = state.saasBackups;
 
     const sanitized = JSON.parse(JSON.stringify(payload));
-    await withTimeout(setDoc(configRef, sanitized, { merge: true }), 5000);
+    await setDoc(configRef, sanitized, { merge: true });
     console.log('[Firestore] Global platform settings synced to cloud.');
   } catch (error) {
-    console.warn('[Firestore] Warning saving global platform config to cloud:', error);
+    if (isQuotaExhaustionError(error)) {
+      markQuotaExhausted('savePlatformConfigToFirestore');
+      return;
+    }
+    console.warn('[Firestore] Notice saving global platform config:', error);
   }
 }
 
 /**
- * Save platform config to Firestore (without repeatedly mass-writing all shops)
+ * Save the entire platform state to Firestore
  */
 export async function savePlatformStateToFirestore(state: PlatformState): Promise<void> {
+  if (isQuotaExhaustedState) return;
   try {
     await savePlatformConfigToFirestore(state);
   } catch (error) {
-    console.warn('[Firestore] Warning in savePlatformStateToFirestore:', error);
+    if (isQuotaExhaustionError(error)) {
+      markQuotaExhausted('savePlatformStateToFirestore');
+      return;
+    }
+    console.warn('[Firestore] Notice saving platform state to Firestore:', error);
   }
 }
 
@@ -203,18 +301,42 @@ export async function savePlatformStateToFirestore(state: PlatformState): Promis
  * Seed initial shops & configuration to Firestore if collection is empty
  */
 export async function seedFirestoreIfEmpty(initialState: PlatformState): Promise<boolean> {
+  const SEED_KEY = 'ilj_firestore_seed_completed_v2';
   try {
+    if (isQuotaExhaustedState) return false;
+    if (localStorage.getItem(SEED_KEY)) {
+      return false;
+    }
+
     const shopsColl = collection(db, SHOPS_COLLECTION);
     const snap = await getDocs(shopsColl);
 
     if (snap.empty && initialState.shops && initialState.shops.length > 0) {
       console.log('[Firestore] Seeding initial data into Firestore...');
-      await savePlatformStateToFirestore(initialState);
+      localStorage.setItem(SEED_KEY, 'true');
+      await savePlatformConfigToFirestore(initialState);
+      
+      const batch = writeBatch(db);
+      for (const shop of initialState.shops.slice(0, 5)) {
+        if (shop && shop.shopId) {
+          const shopRef = doc(db, SHOPS_COLLECTION, shop.shopId);
+          batch.set(shopRef, JSON.parse(JSON.stringify(shop)), { merge: true });
+        }
+      }
+      await batch.commit();
       return true;
+    } else {
+      localStorage.setItem(SEED_KEY, 'true');
     }
     return false;
   } catch (error) {
-    console.error('[Firestore] Error checking / seeding Firestore:', error);
+    if (isQuotaExhaustionError(error)) {
+      markQuotaExhausted('seedFirestoreIfEmpty');
+      localStorage.setItem(SEED_KEY, 'true');
+      return false;
+    }
+    console.warn('[Firestore] Seed check notice:', error);
+    localStorage.setItem(SEED_KEY, 'true');
     return false;
   }
 }
@@ -235,16 +357,27 @@ export function subscribeToShops(onUpdate: (shops: Shop[]) => void): () => void 
             loadedShops.push(data);
           }
         });
-        onUpdate(loadedShops);
-        console.log(`[Firestore Real-Time] Received ${loadedShops.length} shops update from cloud.`);
+        if (loadedShops.length > 0) {
+          onUpdate(loadedShops);
+          console.log(`[Firestore Real-Time] Received ${loadedShops.length} shops update from cloud.`);
+        }
       },
       (err) => {
-        console.warn('[Firestore] Shops subscription error:', err);
+        if (isQuotaExhaustionError(err)) {
+          markQuotaExhausted('subscribeToShops');
+          try { unsubscribe(); } catch {}
+          return;
+        }
+        console.warn('[Firestore] Shops subscription notice:', err);
       }
     );
     return unsubscribe;
   } catch (e) {
-    console.error('[Firestore] Failed to setup shops listener:', e);
+    if (isQuotaExhaustionError(e)) {
+      markQuotaExhausted('subscribeToShopsCatch');
+      return () => {};
+    }
+    console.warn('[Firestore] Failed to setup shops listener:', e);
     return () => {};
   }
 }
@@ -265,12 +398,21 @@ export function subscribeToPlatformConfig(onUpdate: (config: Partial<PlatformSta
         }
       },
       (err) => {
-        console.warn('[Firestore] Global config subscription error:', err);
+        if (isQuotaExhaustionError(err)) {
+          markQuotaExhausted('subscribeToPlatformConfig');
+          try { unsubscribe(); } catch {}
+          return;
+        }
+        console.warn('[Firestore] Global config subscription notice:', err);
       }
     );
     return unsubscribe;
   } catch (e) {
-    console.error('[Firestore] Failed to setup global config listener:', e);
+    if (isQuotaExhaustionError(e)) {
+      markQuotaExhausted('subscribeToPlatformConfigCatch');
+      return () => {};
+    }
+    console.warn('[Firestore] Failed to setup global config listener:', e);
     return () => {};
   }
 }

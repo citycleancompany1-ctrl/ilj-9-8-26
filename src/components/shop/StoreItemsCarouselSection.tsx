@@ -180,30 +180,30 @@ export const SharedItemCard: React.FC<SharedItemCardProps> = ({
       </div>
 
       {/* 2. Item Details & Actions */}
-      <div className="p-2 sm:p-3 flex-1 flex flex-col justify-between gap-1.5 sm:gap-2">
-        <h3 className="font-bold text-slate-900 text-xs sm:text-sm line-clamp-2 leading-snug group-hover:text-orange-600 transition-colors font-['Outfit',sans-serif]">
+      <div className="p-2 sm:p-2.5 flex-1 flex flex-col justify-between gap-1">
+        <h3 className="font-bold text-slate-900 text-xs sm:text-sm line-clamp-2 leading-[1.18] group-hover:text-orange-600 transition-colors font-['Outfit',sans-serif] m-0">
           {item.name}
         </h3>
 
         {/* Bottom Price & Button Strip */}
-        <div className="pt-1.5 sm:pt-2 border-t border-gray-100 flex items-center justify-between gap-1">
+        <div className="pt-1 sm:pt-1.5 border-t border-gray-100 flex items-center justify-between gap-1 mt-auto">
           {/* Price display */}
           {isPriceHidden ? (
-            <div className="min-w-0">
-              <span className="inline-block px-1 sm:px-1.5 py-0.5 rounded bg-amber-50 border border-amber-200 text-amber-900 font-bold text-[9px] sm:text-[11px] leading-tight">
+            <div className="min-w-0 leading-none">
+              <span className="inline-block px-1 sm:px-1.5 py-0.5 rounded bg-amber-50 border border-amber-200 text-amber-900 font-bold text-[9px] sm:text-[10px] leading-none">
                 Price on Request
               </span>
-              <span className="text-[9px] text-amber-700 font-semibold block">
+              <span className="text-[9px] text-amber-700 font-semibold block leading-none mt-0.5">
                 {isCourseItem ? 'फीस पूछें' : isServiceItem ? 'फीस पूछें' : 'कीमत पूछें'}
               </span>
             </div>
           ) : (
-            <div className="min-w-0">
-              <span className="text-xs sm:text-sm md:text-base font-black text-slate-900 truncate block">
+            <div className="min-w-0 leading-none">
+              <span className="text-xs sm:text-sm md:text-base font-black text-slate-900 truncate block leading-none">
                 {formatINR(item.price)}
               </span>
               {hasDiscount && (
-                <span className="text-[9px] sm:text-[11px] text-gray-400 line-through block leading-tight">
+                <span className="text-[9px] sm:text-[10px] text-gray-400 line-through block leading-none mt-0.5">
                   {formatINR(item.originalPrice!)}
                 </span>
               )}
@@ -628,7 +628,7 @@ export const StoreItemsCarouselSection: React.FC<StoreItemsCarouselSectionProps>
               >
                 {/* Row 1 Item */}
                 {pair[0] && (
-                  <div className="h-[265px] sm:h-[285px]">
+                  <div className="h-[230px] sm:h-[255px]">
                     <SharedItemCard
                       item={pair[0]}
                       isService={isService}
@@ -645,7 +645,7 @@ export const StoreItemsCarouselSection: React.FC<StoreItemsCarouselSectionProps>
 
                 {/* Row 2 Item (if pair has 2 items) */}
                 {pair[1] && (
-                  <div className="h-[265px] sm:h-[285px]">
+                  <div className="h-[230px] sm:h-[255px]">
                     <SharedItemCard
                       item={pair[1]}
                       isService={isService}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Globe,
   CheckCircle2,
@@ -15,10 +15,8 @@ import {
   HelpCircle,
   RefreshCw,
   Sparkles,
-  Eye,
 } from 'lucide-react';
 import { Shop } from '../../types';
-import { saveShopToFirestore } from '../../services/firebase';
 
 interface VendorCustomDomainManagerProps {
   shop: Shop;
@@ -39,20 +37,8 @@ export const VendorCustomDomainManager: React.FC<VendorCustomDomainManagerProps>
     message: string;
   } | null>(null);
 
-  // Keep domainInput in sync with shop.customDomain changes
-  useEffect(() => {
-    if (shop.customDomain) {
-      setDomainInput(shop.customDomain);
-    }
-  }, [shop.customDomain]);
-
   const cleanDomain = (val: string) =>
-    val
-      .trim()
-      .toLowerCase()
-      .replace(/^https?:\/\//i, '')
-      .replace(/\/.*$/, '')
-      .replace(/\s+/g, '');
+    val.trim().toLowerCase().replace(/^https?:\/\//i, '').replace(/\/$/, '');
 
   const copyToClipboard = (text: string, fieldName: string) => {
     navigator.clipboard.writeText(text);
@@ -61,63 +47,50 @@ export const VendorCustomDomainManager: React.FC<VendorCustomDomainManagerProps>
     setTimeout(() => setCopiedField(null), 2500);
   };
 
-  const handleSaveDomain = async () => {
+  const handleSaveDomain = () => {
     const cleaned = cleanDomain(domainInput);
     if (!cleaned) {
-      showToast('⚠️ Kripya valid domain name enter karein (e.g. www.myshop.com ya brand.in)');
+      showToast('⚠️ Kripya valid domain name enter karein (e.g. www.myshop.com)');
       return;
     }
 
-    // Comprehensive domain validation: supports .com, .in, .co.in, .org, etc. with or without www
-    const domainRegex = /^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/;
+    // Basic domain validation
+    const domainRegex = /^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\.[a-zA-Z]{2,}(\.[a-zA-Z]{2,})?$/;
     if (!domainRegex.test(cleaned)) {
-      showToast('⚠️ Domain format sahi nahi hai. Example: www.mydukaan.com, brand.co.in ya shop.store');
+      showToast('⚠️ Domain format sahi nahi hai. Example: www.mydukaan.com ya shop.brand.in');
       return;
     }
 
     const updated: Shop = {
       ...shop,
       customDomain: cleaned,
-      domainConnectStatus: 'CONNECTED',
+      domainConnectStatus: shop.domainConnectStatus === 'CONNECTED' ? 'CONNECTED' : 'PENDING_DNS',
       updatedAt: new Date().toISOString(),
     };
 
-    try {
-      await saveShopToFirestore(updated);
-    } catch (e) {
-      console.error('Failed to save domain to firestore:', e);
-    }
-
     onUpdateShop(updated);
-    showToast(`🌐 Custom Domain "${cleaned}" successfully save aur connect ho gaya!`);
+    showToast(`🌐 Custom Domain "${cleaned}" successfully save ho gaya! DNS records configure karein.`);
   };
 
-  const handleRemoveDomain = async () => {
+  const handleRemoveDomain = () => {
     if (!window.confirm(`Kya aap "${shop.customDomain}" domain disconnect karna chahte hain?`)) {
       return;
     }
 
     const updated: Shop = {
       ...shop,
-      customDomain: '',
+      customDomain: undefined,
       domainConnectStatus: 'NOT_CONNECTED',
       updatedAt: new Date().toISOString(),
     };
 
     setDomainInput('');
     setVerificationResult(null);
-
-    try {
-      await saveShopToFirestore(updated);
-    } catch (e) {
-      console.error('Failed to disconnect domain in firestore:', e);
-    }
-
     onUpdateShop(updated);
     showToast('🗑️ Custom domain disconnect kar diya gaya hai.');
   };
 
-  const handleVerifyDns = async () => {
+  const handleVerifyDns = () => {
     const cleaned = cleanDomain(domainInput);
     if (!cleaned) {
       showToast('⚠️ Pehle domain name enter karein.');
@@ -127,7 +100,7 @@ export const VendorCustomDomainManager: React.FC<VendorCustomDomainManagerProps>
     setIsVerifying(true);
     setVerificationResult(null);
 
-    setTimeout(async () => {
+    setTimeout(() => {
       setIsVerifying(false);
       const isConfigured = Boolean(cleaned && cleaned.includes('.'));
       if (isConfigured) {
@@ -142,13 +115,6 @@ export const VendorCustomDomainManager: React.FC<VendorCustomDomainManagerProps>
           domainConnectStatus: 'CONNECTED',
           updatedAt: new Date().toISOString(),
         };
-
-        try {
-          await saveShopToFirestore(updated);
-        } catch (e) {
-          console.error('Failed to save verified domain to firestore:', e);
-        }
-
         onUpdateShop(updated);
         showToast(`✅ DNS Verified! "${cleaned}" is now CONNECTED.`);
       } else {
@@ -157,7 +123,7 @@ export const VendorCustomDomainManager: React.FC<VendorCustomDomainManagerProps>
           message: 'DNS propagation pending or record mismatch. Please verify A and CNAME records in your domain registrar.',
         });
       }
-    }, 1200);
+    }, 1500);
   };
 
   const currentStatus = shop.domainConnectStatus || (shop.customDomain ? 'CONNECTED' : 'NOT_CONNECTED');
@@ -404,28 +370,16 @@ export const VendorCustomDomainManager: React.FC<VendorCustomDomainManagerProps>
           </div>
 
           {shop.customDomain && (
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2">
               <span className="text-gray-500">Custom Domain Live: </span>
               <a
                 href={`https://${shop.customDomain}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-mono font-bold text-indigo-600 hover:underline inline-flex items-center gap-1"
-                title="Open directly on your domain once DNS propagation is complete"
               >
                 https://{shop.customDomain}
                 <ExternalLink className="w-3.5 h-3.5" />
-              </a>
-
-              <a
-                href={`/?shop=${shop.shopId}&domain=${shop.customDomain}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-md font-bold text-[11px] inline-flex items-center gap-1 transition-colors"
-                title="Test and preview how your website looks and works under your custom domain"
-              >
-                <Eye className="w-3 h-3" />
-                <span>Test Domain Preview</span>
               </a>
             </div>
           )}

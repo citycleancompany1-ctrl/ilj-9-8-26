@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Sparkles,
   PhoneCall,
@@ -75,7 +75,7 @@ import {
   ProductItem,
   CartItem,
 } from '../../types';
-import { getWhatsAppDirectUrl, formatINR, getYouTubeEmbedUrl, getYouTubeThumbnail } from '../../utils/mediaUpload';
+import { getWhatsAppDirectUrl, formatINR, getYouTubeEmbedUrl } from '../../utils/mediaUpload';
 import { StoreItemsCarouselSection } from './StoreItemsCarouselSection';
 
 // ==========================================
@@ -1003,16 +1003,40 @@ export const OffersSectionRenderer: React.FC<{
   shop: Shop;
 }> = ({ config, shop }) => {
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [mobileActiveOffer, setMobileActiveOffer] = useState(0);
+  const mobileOffersScrollRef = useRef<HTMLDivElement>(null);
 
   if (!config || !config.enabled || !config.banners || config.banners.length === 0) return null;
 
   const validBanners = config.banners.filter((b) => b.imageUrl || b.title);
   if (validBanners.length === 0) return null;
 
+  const totalOffers = validBanners.length;
+  const displayedDesktopBanners = isExpanded ? validBanners : validBanners.slice(0, 4);
+
   const handleCopyCode = (code: string) => {
     navigator.clipboard.writeText(code);
     setCopiedCode(code);
     setTimeout(() => setCopiedCode(null), 2000);
+  };
+
+  const handleMobileScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const el = e.currentTarget;
+    if (el.clientWidth > 0) {
+      const idx = Math.round(el.scrollLeft / el.clientWidth);
+      setMobileActiveOffer(Math.max(0, Math.min(validBanners.length - 1, idx)));
+    }
+  };
+
+  const scrollToOfferIdx = (idx: number) => {
+    if (mobileOffersScrollRef.current) {
+      mobileOffersScrollRef.current.scrollTo({
+        left: idx * mobileOffersScrollRef.current.clientWidth,
+        behavior: 'smooth',
+      });
+      setMobileActiveOffer(idx);
+    }
   };
 
   return (
@@ -1029,8 +1053,9 @@ export const OffersSectionRenderer: React.FC<{
         )}
       </div>
 
-      <div className={`grid gap-6 ${validBanners.length === 1 ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
-        {validBanners.map((banner, idx) => {
+      {/* 1. DESKTOP VIEW: STANDARD 2-COLUMN GRID */}
+      <div className={`hidden md:grid gap-6 ${displayedDesktopBanners.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+        {displayedDesktopBanners.map((banner, idx) => {
           const whatsappMsg = `Namaste ${shop.businessName}! I want to claim your offer: "${banner.title || 'Special Offer'}"${banner.couponCode ? ` (Coupon: ${banner.couponCode})` : ''}.`;
           const claimUrl = banner.buttonLink && banner.buttonLink !== 'whatsapp'
             ? banner.buttonLink
@@ -1110,6 +1135,221 @@ export const OffersSectionRenderer: React.FC<{
           );
         })}
       </div>
+
+      {/* 2. MOBILE VIEW: SHOW 1 CARD AT A TIME */}
+      <div className="block md:hidden">
+        {!isExpanded ? (
+          <div className="space-y-3">
+            {/* Mobile Slider: 1 CARD PER VIEW (w-full snap-center) */}
+            <div
+              ref={mobileOffersScrollRef}
+              onScroll={handleMobileScroll}
+              className="flex overflow-x-auto snap-x snap-mandatory scroll-smooth pb-1 pt-0.5 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+            >
+              {validBanners.map((banner, idx) => {
+                const whatsappMsg = `Namaste ${shop.businessName}! I want to claim your offer: "${banner.title || 'Special Offer'}"${banner.couponCode ? ` (Coupon: ${banner.couponCode})` : ''}.`;
+                const claimUrl = banner.buttonLink && banner.buttonLink !== 'whatsapp'
+                  ? banner.buttonLink
+                  : getWhatsAppDirectUrl(shop.whatsapp || shop.phone, whatsappMsg);
+
+                return (
+                  <div
+                    key={`mob-slider-banner-${banner.id || idx}`}
+                    className="w-full min-w-full flex-none snap-center px-0.5"
+                  >
+                    <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-xs flex flex-col justify-between group relative">
+                      {banner.imageUrl && (
+                        <div className="relative aspect-16/9 bg-slate-100 overflow-hidden">
+                          <img
+                            src={banner.imageUrl}
+                            alt={banner.title || 'Special Offer'}
+                            className="w-full h-full object-cover"
+                          />
+                          {banner.badge && (
+                            <div className="absolute top-2.5 left-2.5 bg-red-600 text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded shadow-xs">
+                              {banner.badge}
+                            </div>
+                          )}
+                          {banner.validUntil && (
+                            <div className="absolute top-2.5 right-2.5 bg-black/75 backdrop-blur-xs text-white text-[10px] font-semibold px-2 py-0.5 rounded shadow-xs">
+                              {banner.validUntil}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
+                        <div className="space-y-1">
+                          <h3 className="text-base font-black uppercase tracking-tight text-slate-900 font-['Outfit',sans-serif] line-clamp-2">
+                            {banner.title || 'Special Offer'}
+                          </h3>
+                          {banner.subtitle && (
+                            <p className="text-xs text-gray-600 leading-snug line-clamp-2">
+                              {banner.subtitle}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="pt-2.5 border-t border-gray-100 flex items-center justify-between gap-2.5">
+                          {banner.couponCode ? (
+                            <div className="flex items-center gap-1.5 bg-orange-50 border border-dashed border-orange-300 px-2.5 py-1.5 rounded-lg">
+                              <span className="text-[10px] uppercase font-bold text-orange-700">Code:</span>
+                              <span className="font-mono font-black text-xs text-orange-900 tracking-wider">
+                                {banner.couponCode}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => handleCopyCode(banner.couponCode!)}
+                                className="text-orange-600 hover:text-orange-800 p-0.5 transition-colors cursor-pointer"
+                                title="Copy Code"
+                              >
+                                {copiedCode === banner.couponCode ? (
+                                  <Check className="w-3.5 h-3.5 text-emerald-600" />
+                                ) : (
+                                  <Copy className="w-3.5 h-3.5" />
+                                )}
+                              </button>
+                            </div>
+                          ) : (
+                            <div />
+                          )}
+
+                          <a
+                            href={claimUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="flex-1 max-w-[200px] py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold uppercase tracking-wider text-xs rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition-colors active:scale-95"
+                          >
+                            <span>{banner.buttonText || 'Claim Offer'}</span>
+                            <ArrowRight className="w-3.5 h-3.5" />
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Dots Indicator for Mobile Offers Slider when > 1 offer */}
+            {validBanners.length > 1 && (
+              <div className="flex items-center justify-center gap-2 pt-1 pb-1">
+                {validBanners.map((_, i) => (
+                  <button
+                    key={`mob-offer-dot-${i}`}
+                    type="button"
+                    onClick={() => scrollToOfferIdx(i)}
+                    className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
+                      mobileActiveOffer === i ? 'w-6 bg-rose-600' : 'w-2 bg-gray-300 hover:bg-gray-400'
+                    }`}
+                    aria-label={`Go to offer ${i + 1}`}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        ) : (
+          /* Mobile Expanded View: 1 card per row stack displaying each offer cleanly */
+          <div className="grid grid-cols-1 gap-4 animate-in fade-in duration-300">
+            {validBanners.map((banner, idx) => {
+              const whatsappMsg = `Namaste ${shop.businessName}! I want to claim your offer: "${banner.title || 'Special Offer'}"${banner.couponCode ? ` (Coupon: ${banner.couponCode})` : ''}.`;
+              const claimUrl = banner.buttonLink && banner.buttonLink !== 'whatsapp'
+                ? banner.buttonLink
+                : getWhatsAppDirectUrl(shop.whatsapp || shop.phone, whatsappMsg);
+
+              return (
+                <div
+                  key={`mob-grid-banner-${banner.id || idx}`}
+                  className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-xs flex flex-col justify-between group relative"
+                >
+                  {banner.imageUrl && (
+                    <div className="relative aspect-16/9 bg-slate-100 overflow-hidden">
+                      <img
+                        src={banner.imageUrl}
+                        alt={banner.title || 'Special Offer'}
+                        className="w-full h-full object-cover"
+                      />
+                      {banner.badge && (
+                        <div className="absolute top-2.5 left-2.5 bg-red-600 text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded shadow-xs">
+                          {banner.badge}
+                        </div>
+                      )}
+                      {banner.validUntil && (
+                        <div className="absolute top-2.5 right-2.5 bg-black/75 backdrop-blur-xs text-white text-[10px] font-semibold px-2 py-0.5 rounded shadow-xs">
+                          {banner.validUntil}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
+                    <div className="space-y-1">
+                      <h3 className="text-base font-black uppercase tracking-tight text-slate-900 font-['Outfit',sans-serif] line-clamp-2">
+                        {banner.title || 'Special Offer'}
+                      </h3>
+                      {banner.subtitle && (
+                        <p className="text-xs text-gray-600 leading-snug line-clamp-2">
+                          {banner.subtitle}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="pt-2.5 border-t border-gray-100 flex items-center justify-between gap-2.5">
+                      {banner.couponCode ? (
+                        <div className="flex items-center gap-1.5 bg-orange-50 border border-dashed border-orange-300 px-2.5 py-1.5 rounded-lg">
+                          <span className="text-[10px] uppercase font-bold text-orange-700">Code:</span>
+                          <span className="font-mono font-black text-xs text-orange-900 tracking-wider">
+                            {banner.couponCode}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleCopyCode(banner.couponCode!)}
+                            className="text-orange-600 hover:text-orange-800 p-0.5 transition-colors cursor-pointer"
+                            title="Copy Code"
+                          >
+                            {copiedCode === banner.couponCode ? (
+                              <Check className="w-3.5 h-3.5 text-emerald-600" />
+                            ) : (
+                              <Copy className="w-3.5 h-3.5" />
+                            )}
+                          </button>
+                        </div>
+                      ) : (
+                        <div />
+                      )}
+
+                      <a
+                        href={claimUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex-1 max-w-[200px] py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold uppercase tracking-wider text-xs rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition-colors active:scale-95"
+                      >
+                        <span>{banner.buttonText || 'Claim Offer'}</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* VIEW ALL BUTTON - Only shown when total offers >= 4 or if currently expanded */}
+      {(totalOffers >= 4 || isExpanded) && (
+        <div className="text-center pt-6 sm:pt-8">
+          <button
+            type="button"
+            onClick={() => setIsExpanded((prev) => !prev)}
+            className="px-6 py-2.5 sm:py-3 bg-white hover:bg-rose-50 text-rose-900 border border-rose-200 font-black uppercase tracking-wider text-xs rounded-xl shadow-xs inline-flex items-center gap-2 transition-all hover:scale-102 cursor-pointer active:scale-95"
+          >
+            <Sparkles className="w-4 h-4 text-rose-600" />
+            <span>{isExpanded ? 'Show Less Offers' : `View All Offers (${totalOffers})`}</span>
+            {isExpanded ? <ChevronUp className="w-4 h-4 text-rose-600" /> : <ChevronDown className="w-4 h-4 text-rose-600" />}
+          </button>
+        </div>
+      )}
     </section>
   );
 };
@@ -1230,7 +1470,8 @@ export const PortfolioSectionRenderer: React.FC<{
         )}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 animate-in fade-in duration-300">
+      {/* 1. DESKTOP VIEW: STANDARD GRID (UP TO 4 ITEMS OR EXPANDED) */}
+      <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-5 animate-in fade-in duration-300">
         {displayedItems.map((item, idx) => (
           <div
             key={item.id || idx}
@@ -1268,17 +1509,101 @@ export const PortfolioSectionRenderer: React.FC<{
         ))}
       </div>
 
-      {/* VIEW ALL BUTTON - Only shown when total projects > 4 or if currently expanded */}
-      {(totalProjects > 4 || isExpanded) && (
-        <div className="text-center pt-8">
+      {/* 2. MOBILE VIEW: 2 ITEMS PROPERLY VISIBLE + 10% PEEK SLIDER (OR EXPANDED 2-COL GRID) */}
+      <div className="block md:hidden">
+        {!isExpanded ? (
+          /* Mobile Slider */
+          <div className="flex gap-2.5 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-2 pt-1 -mx-4 px-4 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+            {config.items.map((item, idx) => (
+              <div
+                key={`mob-slider-port-${item.id || idx}`}
+                onClick={() => setActiveImage(item.imageUrl)}
+                className="flex-none snap-start group bg-white rounded-xl border border-gray-200 overflow-hidden shadow-xs hover:shadow-md transition-all cursor-pointer relative flex flex-col justify-between"
+                style={{ width: 'calc((100% - 20px) / 2.12)', minWidth: 'calc((100% - 20px) / 2.12)' }}
+              >
+                <div className="aspect-4/3 overflow-hidden bg-gray-100 relative">
+                  <img
+                    src={item.imageUrl}
+                    alt={item.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
+                    <span className="text-[9px] font-bold text-white flex items-center gap-0.5">
+                      <span>View</span>
+                      <ArrowUpRight className="w-3 h-3" />
+                    </span>
+                  </div>
+                </div>
+
+                <div className="p-2.5 space-y-1">
+                  {item.category && (
+                    <div className="text-[9px] font-bold text-cyan-700 uppercase tracking-wider truncate">
+                      {item.category}
+                    </div>
+                  )}
+                  <h3 className="text-xs font-black text-slate-900 truncate">
+                    {item.title}
+                  </h3>
+                  {item.description && (
+                    <p className="text-[10px] text-gray-500 line-clamp-1">{item.description}</p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          /* Mobile Expanded View: 2-column grid showing all items */
+          <div className="grid grid-cols-2 gap-2.5 animate-in fade-in duration-300">
+            {config.items.map((item, idx) => (
+              <div
+                key={`mob-grid-port-${item.id || idx}`}
+                onClick={() => setActiveImage(item.imageUrl)}
+                className="group bg-white rounded-xl border border-gray-200 overflow-hidden shadow-xs hover:shadow-md transition-all cursor-pointer relative flex flex-col justify-between"
+              >
+                <div className="aspect-4/3 overflow-hidden bg-gray-100 relative">
+                  <img
+                    src={item.imageUrl}
+                    alt={item.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
+                    <span className="text-[9px] font-bold text-white flex items-center gap-0.5">
+                      <span>View</span>
+                      <ArrowUpRight className="w-3 h-3" />
+                    </span>
+                  </div>
+                </div>
+
+                <div className="p-2.5 space-y-1">
+                  {item.category && (
+                    <div className="text-[9px] font-bold text-cyan-700 uppercase tracking-wider truncate">
+                      {item.category}
+                    </div>
+                  )}
+                  <h3 className="text-xs font-black text-slate-900 truncate">
+                    {item.title}
+                  </h3>
+                  {item.description && (
+                    <p className="text-[10px] text-gray-500 line-clamp-1">{item.description}</p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* VIEW ALL BUTTON - Only shown when total projects >= 4 or if currently expanded */}
+      {(totalProjects >= 4 || isExpanded) && (
+        <div className="text-center pt-6 sm:pt-8">
           <button
             type="button"
             onClick={() => setIsExpanded((prev) => !prev)}
-            className="px-6 py-3 bg-white hover:bg-cyan-50 text-cyan-900 border border-cyan-200 font-black uppercase tracking-wider text-xs rounded-xl shadow-xs inline-flex items-center gap-2.5 transition-all hover:scale-102 cursor-pointer active:scale-95"
+            className="px-6 py-2.5 sm:py-3 bg-white hover:bg-cyan-50 text-cyan-900 border border-cyan-200 font-black uppercase tracking-wider text-xs rounded-xl shadow-xs inline-flex items-center gap-2 transition-all hover:scale-102 cursor-pointer active:scale-95"
           >
             <Award className="w-4 h-4 text-cyan-600" />
             <span>{isExpanded ? 'Show Less Projects' : `View All Projects (${totalProjects})`}</span>
-            {isExpanded ? <ChevronUp className="w-4 h-4 text-cyan-600" /> : <ArrowRight className="w-4 h-4 text-cyan-600" />}
+            {isExpanded ? <ChevronUp className="w-4 h-4 text-cyan-600" /> : <ChevronDown className="w-4 h-4 text-cyan-600" />}
           </button>
         </div>
       )}
@@ -1314,6 +1639,7 @@ export const GallerySectionRenderer: React.FC<{
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
 
+  // High-resolution curated store photos (up to 15 images)
   const fallbackPhotos = [
     'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800',
     'https://images.unsplash.com/photo-1607344645866-009c320c5ab8?w=800',
@@ -1325,22 +1651,35 @@ export const GallerySectionRenderer: React.FC<{
     'https://images.unsplash.com/photo-1528698827591-e19ccd7bc23d?w=800',
     'https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=800',
     'https://images.unsplash.com/photo-1580828343064-fde4fc206bc6?w=800',
+    'https://images.unsplash.com/photo-1513094735237-8f2714d57c13?w=800',
+    'https://images.unsplash.com/photo-1556742049-0a67c5574f73?w=800',
+    'https://images.unsplash.com/photo-1526178613552-2b45c6c302f0?w=800',
+    'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=800',
+    'https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?w=800',
   ];
 
-  // Resolve gallery photos: check custom items in config or shop, else fallback
-  const configItems = (config?.items && Array.isArray(config.items)) ? config.items.filter(Boolean) : [];
-  const shopImages = (shop.galleryImages && Array.isArray(shop.galleryImages)) ? shop.galleryImages.filter(Boolean) : [];
-  const customPhotos = configItems.length > 0 ? configItems : shopImages;
-  const allPhotos = customPhotos.length > 0 ? customPhotos : fallbackPhotos;
+  // Specific image rules: Maximum 15 photos allowed, initially 12 visible
+  const MAX_ALLOWED_IMAGES = 15;
+  const INITIAL_VISIBLE_COUNT = 12;
+
+  // Resolve gallery photos: combine shop gallery images or fallback, capped at 15
+  const rawPhotos = shop.galleryImages && shop.galleryImages.filter(Boolean).length > 0
+    ? shop.galleryImages.filter(Boolean)
+    : fallbackPhotos;
+
+  // Cap total allowed photos to 15
+  const allPhotos = (rawPhotos.length < MAX_ALLOWED_IMAGES
+    ? [...rawPhotos, ...fallbackPhotos.filter((p) => !rawPhotos.includes(p)).slice(0, MAX_ALLOWED_IMAGES - rawPhotos.length)]
+    : rawPhotos).slice(0, MAX_ALLOWED_IMAGES);
 
   const totalPhotos = allPhotos.length;
-  const displayedPhotos = isExpanded ? allPhotos : allPhotos.slice(0, 8);
+  const displayedPhotos = isExpanded ? allPhotos : allPhotos.slice(0, INITIAL_VISIBLE_COUNT);
 
   const title = config?.title || 'Store Photo Gallery';
   const subtitle = config?.subtitle || 'Hamari dukaan, taaza stock aur shandar collection ka photo showcase';
 
-  // Different aspect ratios for authentic masonry staggering
-  const aspectClasses = [
+  // Desktop aspect ratios for staggered columns
+  const desktopAspectClasses = [
     'aspect-[3/4]',
     'aspect-square',
     'aspect-[4/5]',
@@ -1350,6 +1689,45 @@ export const GallerySectionRenderer: React.FC<{
     'aspect-[4/3]',
     'aspect-[4/5]',
   ];
+
+  // Mobile flexible 3 / 2 rows grouping
+  const mobileRows: { photos: { url: string; globalIdx: number; aspect: string }[]; isThree: boolean }[] = [];
+  let pIdx = 0;
+  let takeThree = true;
+
+  while (pIdx < displayedPhotos.length) {
+    const remaining = displayedPhotos.length - pIdx;
+    let count = takeThree ? 3 : 2;
+    // Smart split: if 4 remaining, take 2 then 2 to avoid single orphaned item
+    if (remaining === 4) {
+      count = 2;
+    } else if (remaining < count) {
+      count = remaining;
+    }
+
+    const rowItems = displayedPhotos.slice(pIdx, pIdx + count).map((url, offset) => {
+      const gIdx = pIdx + offset;
+      let aspect = 'aspect-square';
+      if (count === 3) {
+        // In 3-image row: middle item slightly taller or variation
+        aspect = offset === 1 ? 'aspect-[4/5]' : 'aspect-square';
+      } else if (count === 2) {
+        // In 2-image row: wide cinematic / 4:3 balance
+        aspect = offset === 0 ? 'aspect-[16/11]' : 'aspect-[4/3]';
+      } else {
+        aspect = 'aspect-[21/9]';
+      }
+      return { url, globalIdx: gIdx, aspect };
+    });
+
+    mobileRows.push({
+      photos: rowItems,
+      isThree: rowItems.length === 3,
+    });
+
+    pIdx += count;
+    takeThree = !takeThree;
+  }
 
   const handleOpenLightbox = (index: number) => {
     setLightboxIndex(index);
@@ -1394,13 +1772,56 @@ export const GallerySectionRenderer: React.FC<{
         <p className="text-xs sm:text-sm text-gray-500">{subtitle}</p>
       </div>
 
-      {/* MASONRY PHOTO GRID */}
-      <div className="columns-1 sm:columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4">
+      {/* 1. MOBILE MASONRY GRID (Flexible 3 / 2 images per row) */}
+      <div className="block md:hidden space-y-2 sm:space-y-2.5">
+        {mobileRows.map((row, rIdx) => (
+          <div
+            key={`mob-gal-row-${rIdx}`}
+            className={
+              row.isThree
+                ? 'grid grid-cols-3 gap-2 sm:gap-2.5'
+                : row.photos.length === 2
+                ? 'grid grid-cols-2 gap-2 sm:gap-2.5'
+                : 'grid grid-cols-1 gap-2'
+            }
+          >
+            {row.photos.map((item) => (
+              <div
+                key={`mob-masonry-photo-${item.globalIdx}`}
+                onClick={() => handleOpenLightbox(item.globalIdx)}
+                className="group relative rounded-xl overflow-hidden bg-gray-100 border border-gray-200 shadow-2xs hover:shadow-md transition-all duration-300 active:scale-97 cursor-pointer"
+              >
+                <div className={`w-full ${item.aspect} overflow-hidden relative`}>
+                  <img
+                    src={item.url}
+                    alt={`${shop.businessName} Gallery Photo ${item.globalIdx + 1}`}
+                    loading="lazy"
+                    className="w-full h-full object-cover object-center group-hover:scale-106 transition-transform duration-500 ease-out"
+                  />
+
+                  {/* Gradient Overlay & High-Res Cue */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-end justify-between p-2">
+                    <span className="text-[9px] font-black text-cyan-300 font-mono">
+                      #{item.globalIdx + 1}
+                    </span>
+                    <span className="w-5 h-5 rounded-full bg-white/30 backdrop-blur-xs flex items-center justify-center text-white">
+                      <Maximize2 className="w-3 h-3" />
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+
+      {/* 2. DESKTOP MASONRY GRID (Responsive Columns) */}
+      <div className="hidden md:block columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4">
         {displayedPhotos.map((photoUrl, idx) => {
-          const aspect = aspectClasses[idx % aspectClasses.length];
+          const aspect = desktopAspectClasses[idx % desktopAspectClasses.length];
           return (
             <div
-              key={`masonry-photo-${idx}`}
+              key={`desktop-masonry-photo-${idx}`}
               onClick={() => handleOpenLightbox(idx)}
               className="break-inside-avoid group relative rounded-2xl overflow-hidden bg-gray-100 border border-gray-200 shadow-xs hover:shadow-xl hover:border-cyan-400 transition-all duration-300 cursor-pointer"
             >
@@ -1410,9 +1831,6 @@ export const GallerySectionRenderer: React.FC<{
                   alt={`${shop.businessName} Gallery Photo ${idx + 1}`}
                   loading="lazy"
                   className="w-full h-full object-cover object-center group-hover:scale-108 transition-transform duration-700 ease-out"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800';
-                  }}
                 />
 
                 {/* Gradient Overlay & Hover Controls */}
@@ -1438,17 +1856,17 @@ export const GallerySectionRenderer: React.FC<{
         })}
       </div>
 
-      {/* VIEW ALL BUTTON - Only shown when total photos > 8 or if currently expanded */}
-      {(totalPhotos > 8 || isExpanded) && (
-        <div className="text-center pt-8">
+      {/* VIEW ALL BUTTON - Only shown when total photos > 12 or if currently expanded */}
+      {(totalPhotos > INITIAL_VISIBLE_COUNT || isExpanded) && (
+        <div className="text-center pt-6 sm:pt-8">
           <button
             type="button"
             onClick={() => setIsExpanded((prev) => !prev)}
-            className="px-6 py-3 bg-white hover:bg-cyan-50 text-cyan-950 border border-cyan-300 font-black uppercase tracking-wider text-xs rounded-xl shadow-xs inline-flex items-center gap-2.5 transition-all hover:scale-102 cursor-pointer active:scale-95"
+            className="px-6 py-2.5 sm:py-3 bg-white hover:bg-cyan-50 text-cyan-950 border border-cyan-300 font-black uppercase tracking-wider text-xs rounded-xl shadow-xs inline-flex items-center gap-2.5 transition-all hover:scale-102 cursor-pointer active:scale-95"
           >
             <ImageIcon className="w-4 h-4 text-cyan-600" />
-            <span>{isExpanded ? 'Show Less Photos' : `View All Gallery Photos (${totalPhotos})`}</span>
-            {isExpanded ? <ChevronUp className="w-4 h-4 text-cyan-600" /> : <ArrowRight className="w-4 h-4 text-cyan-600" />}
+            <span>{isExpanded ? 'Show Less Photos' : `View All Photos (${totalPhotos})`}</span>
+            {isExpanded ? <ChevronUp className="w-4 h-4 text-cyan-600" /> : <ChevronDown className="w-4 h-4 text-cyan-600" />}
           </button>
         </div>
       )}
@@ -1501,9 +1919,6 @@ export const GallerySectionRenderer: React.FC<{
               src={allPhotos[lightboxIndex]}
               alt={`Photo ${lightboxIndex + 1}`}
               className="max-h-[72vh] max-w-full object-contain rounded-xl shadow-2xl border border-white/10 select-none animate-in zoom-in-95 duration-200"
-              onError={(e) => {
-                (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800';
-              }}
             />
 
             <button
@@ -1549,10 +1964,8 @@ export const VideoSectionRenderer: React.FC<{
   shop: Shop;
   config?: VideoSectionConfig;
 }> = ({ shop, config }) => {
-  const [mobileSlideIndex, setMobileSlideIndex] = useState(0);
   const [isExpanded, setIsExpanded] = useState(false);
-  const [activeVideoModal, setActiveVideoModal] = useState<VideoItem | null>(null);
-  const [playingInlineId, setPlayingInlineId] = useState<string | null>(null);
+  const [selectedVideo, setSelectedVideo] = useState<VideoItem | null>(null);
 
   const fallbackVideos: VideoItem[] = [
     {
@@ -1581,32 +1994,14 @@ export const VideoSectionRenderer: React.FC<{
     },
   ];
 
-  const rawVideos = (shop.videos && shop.videos.length > 0) ? shop.videos : [];
-  // Use vendor videos if added; only fallback to demo videos if vendor has none
-  const allVideos: VideoItem[] = rawVideos.length > 0 ? rawVideos : fallbackVideos;
+  const rawVideos = shop.videos && shop.videos.length > 0 ? shop.videos : fallbackVideos;
+  // Ensure we have 4 videos for the desktop 4-column layout
+  const allVideos = rawVideos.length < 4
+    ? [...rawVideos, ...fallbackVideos.slice(0, 4 - rawVideos.length)]
+    : rawVideos;
 
-  // Desktop takes up to 4 videos in collapsed state
+  // Desktop takes 4 videos in collapsed state
   const desktopVideos = isExpanded ? allVideos : allVideos.slice(0, 4);
-
-  const handlePrevMobile = (e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    setMobileSlideIndex((prev) => (prev - 1 + allVideos.length) % allVideos.length);
-  };
-
-  const handleNextMobile = (e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    setMobileSlideIndex((prev) => (prev + 1) % allVideos.length);
-  };
-
-  // Keyboard support for theater modal
-  useEffect(() => {
-    if (!activeVideoModal) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setActiveVideoModal(null);
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeVideoModal]);
 
   return (
     <section id="videos" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16">
@@ -1623,20 +2018,17 @@ export const VideoSectionRenderer: React.FC<{
         </p>
       </div>
 
-      {/* 1. DESKTOP VIEW: RESPONSIVE GRID (1, 2, 3, or 4 columns) */}
+      {/* 1. DESKTOP VIEW: 4-COLUMN RESPONSIVE GRID */}
       <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-5">
         {desktopVideos.map((vid, idx) => {
-          const thumb = vid.thumbnailUrl || getYouTubeThumbnail(vid.youtubeUrl);
-          const embedUrl = getYouTubeEmbedUrl(vid.youtubeUrl, true) || vid.youtubeUrl;
-          const isInlinePlaying = playingInlineId === vid.id;
-
+          const embedUrl = getYouTubeEmbedUrl(vid.youtubeUrl) || vid.youtubeUrl;
           return (
             <div
               key={`desktop-video-${vid.id || idx}`}
-              className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-xs hover:shadow-lg hover:border-red-300 transition-all flex flex-col justify-between group"
+              className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-xs hover:shadow-lg hover:border-red-300 transition-all flex flex-col justify-between"
             >
-              <div className="aspect-16/9 bg-slate-950 overflow-hidden relative">
-                {isInlinePlaying ? (
+              <div className="aspect-16/9 bg-slate-900 overflow-hidden relative">
+                {embedUrl.includes('youtube.com') || embedUrl.includes('youtu.be') ? (
                   <iframe
                     src={embedUrl}
                     title={vid.title}
@@ -1645,282 +2037,173 @@ export const VideoSectionRenderer: React.FC<{
                     className="w-full h-full border-0"
                   />
                 ) : (
-                  <div 
-                    onClick={() => setActiveVideoModal(vid)}
-                    className="w-full h-full relative cursor-pointer group/thumb"
-                  >
-                    <img
-                      src={thumb}
-                      alt={vid.title}
-                      loading="lazy"
-                      className="w-full h-full object-cover group-hover/thumb:scale-105 transition-transform duration-300"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=800';
-                      }}
-                    />
-                    <div className="absolute inset-0 bg-black/35 group-hover/thumb:bg-black/50 transition-colors flex items-center justify-center">
-                      <div className="w-13 h-13 rounded-full bg-red-600/90 text-white flex items-center justify-center shadow-xl transform group-hover/thumb:scale-110 transition-transform">
-                        <Play className="w-6 h-6 fill-white ml-0.5" />
-                      </div>
-                    </div>
-                    <span className="absolute bottom-2 left-2 bg-black/75 text-white text-[9px] font-bold px-2 py-0.5 rounded">
-                      Video #{idx + 1}
-                    </span>
+                  <div className="w-full h-full flex items-center justify-center bg-slate-900 text-white">
+                    <Play className="w-10 h-10 text-red-500 fill-red-500" />
                   </div>
                 )}
               </div>
 
-              <div className="p-4 space-y-2 flex-1 flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-[10px] font-bold text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded">
-                      YouTube Reel
-                    </span>
-                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">
-                      Verified Store
-                    </span>
-                  </div>
-                  <h3 className="text-xs sm:text-sm font-black uppercase text-slate-900 line-clamp-2">
-                    {vid.title}
-                  </h3>
+              <div className="p-4 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded">
+                    Video #{idx + 1}
+                  </span>
+                  <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">
+                    Verified Store
+                  </span>
                 </div>
-
-                <div className="pt-2 border-t border-gray-100 flex items-center justify-between gap-2">
-                  {isInlinePlaying ? (
-                    <button
-                      type="button"
-                      onClick={() => setPlayingInlineId(null)}
-                      className="text-xs font-bold text-gray-500 hover:text-slate-800 transition-colors cursor-pointer"
-                    >
-                      Close Player
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => setActiveVideoModal(vid)}
-                      className="text-xs font-bold text-red-600 hover:text-red-700 flex items-center gap-1.5 transition-colors cursor-pointer"
-                    >
-                      <Play className="w-3.5 h-3.5 fill-red-600" />
-                      <span>Watch Video</span>
-                    </button>
-                  )}
-
-                  <a
-                    href={vid.youtubeUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-[11px] font-medium text-gray-400 hover:text-red-600 flex items-center gap-1 transition-colors"
-                    title="Open on YouTube"
-                  >
-                    <span>YouTube</span>
-                    <ExternalLink className="w-3 h-3" />
-                  </a>
-                </div>
+                <h3 className="text-xs sm:text-sm font-black uppercase text-slate-900 line-clamp-2">
+                  {vid.title}
+                </h3>
               </div>
             </div>
           );
         })}
       </div>
 
-      {/* 2. MOBILE VIEW: INTERACTIVE VIDEO CAROUSEL */}
+      {/* 2. MOBILE VIEW: 2 ITEMS VISIBLE + ~10% PEEK SLIDER (OR EXPANDED 2-COL GRID) */}
       <div className="block md:hidden">
-        {(() => {
-          const currentVid = allVideos[mobileSlideIndex % allVideos.length];
-          const thumb = currentVid.thumbnailUrl || getYouTubeThumbnail(currentVid.youtubeUrl);
-          const embedUrl = getYouTubeEmbedUrl(currentVid.youtubeUrl, true) || currentVid.youtubeUrl;
-          const isInlinePlaying = playingInlineId === currentVid.id;
+        {!isExpanded ? (
+          /* Mobile Slider: 2 items properly visible + ~10% peek of next item */
+          <div className="flex gap-2.5 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-2 pt-1 -mx-4 px-4 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+            {allVideos.map((vid, idx) => {
+              const embedUrl = getYouTubeEmbedUrl(vid.youtubeUrl) || vid.youtubeUrl;
+              return (
+                <div
+                  key={`mob-slider-vid-${vid.id || idx}`}
+                  onClick={() => setSelectedVideo(vid)}
+                  className="flex-none snap-start bg-white rounded-xl border border-gray-200 overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col justify-between cursor-pointer group"
+                  style={{ width: 'calc((100% - 20px) / 2.12)', minWidth: 'calc((100% - 20px) / 2.12)' }}
+                >
+                  <div className="aspect-16/10 bg-slate-900 overflow-hidden relative">
+                    {vid.thumbnailUrl ? (
+                      <img
+                        src={vid.thumbnailUrl}
+                        alt={vid.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-slate-900" />
+                    )}
+                    <div className="absolute inset-0 bg-black/35 flex items-center justify-center group-hover:bg-black/20 transition-colors">
+                      <div className="w-9 h-9 rounded-full bg-red-600/90 text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                        <Play className="w-4 h-4 text-white fill-white ml-0.5" />
+                      </div>
+                    </div>
+                    <span className="absolute top-1.5 left-1.5 text-[9px] font-bold text-white bg-black/75 px-1.5 py-0.5 rounded">
+                      #{idx + 1}
+                    </span>
+                  </div>
 
-          return (
-            <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-md">
-              <div className="aspect-16/9 bg-slate-950 overflow-hidden relative">
-                {isInlinePlaying ? (
+                  <div className="p-2.5 space-y-1">
+                    <h3 className="text-xs font-black uppercase text-slate-900 line-clamp-2">
+                      {vid.title}
+                    </h3>
+                    <p className="text-[10px] text-red-600 font-bold flex items-center gap-1">
+                      <span>Watch Video</span>
+                      <ArrowRight className="w-2.5 h-2.5" />
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          /* Mobile Expanded View: 2-column grid showing all videos */
+          <div className="grid grid-cols-2 gap-2.5 animate-in fade-in duration-300">
+            {allVideos.map((vid, idx) => (
+              <div
+                key={`mob-grid-vid-${vid.id || idx}`}
+                onClick={() => setSelectedVideo(vid)}
+                className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col justify-between cursor-pointer group"
+              >
+                <div className="aspect-16/10 bg-slate-900 overflow-hidden relative">
+                  {vid.thumbnailUrl ? (
+                    <img
+                      src={vid.thumbnailUrl}
+                      alt={vid.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-slate-900" />
+                  )}
+                  <div className="absolute inset-0 bg-black/35 flex items-center justify-center group-hover:bg-black/20 transition-colors">
+                    <div className="w-9 h-9 rounded-full bg-red-600/90 text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                      <Play className="w-4 h-4 text-white fill-white ml-0.5" />
+                    </div>
+                  </div>
+                  <span className="absolute top-1.5 left-1.5 text-[9px] font-bold text-white bg-black/75 px-1.5 py-0.5 rounded">
+                    #{idx + 1}
+                  </span>
+                </div>
+
+                <div className="p-2.5 space-y-1">
+                  <h3 className="text-xs font-black uppercase text-slate-900 line-clamp-2">
+                    {vid.title}
+                  </h3>
+                  <p className="text-[10px] text-red-600 font-bold flex items-center gap-1">
+                    <span>Watch Video</span>
+                    <ArrowRight className="w-2.5 h-2.5" />
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* VIEW ALL BUTTON - Only shown when total videos >= 4 or if currently expanded */}
+      {(allVideos.length >= 4 || isExpanded) && (
+        <div className="text-center pt-6 sm:pt-8">
+          <button
+            type="button"
+            onClick={() => setIsExpanded((prev) => !prev)}
+            className="px-6 py-2.5 sm:py-3 bg-white hover:bg-red-50 text-red-950 border border-red-200 font-black uppercase tracking-wider text-xs rounded-xl shadow-xs inline-flex items-center gap-2 transition-all hover:scale-102 cursor-pointer active:scale-95"
+          >
+            <Play className="w-4 h-4 text-red-600 fill-red-600" />
+            <span>{isExpanded ? 'Show Less Videos' : `View All Videos & Tutorials (${allVideos.length})`}</span>
+            {isExpanded ? <ChevronUp className="w-4 h-4 text-red-600" /> : <ChevronDown className="w-4 h-4 text-red-600" />}
+          </button>
+        </div>
+      )}
+
+      {/* Video Player Modal for Mobile Tap */}
+      {selectedVideo && (
+        <div
+          onClick={() => setSelectedVideo(null)}
+          className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 backdrop-blur-xs animate-in fade-in"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-full max-w-2xl bg-slate-900 rounded-2xl overflow-hidden shadow-2xl border border-white/10"
+          >
+            <div className="p-3 bg-slate-800 text-white flex items-center justify-between">
+              <h4 className="text-xs sm:text-sm font-bold truncate pr-4">{selectedVideo.title}</h4>
+              <button
+                type="button"
+                onClick={() => setSelectedVideo(null)}
+                className="text-gray-400 hover:text-white p-1 rounded-full cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="aspect-16/9 w-full bg-black">
+              {(() => {
+                const embedUrl = getYouTubeEmbedUrl(selectedVideo.youtubeUrl) || selectedVideo.youtubeUrl;
+                return embedUrl.includes('youtube.com') || embedUrl.includes('youtu.be') ? (
                   <iframe
-                    src={embedUrl}
-                    title={currentVid.title}
+                    src={`${embedUrl}?autoplay=1`}
+                    title={selectedVideo.title}
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
                     className="w-full h-full border-0"
                   />
                 ) : (
-                  <div
-                    onClick={() => setActiveVideoModal(currentVid)}
-                    className="w-full h-full relative cursor-pointer"
-                  >
-                    <img
-                      src={thumb}
-                      alt={currentVid.title}
-                      loading="lazy"
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=800';
-                      }}
-                    />
-                    <div className="absolute inset-0 bg-black/35 flex items-center justify-center">
-                      <div className="w-14 h-14 rounded-full bg-red-600/90 text-white flex items-center justify-center shadow-xl">
-                        <Play className="w-7 h-7 fill-white ml-0.5" />
-                      </div>
-                    </div>
+                  <div className="w-full h-full flex items-center justify-center text-white text-xs">
+                    Unable to load video stream
                   </div>
-                )}
-              </div>
-
-              <div className="p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold text-red-700 bg-red-50 border border-red-200 px-2.5 py-0.5 rounded-full">
-                    Video {(mobileSlideIndex % allVideos.length) + 1} of {allVideos.length}
-                  </span>
-                  <a
-                    href={currentVid.youtubeUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs font-bold text-red-600 hover:text-red-700 flex items-center gap-1"
-                  >
-                    <span>Open YouTube</span>
-                    <ExternalLink className="w-3.5 h-3.5" />
-                  </a>
-                </div>
-
-                <h3 className="text-sm font-black uppercase text-slate-900">
-                  {currentVid.title}
-                </h3>
-
-                <div className="pt-2 flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setActiveVideoModal(currentVid)}
-                    className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs transition-colors cursor-pointer"
-                  >
-                    <Play className="w-4 h-4 fill-white" />
-                    <span>Watch Fullscreen</span>
-                  </button>
-                  {isInlinePlaying && (
-                    <button
-                      type="button"
-                      onClick={() => setPlayingInlineId(null)}
-                      className="px-3 py-2.5 bg-gray-100 hover:bg-gray-200 text-slate-800 rounded-xl text-xs font-bold cursor-pointer"
-                    >
-                      Stop
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* Carousel Arrows */}
-              <div className="px-4 pb-4 flex items-center justify-between gap-3 pt-2 border-t border-gray-100">
-                <button
-                  type="button"
-                  onClick={handlePrevMobile}
-                  className="flex-1 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-slate-800 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                  <span>Previous</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleNextMobile}
-                  className="flex-1 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-xs"
-                >
-                  <span>Next Video</span>
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          );
-        })()}
-
-        {/* Carousel Pagination Dots */}
-        <div className="flex items-center justify-center gap-1.5 mt-4">
-          {allVideos.map((_, dotIdx) => (
-            <button
-              key={`mob-vid-dot-${dotIdx}`}
-              type="button"
-              onClick={() => setMobileSlideIndex(dotIdx)}
-              className={`transition-all rounded-full cursor-pointer ${
-                dotIdx === (mobileSlideIndex % allVideos.length)
-                  ? 'w-6 h-2 bg-red-600'
-                  : 'w-2 h-2 bg-gray-300'
-              }`}
-              aria-label={`Go to video ${dotIdx + 1}`}
-            />
-          ))}
-        </div>
-      </div>
-
-      {/* VIEW ALL BUTTON - Only shown when total videos > 4 */}
-      {allVideos.length > 4 && (
-        <div className="text-center pt-8">
-          <button
-            type="button"
-            onClick={() => setIsExpanded((prev) => !prev)}
-            className="px-6 py-3 bg-white hover:bg-red-50 text-red-950 border border-red-200 font-black uppercase tracking-wider text-xs rounded-xl shadow-xs inline-flex items-center gap-2.5 transition-all hover:scale-102 cursor-pointer active:scale-95"
-          >
-            <Play className="w-4 h-4 text-red-600 fill-red-600" />
-            <span>{isExpanded ? 'Show Less Videos' : `View All Videos & Tutorials (${allVideos.length})`}</span>
-            {isExpanded ? <ChevronUp className="w-4 h-4 text-red-600" /> : <ArrowRight className="w-4 h-4 text-red-600" />}
-          </button>
-        </div>
-      )}
-
-      {/* FULLSCREEN THEATER MODAL */}
-      {activeVideoModal && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex flex-col items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200"
-          onClick={() => setActiveVideoModal(null)}
-        >
-          <div
-            className="w-full max-w-4xl bg-slate-900 rounded-2xl overflow-hidden border border-slate-700 shadow-2xl flex flex-col"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Modal Header */}
-            <div className="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-950 text-white">
-              <div className="flex items-center gap-2.5 truncate">
-                <span className="p-1.5 bg-red-600 rounded-lg shrink-0">
-                  <Play className="w-4 h-4 fill-white" />
-                </span>
-                <h3 className="text-sm sm:text-base font-bold truncate">
-                  {activeVideoModal.title}
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setActiveVideoModal(null)}
-                className="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-gray-300 hover:text-white flex items-center justify-center transition-colors cursor-pointer shrink-0 ml-2"
-                title="Close (Esc)"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Video Iframe Viewport */}
-            <div className="aspect-16/9 w-full bg-black">
-              <iframe
-                src={getYouTubeEmbedUrl(activeVideoModal.youtubeUrl, true) || activeVideoModal.youtubeUrl}
-                title={activeVideoModal.title}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                className="w-full h-full border-0"
-              />
-            </div>
-
-            {/* Modal Footer */}
-            <div className="p-3.5 sm:p-4 bg-slate-950 border-t border-slate-800 flex items-center justify-between gap-3 text-white">
-              <span className="text-xs text-gray-400 truncate">
-                {shop.businessName} • Verified Video
-              </span>
-              <div className="flex items-center gap-2">
-                <a
-                  href={activeVideoModal.youtubeUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg flex items-center gap-1.5 transition-colors shadow-xs"
-                >
-                  <span>Watch on YouTube</span>
-                  <ExternalLink className="w-3.5 h-3.5" />
-                </a>
-              </div>
+                );
+              })()}
             </div>
           </div>
         </div>
@@ -2049,8 +2332,30 @@ export const ContactSocialMediaBlock: React.FC<{
         </span>
       </div>
 
-      {/* Social Buttons Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* 1. MOBILE VIEW: Social Media icons in a single horizontal line */}
+      <div className="block sm:hidden">
+        <div className="flex items-center justify-center gap-3 overflow-x-auto py-2 px-1 flex-nowrap scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+          {socialChannels.map((chan) => {
+            const IconComp = chan.icon;
+            return (
+              <a
+                key={`mob-contact-social-${chan.id}`}
+                href={chan.url}
+                target="_blank"
+                rel="noreferrer"
+                aria-label={chan.name}
+                title={chan.name}
+                className={`flex-none w-12 h-12 rounded-2xl ${chan.color} flex items-center justify-center shadow-md active:scale-90 hover:scale-105 transition-transform cursor-pointer`}
+              >
+                <IconComp className="w-6 h-6 text-white" />
+              </a>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 2. DESKTOP VIEW: Social Buttons Grid */}
+      <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {socialChannels.map((chan) => {
           const IconComp = chan.icon;
           return (
@@ -2197,7 +2502,30 @@ export const SocialMediaSectionRenderer: React.FC<{
           </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+        {/* 1. MOBILE VIEW: Social Media icons in a single horizontal line */}
+        <div className="block sm:hidden">
+          <div className="flex items-center justify-center gap-3.5 overflow-x-auto py-2.5 px-1 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden flex-nowrap">
+            {channels.map((chan) => {
+              const IconComp = chan.icon;
+              return (
+                <a
+                  key={`mob-single-line-social-${chan.id}`}
+                  href={chan.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label={chan.name}
+                  title={chan.name}
+                  className={`flex-none w-12 h-12 rounded-2xl ${chan.color} flex items-center justify-center shadow-md active:scale-90 hover:scale-105 transition-transform cursor-pointer`}
+                >
+                  <IconComp className="w-6 h-6 text-white" />
+                </a>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* 2. DESKTOP VIEW: Multi-column Card Grid */}
+        <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
           {channels.map((chan) => {
             const IconComp = chan.icon;
             return (
@@ -2240,7 +2568,12 @@ export const SocialMediaSectionRenderer: React.FC<{
 export const TeamSectionRenderer: React.FC<{
   config: TeamSectionConfig;
 }> = ({ config }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+
   if (!config.enabled || !config.members || config.members.length === 0) return null;
+
+  const totalMembers = config.members.length;
+  const displayedDesktopMembers = isExpanded ? config.members : config.members.slice(0, 3);
 
   return (
     <section id="team" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16">
@@ -2256,8 +2589,9 @@ export const TeamSectionRenderer: React.FC<{
         )}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {config.members.map((member, idx) => (
+      {/* 1. DESKTOP VIEW: 3-COLUMN GRID */}
+      <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {displayedDesktopMembers.map((member, idx) => (
           <div
             key={member.id || idx}
             className="bg-white rounded-2xl border border-gray-200 p-6 shadow-xs hover:shadow-md transition-all text-center space-y-3 group"
@@ -2287,6 +2621,93 @@ export const TeamSectionRenderer: React.FC<{
           </div>
         ))}
       </div>
+
+      {/* 2. MOBILE VIEW: 2 ITEMS VISIBLE + ~10% PEEK SLIDER (OR EXPANDED 2-COL GRID) */}
+      <div className="block md:hidden">
+        {!isExpanded ? (
+          /* Mobile Slider: 2 items properly visible + ~10% peek of next item */
+          <div className="flex gap-2.5 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-2 pt-1 -mx-4 px-4 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+            {config.members.map((member, idx) => (
+              <div
+                key={`mob-slider-team-${member.id || idx}`}
+                className="flex-none snap-start bg-white rounded-xl border border-gray-200 p-3 shadow-xs text-center space-y-2 flex flex-col items-center justify-between group"
+                style={{ width: 'calc((100% - 20px) / 2.12)', minWidth: 'calc((100% - 20px) / 2.12)' }}
+              >
+                <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-orange-500 p-0.5 group-hover:scale-105 transition-transform shrink-0">
+                  <img
+                    src={member.imageUrl}
+                    alt={member.name}
+                    className="w-full h-full object-cover rounded-full"
+                  />
+                </div>
+
+                <div className="w-full">
+                  <h3 className="text-xs font-black uppercase tracking-tight text-slate-900 font-['Outfit',sans-serif] truncate">
+                    {member.name}
+                  </h3>
+                  <p className="text-[10px] font-bold text-orange-600 uppercase tracking-wide truncate mt-0.5">
+                    {member.position}
+                  </p>
+                </div>
+
+                {member.bio && (
+                  <p className="text-[10px] text-gray-500 line-clamp-2 leading-tight">
+                    {member.bio}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          /* Mobile Expanded View: 2-column grid showing all members */
+          <div className="grid grid-cols-2 gap-2.5 animate-in fade-in duration-300">
+            {config.members.map((member, idx) => (
+              <div
+                key={`mob-grid-team-${member.id || idx}`}
+                className="bg-white rounded-xl border border-gray-200 p-3 shadow-xs text-center space-y-2 flex flex-col items-center justify-between group"
+              >
+                <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-orange-500 p-0.5 group-hover:scale-105 transition-transform shrink-0">
+                  <img
+                    src={member.imageUrl}
+                    alt={member.name}
+                    className="w-full h-full object-cover rounded-full"
+                  />
+                </div>
+
+                <div className="w-full">
+                  <h3 className="text-xs font-black uppercase tracking-tight text-slate-900 font-['Outfit',sans-serif] truncate">
+                    {member.name}
+                  </h3>
+                  <p className="text-[10px] font-bold text-orange-600 uppercase tracking-wide truncate mt-0.5">
+                    {member.position}
+                  </p>
+                </div>
+
+                {member.bio && (
+                  <p className="text-[10px] text-gray-500 line-clamp-2 leading-tight">
+                    {member.bio}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* VIEW ALL BUTTON - Only shown when total members >= 4 or if currently expanded */}
+      {(totalMembers >= 4 || isExpanded) && (
+        <div className="text-center pt-6 sm:pt-8">
+          <button
+            type="button"
+            onClick={() => setIsExpanded((prev) => !prev)}
+            className="px-6 py-2.5 sm:py-3 bg-white hover:bg-fuchsia-50 text-fuchsia-950 border border-fuchsia-200 font-black uppercase tracking-wider text-xs rounded-xl shadow-xs inline-flex items-center gap-2 transition-all hover:scale-102 cursor-pointer active:scale-95"
+          >
+            <Users className="w-4 h-4 text-fuchsia-600" />
+            <span>{isExpanded ? 'Show Less Team Members' : `View All Team (${totalMembers})`}</span>
+            {isExpanded ? <ChevronUp className="w-4 h-4 text-fuchsia-600" /> : <ChevronDown className="w-4 h-4 text-fuchsia-600" />}
+          </button>
+        </div>
+      )}
     </section>
   );
 };
@@ -2443,8 +2864,12 @@ export const BlogSectionRenderer: React.FC<{
   shop?: Shop;
 }> = ({ config, shop }) => {
   const [selectedArticle, setSelectedArticle] = useState<BlogPostItem | null>(null);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   if (!config.enabled || !config.posts || config.posts.length === 0) return null;
+
+  const totalPosts = config.posts.length;
+  const displayedDesktopPosts = isExpanded ? config.posts : config.posts.slice(0, 3);
 
   return (
     <section id="blog" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16">
@@ -2460,8 +2885,9 @@ export const BlogSectionRenderer: React.FC<{
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {config.posts.map((post, idx) => (
+      {/* 1. DESKTOP VIEW: 3-COLUMN RESPONSIVE GRID */}
+      <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {displayedDesktopPosts.map((post, idx) => (
           <article
             key={post.id || idx}
             className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col justify-between group"
@@ -2512,6 +2938,121 @@ export const BlogSectionRenderer: React.FC<{
           </article>
         ))}
       </div>
+
+      {/* 2. MOBILE VIEW: 2 ITEMS VISIBLE + ~10% PEEK SLIDER (OR EXPANDED 2-COL GRID) */}
+      <div className="block md:hidden">
+        {!isExpanded ? (
+          /* Mobile Slider: 2 items properly visible + ~10% peek of next item */
+          <div className="flex gap-2.5 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-2 pt-1 -mx-4 px-4 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+            {config.posts.map((post, idx) => (
+              <article
+                key={`mob-slider-post-${post.id || idx}`}
+                onClick={() => setSelectedArticle(post)}
+                className="flex-none snap-start bg-white rounded-xl border border-gray-200 overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col justify-between group cursor-pointer"
+                style={{ width: 'calc((100% - 20px) / 2.12)', minWidth: 'calc((100% - 20px) / 2.12)' }}
+              >
+                <div>
+                  {post.imageUrl ? (
+                    <div className="aspect-16/10 bg-gray-100 overflow-hidden relative">
+                      <img
+                        src={post.imageUrl}
+                        alt={post.title}
+                        className="w-full h-full object-cover group-hover:scale-104 transition-transform"
+                      />
+                      {post.category && (
+                        <span className="absolute top-1.5 left-1.5 bg-slate-900/80 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-xs uppercase tracking-wider">
+                          {post.category}
+                        </span>
+                      )}
+                    </div>
+                  ) : null}
+
+                  <div className="p-2.5 space-y-1">
+                    <div className="text-[9px] text-gray-400 truncate">
+                      {post.date}
+                    </div>
+                    <h3 className="text-xs font-black uppercase text-slate-900 line-clamp-2">
+                      {post.title}
+                    </h3>
+                    <p className="text-[10px] text-gray-500 line-clamp-2 leading-tight">
+                      {post.snippet}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="p-2.5 pt-0">
+                  <span className="text-[10px] font-bold text-orange-600 flex items-center gap-0.5">
+                    <span>Read Guide</span>
+                    <ArrowRight className="w-2.5 h-2.5" />
+                  </span>
+                </div>
+              </article>
+            ))}
+          </div>
+        ) : (
+          /* Mobile Expanded View: 2-column grid showing all blog posts */
+          <div className="grid grid-cols-2 gap-2.5 animate-in fade-in duration-300">
+            {config.posts.map((post, idx) => (
+              <article
+                key={`mob-grid-post-${post.id || idx}`}
+                onClick={() => setSelectedArticle(post)}
+                className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col justify-between group cursor-pointer"
+              >
+                <div>
+                  {post.imageUrl ? (
+                    <div className="aspect-16/10 bg-gray-100 overflow-hidden relative">
+                      <img
+                        src={post.imageUrl}
+                        alt={post.title}
+                        className="w-full h-full object-cover group-hover:scale-104 transition-transform"
+                      />
+                      {post.category && (
+                        <span className="absolute top-1.5 left-1.5 bg-slate-900/80 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-xs uppercase tracking-wider">
+                          {post.category}
+                        </span>
+                      )}
+                    </div>
+                  ) : null}
+
+                  <div className="p-2.5 space-y-1">
+                    <div className="text-[9px] text-gray-400 truncate">
+                      {post.date}
+                    </div>
+                    <h3 className="text-xs font-black uppercase text-slate-900 line-clamp-2">
+                      {post.title}
+                    </h3>
+                    <p className="text-[10px] text-gray-500 line-clamp-2 leading-tight">
+                      {post.snippet}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="p-2.5 pt-0">
+                  <span className="text-[10px] font-bold text-orange-600 flex items-center gap-0.5">
+                    <span>Read Guide</span>
+                    <ArrowRight className="w-2.5 h-2.5" />
+                  </span>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* VIEW ALL BUTTON - Only shown when total posts >= 4 or if currently expanded */}
+      {(totalPosts >= 4 || isExpanded) && (
+        <div className="text-center pt-6 sm:pt-8">
+          <button
+            type="button"
+            onClick={() => setIsExpanded((prev) => !prev)}
+            className="px-6 py-2.5 sm:py-3 bg-white hover:bg-amber-50 text-amber-950 border border-amber-200 font-black uppercase tracking-wider text-xs rounded-xl shadow-xs inline-flex items-center gap-2 transition-all hover:scale-102 cursor-pointer active:scale-95"
+          >
+            <Award className="w-4 h-4 text-amber-600" />
+            <span>{isExpanded ? 'Show Less Articles' : `View All Articles (${totalPosts})`}</span>
+            {isExpanded ? <ChevronUp className="w-4 h-4 text-amber-600" /> : <ChevronDown className="w-4 h-4 text-amber-600" />}
+          </button>
+        </div>
+      )}
 
       {/* Reader Modal for Full Article */}
       {selectedArticle && (
