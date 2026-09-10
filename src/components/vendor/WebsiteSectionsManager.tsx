@@ -330,10 +330,20 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
   // Sync initialExpandedSection when passed from sidebar
   React.useEffect(() => {
     if (initialExpandedSection) {
-      const targetKey = initialExpandedSection as SectionKey;
+      let targetKey: SectionKey = initialExpandedSection as SectionKey;
+      if (initialExpandedSection === 'hero_banner' || initialExpandedSection === 'hero') targetKey = 'hero';
+      else if (initialExpandedSection === 'why_choose_us' || initialExpandedSection === 'features') targetKey = 'features';
+      else if (initialExpandedSection === 'social_media' || initialExpandedSection === 'socialMedia') targetKey = 'socialMedia';
+      else if (initialExpandedSection === 'video' || initialExpandedSection === 'videos') targetKey = 'videos';
+      else if (initialExpandedSection === 'offer' || initialExpandedSection === 'offers') targetKey = 'offers';
+      else if (initialExpandedSection === 'gallery' || initialExpandedSection === 'photo_gallery') targetKey = 'gallery';
+      else if (initialExpandedSection === 'services' || initialExpandedSection === 'service') targetKey = 'services';
+      else if (initialExpandedSection === 'products' || initialExpandedSection === 'product') targetKey = 'products';
+      else if (initialExpandedSection === 'courses' || initialExpandedSection === 'course') targetKey = 'courses';
+
       setExpandedSection(targetKey);
       setTimeout(() => {
-        const el = document.getElementById(`section-card-${initialExpandedSection}`);
+        const el = document.getElementById(`section-card-${targetKey}`) || document.getElementById(`section-card-${initialExpandedSection}`);
         if (el) {
           el.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }

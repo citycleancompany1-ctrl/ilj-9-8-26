@@ -83,6 +83,8 @@ import {
   PaymentQrAddonView,
   ShopStandeeView,
   WebsiteSwitchView,
+  WebsiteVisibilityView,
+  AccountSettingsView,
   MyPlanView,
   BillingInvoiceView,
   BillingRenewView,
@@ -283,9 +285,24 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
   const getNavMeta = (nav: string) => {
     switch (nav) {
       case 'dashboard':
-        return { title: 'Store Overview Dashboard', category: 'PLATFORM', desc: 'Main control center, store performance & quick actions' };
+        return { title: 'Store Overview Dashboard', category: 'DASHBOARD', desc: 'Main control center, store performance & quick actions' };
       case 'profile':
-        return { title: 'My Store Profile & Details', category: 'BUSINESS', desc: 'Business name, owner, contact, address, logo & UPI ID' };
+      case 'profile_business':
+        return { title: 'Business Profile & Shop Details', category: 'MY PROFILE', desc: 'Business name, owner, contact, address, logo & timings' };
+      case 'profile_validity':
+        return { title: '1-Year Store Validity & Annual Subscription', category: 'MY PROFILE', desc: 'Subscription validity, renewal status, benefits & tax invoices' };
+      case 'profile_visibility':
+        return { title: 'Website Visibility & Storefront Controls', category: 'MY PROFILE', desc: 'Store live/pause status, catalogue vs e-commerce mode & price display' };
+      case 'profile_inquiries':
+        return { title: 'Form Submission Entries & Customer Leads', category: 'MY PROFILE', desc: 'Manage contact form submissions, customer inquiries & lead followups' };
+      case 'section_hero_banner':
+        return { title: 'Hero Banner Slider (Desktop & Mobile)', category: 'ALL SECTIONS', desc: 'Upload up to 4 desktop and 3 mobile responsive banners' };
+      case 'section_why_choose_us':
+        return { title: 'Why Choose Us / Features', category: 'ALL SECTIONS', desc: 'Highlight trust points, fast delivery, quality badges' };
+      case 'section_social_media':
+        return { title: 'Social Media Links & Handles', category: 'ALL SECTIONS', desc: 'Instagram, YouTube, Facebook, LinkedIn store profiles' };
+      case 'settings_account':
+        return { title: 'Account Settings & Credentials', category: 'SETTINGS', desc: 'Manage login credentials, password, and registered store mobile' };
       case 'products':
       case 'section_products':
         return { title: 'Products Catalogue & Inventory', category: 'CATALOGUE', desc: 'Physical store items, pricing, inventory & stock status' };
@@ -3323,6 +3340,9 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
         'addon_custom_domain',
         'addon_shop_standee',
         'addon_website_switch',
+        'profile_visibility',
+        'profile_validity',
+        'settings_account',
         'billing_plan',
         'billing_invoice',
         'billing_renew',
@@ -3425,7 +3445,7 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
           )}
           
           {/* SECTION 1: MY WEBSITE DETAILS (Basic, Contact, Location) */}
-          {(activeNav === 'profile' || activeNav === 'settings') && (
+          {(activeNav === 'profile' || activeNav === 'profile_business' || activeNav === 'settings') && (
           <div id="section-basic-details" className="bg-white rounded-2xl border border-gray-200 shadow-xs overflow-hidden">
             <button
               onClick={() => toggleSection('BASIC_DETAILS')}
@@ -3440,10 +3460,10 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
                 <p className="text-[11px] text-gray-500">Business name, owner, phone, WhatsApp, address, category</p>
               </div>
             </div>
-            {(openSection === 'BASIC_DETAILS' || activeNav === 'profile') ? <ChevronUp className="w-5 h-5 text-orange-600" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
+            {(openSection === 'BASIC_DETAILS' || activeNav === 'profile' || activeNav === 'profile_business') ? <ChevronUp className="w-5 h-5 text-orange-600" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
           </button>
 
-          {(openSection === 'BASIC_DETAILS' || activeNav === 'profile') && (
+          {(openSection === 'BASIC_DETAILS' || activeNav === 'profile' || activeNav === 'profile_business') && (
             <div className="p-5 space-y-4 border-t border-gray-100 animate-in fade-in duration-200">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
@@ -4759,7 +4779,7 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
         )}
 
         {/* SECTION 6: FORM INQUIRIES & LEADS (With Read / Unread filters) */}
-        {(activeNav === 'orders' || activeNav === 'settings') && (
+        {(activeNav === 'orders' || activeNav === 'profile_inquiries' || activeNav === 'settings') && (
         <div id="section-inquiries" className="bg-white rounded-2xl border border-gray-200 shadow-xs overflow-hidden">
           <button
             onClick={() => toggleSection('INQUIRIES')}
@@ -4778,10 +4798,10 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
                 </p>
               </div>
             </div>
-            {(openSection === 'INQUIRIES' || activeNav === 'orders') ? <ChevronUp className="w-5 h-5 text-orange-600" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
+            {(openSection === 'INQUIRIES' || activeNav === 'orders' || activeNav === 'profile_inquiries') ? <ChevronUp className="w-5 h-5 text-orange-600" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
           </button>
 
-          {(openSection === 'INQUIRIES' || activeNav === 'orders') && (
+          {(openSection === 'INQUIRIES' || activeNav === 'orders' || activeNav === 'profile_inquiries') && (
             <div className="p-5 space-y-4 border-t border-gray-100 animate-in fade-in duration-200">
               
               {/* Filter Tabs */}
@@ -5636,8 +5656,8 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
         />
       )}
 
-      {/* 9. MY PLAN */}
-      {(activeNav === 'billing_plan' || activeNav === 'my-plan') && (
+      {/* 9. MY PLAN & 1-YEAR VALIDITY */}
+      {(activeNav === 'billing_plan' || activeNav === 'my-plan' || activeNav === 'profile_validity') && (
         <MyPlanView
           shop={currentShop}
           onUpdateShop={(updated) => {
@@ -5730,6 +5750,34 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
       {/* 15. SETTINGS STORAGE (Vendor Storage: 200 MB only) */}
       {activeNav === 'settings_storage' && (
         <StorageManagerView
+          shop={currentShop}
+          onUpdateShop={(updated) => {
+            setCurrentShop(updated);
+            setHasUnsavedChanges(true);
+            onUpdateShop(updated);
+          }}
+          onMarkDirty={() => setHasUnsavedChanges(true)}
+          showToast={showToast}
+        />
+      )}
+
+      {/* 16. WEBSITE VISIBILITY VIEW */}
+      {activeNav === 'profile_visibility' && (
+        <WebsiteVisibilityView
+          shop={currentShop}
+          onUpdateShop={(updated) => {
+            setCurrentShop(updated);
+            handleSaveAll(updated);
+          }}
+          onMarkDirty={() => setHasUnsavedChanges(true)}
+          showToast={showToast}
+          onNavigateToShop={() => onNavigateToShop(currentShop.shopId)}
+        />
+      )}
+
+      {/* 17. ACCOUNT SETTINGS VIEW */}
+      {activeNav === 'settings_account' && (
+        <AccountSettingsView
           shop={currentShop}
           onUpdateShop={(updated) => {
             setCurrentShop(updated);

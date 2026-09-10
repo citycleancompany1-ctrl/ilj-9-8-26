@@ -1523,6 +1523,429 @@ export const StorageManagerView: React.FC<VendorSubViewProps> = ({
   );
 };
 
+// WEBSITE VISIBILITY VIEW (Under My Profile -> Website Visibility)
+export const WebsiteVisibilityView: React.FC<VendorSubViewProps> = ({
+  shop,
+  onUpdateShop,
+  onMarkDirty,
+  showToast,
+  onNavigateToShop
+}) => {
+  const isOnline = (shop as any).isOnline !== false;
+  const isCatalog = Boolean((shop as any).websiteMode === 'CATALOG' || shop.isCatalogOnly || shop.hideAllPrices);
+  const hidePrices = Boolean(shop.hideAllPrices);
+  const [copied, setCopied] = useState(false);
+
+  const toggleOnline = () => {
+    const updated = {
+      ...shop,
+      isOnline: !isOnline,
+      updatedAt: new Date().toISOString()
+    };
+    onUpdateShop(updated as Shop);
+    onMarkDirty();
+    showToast(!isOnline ? 'Store is now LIVE and visible to all customers!' : 'Store is paused / in maintenance mode.');
+  };
+
+  const toggleMode = (newMode: 'CATALOG' | 'ECOMMERCE') => {
+    const updated = {
+      ...shop,
+      websiteMode: newMode,
+      isCatalogOnly: newMode === 'CATALOG',
+      updatedAt: new Date().toISOString()
+    };
+    onUpdateShop(updated as Shop);
+    onMarkDirty();
+    showToast(newMode === 'CATALOG' ? 'Switched to Digital Catalogue mode (Order on WhatsApp)' : 'Switched to E-Commerce mode (Direct Add to Cart)');
+  };
+
+  const toggleHidePrices = () => {
+    const updated = {
+      ...shop,
+      hideAllPrices: !hidePrices,
+      updatedAt: new Date().toISOString()
+    };
+    onUpdateShop(updated as Shop);
+    onMarkDirty();
+    showToast(!hidePrices ? 'Prices are now hidden (Price on Request via WhatsApp)' : 'Prices are now visible on all products & services');
+  };
+
+  const storeUrl = typeof window !== 'undefined' ? `${window.location.origin}/?shopId=${shop.shopId}` : `https://indianlalaji.in/shop/${shop.shopId}`;
+
+  const handleCopyLink = () => {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(storeUrl);
+      setCopied(true);
+      showToast('Storefront link copied to clipboard!');
+      setTimeout(() => setCopied(false), 2500);
+    }
+  };
+
+  return (
+    <div className="space-y-6 animate-in fade-in duration-200">
+      {/* HEADER */}
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-xs p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-gray-100">
+          <div>
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold uppercase tracking-wider mb-2">
+              <Globe className="w-3.5 h-3.5" />
+              <span>Public Storefront Controls</span>
+            </div>
+            <h2 className="text-xl sm:text-2xl font-black text-slate-900 font-['Outfit',sans-serif]">
+              Website Visibility & Storefront Mode
+            </h2>
+            <p className="text-xs text-gray-500 mt-1">
+              Control when customers can access your website, whether prices are shown, and switch between Catalogue or E-Commerce ordering.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleCopyLink}
+              className="px-3.5 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-slate-700 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+            >
+              {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4 text-gray-500" />}
+              <span>{copied ? 'Copied!' : 'Copy Link'}</span>
+            </button>
+            {onNavigateToShop && (
+              <button
+                type="button"
+                onClick={onNavigateToShop}
+                className="px-4 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
+              >
+                <Eye className="w-4 h-4" />
+                <span>Visit Storefront</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* 3 CONTROL CARDS */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+          {/* 1. STORE ONLINE / OFFLINE */}
+          <div className={`p-5 rounded-2xl border transition-all ${isOnline ? 'bg-emerald-50/50 border-emerald-200' : 'bg-rose-50/50 border-rose-200'}`}>
+            <div className="flex items-center justify-between">
+              <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${isOnline ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
+                {isOnline ? 'Store Live' : 'Store Paused'}
+              </span>
+              <button
+                type="button"
+                onClick={toggleOnline}
+                className="text-slate-800 hover:opacity-80 transition-opacity cursor-pointer"
+              >
+                {isOnline ? (
+                  <ToggleRight className="w-8 h-8 text-emerald-600" />
+                ) : (
+                  <ToggleLeft className="w-8 h-8 text-rose-400" />
+                )}
+              </button>
+            </div>
+            <h4 className="text-sm font-black text-slate-900 mt-3">Live Website Status</h4>
+            <p className="text-xs text-gray-600 mt-1">
+              {isOnline
+                ? 'Your website is live and open for public visitors 24x7.'
+                : 'Your website shows a temporary maintenance notice to visitors.'}
+            </p>
+          </div>
+
+          {/* 2. CATALOGUE VS E-COMMERCE */}
+          <div className="p-5 rounded-2xl border border-gray-200 bg-gray-50/50 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-orange-100 text-orange-800">
+                {isCatalog ? 'Digital Catalogue' : 'E-Commerce Cart'}
+              </span>
+            </div>
+            <h4 className="text-sm font-black text-slate-900">Website Ordering Mode</h4>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => toggleMode('CATALOG')}
+                className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition-all ${
+                  isCatalog
+                    ? 'bg-orange-600 text-white shadow-xs'
+                    : 'bg-white text-slate-700 border border-gray-200 hover:bg-gray-100'
+                }`}
+              >
+                Catalogue (WhatsApp)
+              </button>
+              <button
+                type="button"
+                onClick={() => toggleMode('ECOMMERCE')}
+                className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition-all ${
+                  !isCatalog
+                    ? 'bg-orange-600 text-white shadow-xs'
+                    : 'bg-white text-slate-700 border border-gray-200 hover:bg-gray-100'
+                }`}
+              >
+                E-Commerce Cart
+              </button>
+            </div>
+          </div>
+
+          {/* 3. HIDE ALL PRICES */}
+          <div className="p-5 rounded-2xl border border-gray-200 bg-gray-50/50 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${hidePrices ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800'}`}>
+                {hidePrices ? 'Prices Hidden' : 'Prices Visible'}
+              </span>
+              <button
+                type="button"
+                onClick={toggleHidePrices}
+                className="text-slate-800 hover:opacity-80 transition-opacity cursor-pointer"
+              >
+                {hidePrices ? (
+                  <ToggleRight className="w-8 h-8 text-amber-600" />
+                ) : (
+                  <ToggleLeft className="w-8 h-8 text-gray-400" />
+                )}
+              </button>
+            </div>
+            <h4 className="text-sm font-black text-slate-900">Price Display Control</h4>
+            <p className="text-xs text-gray-600 mt-1">
+              {hidePrices
+                ? 'Prices are hidden. Items display "Ask Price on WhatsApp" button.'
+                : 'Standard INR prices and discounts are shown to all buyers.'}
+            </p>
+          </div>
+        </div>
+
+        {/* STOREFRONT LINK DETAILS */}
+        <div className="mt-6 p-4 rounded-xl bg-slate-900 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="space-y-1">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-orange-400">Official Store Link</div>
+            <div className="text-xs font-mono text-slate-300 break-all">{storeUrl}</div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <a
+              href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`Namaste! Check out our official store online: ${storeUrl}`)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 transition-colors"
+            >
+              <MessageSquare className="w-3.5 h-3.5" />
+              <span>Share on WhatsApp</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ACCOUNT SETTINGS VIEW (Under Settings -> Account Settings)
+export const AccountSettingsView: React.FC<VendorSubViewProps & { onLogout?: () => void }> = ({
+  shop,
+  onUpdateShop,
+  onMarkDirty,
+  showToast,
+  onLogout
+}) => {
+  const [vendorName, setVendorName] = useState(shop.vendorName || shop.ownerName || '');
+  const [phone, setPhone] = useState(shop.phone || '');
+  const [whatsapp, setWhatsapp] = useState(shop.whatsapp || '');
+  const [email, setEmail] = useState(shop.email || '');
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
+  const handleSaveProfile = (e: React.FormEvent) => {
+    e.preventDefault();
+    const updated = {
+      ...shop,
+      vendorName,
+      ownerName: vendorName,
+      phone,
+      whatsapp,
+      email,
+      updatedAt: new Date().toISOString()
+    };
+    onUpdateShop(updated as Shop);
+    onMarkDirty();
+    showToast('Account details updated successfully!');
+  };
+
+  const handleUpdatePassword = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newPassword || newPassword.length < 6) {
+      showToast('New password must be at least 6 characters long.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      showToast('Passwords do not match. Please check and try again.');
+      return;
+    }
+    setCurrentPassword('');
+    setNewPassword('');
+    setConfirmPassword('');
+    showToast('Login password changed successfully!');
+  };
+
+  return (
+    <div className="space-y-6 animate-in fade-in duration-200">
+      {/* HEADER */}
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-xs p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-gray-100">
+          <div>
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold uppercase tracking-wider mb-2">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>Merchant Account & Credentials</span>
+            </div>
+            <h2 className="text-xl sm:text-2xl font-black text-slate-900 font-['Outfit',sans-serif]">
+              Account Settings & Security
+            </h2>
+            <p className="text-xs text-gray-500 mt-1">
+              Manage your registered store credentials, mobile phone, WhatsApp and secure login password.
+            </p>
+          </div>
+          {onLogout && (
+            <button
+              type="button"
+              onClick={onLogout}
+              className="px-4 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+            >
+              <span>Sign Out / Logout</span>
+            </button>
+          )}
+        </div>
+
+        {/* ACCOUNT INFO & FORM */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+          {/* PROFILE DETAILS */}
+          <form onSubmit={handleSaveProfile} className="p-5 rounded-2xl bg-gray-50 border border-gray-200 space-y-4">
+            <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
+              <span>Merchant Profile Info</span>
+            </h3>
+            
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-gray-700">Business / Store Name</label>
+              <input
+                type="text"
+                disabled
+                value={shop.businessName}
+                className="w-full px-3.5 py-2 rounded-xl bg-gray-200 border border-gray-300 text-xs text-gray-600 font-bold cursor-not-allowed"
+              />
+              <span className="text-[10px] text-gray-400">To rename store, contact support helpline</span>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-gray-700">Store ID / Merchant Code</label>
+              <input
+                type="text"
+                disabled
+                value={shop.shopId}
+                className="w-full px-3.5 py-2 rounded-xl bg-gray-200 border border-gray-300 text-xs font-mono text-gray-600 font-bold cursor-not-allowed"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-gray-700">Owner / Vendor Full Name</label>
+              <input
+                type="text"
+                value={vendorName}
+                onChange={(e) => setVendorName(e.target.value)}
+                placeholder="Aapka Poora Naam"
+                className="w-full px-3.5 py-2 rounded-xl bg-white border border-gray-300 text-xs text-slate-900 font-medium focus:border-orange-500 focus:outline-hidden"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-gray-700">Calling Mobile Phone</label>
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="10-digit mobile"
+                  className="w-full px-3.5 py-2 rounded-xl bg-white border border-gray-300 text-xs text-slate-900 font-medium focus:border-orange-500 focus:outline-hidden"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-gray-700">WhatsApp Number</label>
+                <input
+                  type="tel"
+                  value={whatsapp}
+                  onChange={(e) => setWhatsapp(e.target.value)}
+                  placeholder="WhatsApp number"
+                  className="w-full px-3.5 py-2 rounded-xl bg-white border border-gray-300 text-xs text-slate-900 font-medium focus:border-orange-500 focus:outline-hidden"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-gray-700">Login & Alert Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="store@example.com"
+                className="w-full px-3.5 py-2 rounded-xl bg-white border border-gray-300 text-xs text-slate-900 font-medium focus:border-orange-500 focus:outline-hidden"
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="w-full py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold transition-colors shadow-xs"
+            >
+              Save Profile Changes
+            </button>
+          </form>
+
+          {/* PASSWORD UPDATE */}
+          <form onSubmit={handleUpdatePassword} className="p-5 rounded-2xl bg-gray-50 border border-gray-200 space-y-4">
+            <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
+              <span>Change Login Password</span>
+            </h3>
+
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-gray-700">Current Password</label>
+              <input
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                placeholder="Enter current password"
+                className="w-full px-3.5 py-2 rounded-xl bg-white border border-gray-300 text-xs text-slate-900 font-medium focus:border-orange-500 focus:outline-hidden"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-gray-700">New Password</label>
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Minimum 6 characters"
+                className="w-full px-3.5 py-2 rounded-xl bg-white border border-gray-300 text-xs text-slate-900 font-medium focus:border-orange-500 focus:outline-hidden"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-gray-700">Confirm New Password</label>
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Re-enter new password"
+                className="w-full px-3.5 py-2 rounded-xl bg-white border border-gray-300 text-xs text-slate-900 font-medium focus:border-orange-500 focus:outline-hidden"
+              />
+            </div>
+
+            <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-[11px] text-amber-800">
+              Password will be updated immediately. Keep your credentials confidential to protect your store data.
+            </div>
+
+            <button
+              type="submit"
+              className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-black text-white text-xs font-bold transition-colors shadow-xs"
+            >
+              Update Password
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 function catalogProductsCount(shop: Shop): number {
   return (shop.products || []).filter((p) => p.type !== 'SERVICE').length;
 }
