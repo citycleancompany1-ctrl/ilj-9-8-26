@@ -13,6 +13,7 @@ import { TemplatesPage } from './components/pages/TemplatesPage';
 import { HowToStartPage } from './components/pages/HowToStartPage';
 import { PricingPage } from './components/pages/PricingPage';
 import { ContactPage } from './components/pages/ContactPage';
+import { DisclaimerPage } from './components/pages/DisclaimerPage';
 import { VendorDashboard } from './components/vendor/VendorDashboard';
 import { SuperAdminDashboard } from './components/admin/SuperAdminDashboard';
 import { PublicShopPage } from './components/shop/PublicShopPage';
@@ -216,7 +217,7 @@ export default function App() {
         return;
       }
 
-      if (['home', 'stores', 'how-it-works', 'pricing', 'contact'].includes(cleanPath)) {
+      if (['home', 'stores', 'how-it-works', 'pricing', 'contact', 'disclaimer'].includes(cleanPath)) {
         setCurrentView(cleanPath);
       } else {
         // Any root domain or unmapped path always renders the home page cleanly
@@ -560,6 +561,10 @@ export default function App() {
 
         {currentView === 'contact' && (
           <ContactPage onAddLead={handleAddPlatformLead} />
+        )}
+
+        {currentView === 'disclaimer' && (
+          <DisclaimerPage onNavigateHome={() => handleNavigate('home')} />
         )}
 
         {/* Vendor Dashboard (Strictly Protected - Isolated to Own Shop Only) */}

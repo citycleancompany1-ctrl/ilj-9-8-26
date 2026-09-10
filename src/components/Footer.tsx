@@ -7,7 +7,8 @@ import {
   ShieldCheck, 
   CheckCircle2, 
   Sparkles,
-  ArrowRight
+  ArrowRight,
+  ShieldAlert
 } from 'lucide-react';
 
 interface FooterProps {
@@ -112,6 +113,16 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenAuth }) => {
                   Contact Us
                 </button>
               </li>
+              <li>
+                <button 
+                  id="footer-disclaimer-link-btn"
+                  onClick={() => onNavigate('disclaimer')} 
+                  className="text-amber-400 hover:text-amber-300 transition-colors font-semibold flex items-center gap-1.5 text-left"
+                >
+                  <ShieldAlert className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                  <span>Data & Tech Disclaimer (अस्वीकरण)</span>
+                </button>
+              </li>
             </ul>
           </div>
 
@@ -165,8 +176,16 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenAuth }) => {
 
         {/* Bottom Bar with Vendor & Admin Portal Access */}
         <div className="border-t border-slate-800 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-500">
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2.5">
             <span>&copy; {new Date().getFullYear()} IndianLalaJi.com — Digital Catalogue.</span>
+            <span>•</span>
+            <button
+              id="footer-bottom-disclaimer-btn"
+              onClick={() => onNavigate('disclaimer')}
+              className="text-amber-400/90 hover:text-amber-300 transition-colors font-medium underline decoration-slate-700 underline-offset-2"
+            >
+              Technology & Data Disclaimer (हम डाटा सेव नहीं करते - ज़िम्मेदारी अस्वीकरण)
+            </button>
           </div>
           <div className="flex items-center gap-4">
             <button
