@@ -103,7 +103,7 @@ export const VendorSidebar: React.FC<VendorSidebarProps> = ({
     () => [
       {
         id: 'dashboard',
-        label: 'DASHBOARD',
+        label: 'DASHBOARDdddd',
         icon: LayoutDashboard,
       },
       {
@@ -114,7 +114,6 @@ export const VendorSidebar: React.FC<VendorSidebarProps> = ({
         subItems: [
           { id: 'profile_business', label: 'Business Profile', icon: Store },
           { id: 'profile_validity', label: '1-Year Store Validity & Annual Subscription', icon: ShieldCheck },
-          { id: 'profile_visibility', label: 'Website Visibility', icon: Globe },
           {
             id: 'profile_inquiries',
             label: 'Form Submission Entries',

@@ -42,7 +42,8 @@ import {
   GraduationCap,
   FolderTree,
   AlertCircle,
-  Share2
+  Share2,
+  Youtube
 } from 'lucide-react';
 import {
   Shop,
@@ -72,10 +73,11 @@ import {
   BlogSectionConfig,
   FooterSectionConfig,
   FloatingButtonsConfig,
-  ShopCategory
+  ShopCategory,
+  VideoItem
 } from '../../types';
 import { getDefaultSectionsConfig } from '../../utils/sectionDefaults';
-import { fileToBase64 } from '../../utils/mediaUpload';
+import { fileToBase64, getYouTubeEmbedUrl } from '../../utils/mediaUpload';
 import { getAvailableCategoriesForShop, getCategoryImageByName } from '../../utils/categoryUtils';
 
 interface WebsiteSectionsManagerProps {
@@ -1247,6 +1249,315 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
   );
 };
 
+// Sub-component for Video Section with YouTube Link addition and live preview
+const VideoSectionEditor: React.FC<{
+  data: VideoSectionConfig;
+  update: (patch: Partial<VideoSectionConfig>) => void;
+  shop: Shop;
+  onUpdateShop?: (updated: Shop) => void;
+  showToast: (msg: string) => void;
+}> = ({ data, update, shop, onUpdateShop, showToast }) => {
+  const [videoTitleInput, setVideoTitleInput] = useState('');
+  const [videoUrlInput, setVideoUrlInput] = useState('');
+
+  const currentVideos: VideoItem[] = shop.videos || [];
+  const previewEmbedUrl = videoUrlInput.trim() ? getYouTubeEmbedUrl(videoUrlInput.trim()) : null;
+
+  const handleAddYouTubeVideo = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const url = videoUrlInput.trim();
+    if (!url) {
+      showToast('Kripya YouTube video ya Shorts ka link enter karein.');
+      return;
+    }
+    const embedUrl = getYouTubeEmbedUrl(url);
+    if (!embedUrl) {
+      showToast('Valid YouTube Link nahi mila. Kripya valid YouTube ya Shorts URL dalein.');
+      return;
+    }
+    if (currentVideos.length >= 10) {
+      showToast('Maximum 10 YouTube videos allowed hain.');
+      return;
+    }
+
+    const newVideo: VideoItem = {
+      id: `vid_${Date.now()}`,
+      title: videoTitleInput.trim() || 'Store Showcase Video',
+      youtubeUrl: url,
+    };
+
+    const updatedVideos = [...currentVideos, newVideo];
+    if (onUpdateShop) {
+      onUpdateShop({
+        ...shop,
+        videos: updatedVideos,
+      });
+    }
+    setVideoTitleInput('');
+    setVideoUrlInput('');
+    showToast('YouTube video successfully add ho gaya! ✅');
+  };
+
+  const handleDeleteYouTubeVideo = (id: string, title?: string) => {
+    if (!window.confirm(`Kya aap "${title || 'is video'}" ko delete karna chahte hain?`)) {
+      return;
+    }
+    const updatedVideos = currentVideos.filter((v) => v.id !== id);
+    if (onUpdateShop) {
+      onUpdateShop({
+        ...shop,
+        videos: updatedVideos,
+      });
+    }
+    showToast('Video delete ho gaya.');
+  };
+
+  return (
+    <div className="space-y-5">
+      {/* Section Titles */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+            Section Heading *
+          </label>
+          <input
+            type="text"
+            value={data.title}
+            onChange={(e) => update({ title: e.target.value })}
+            className="w-full px-3 py-2 text-xs rounded-sm border border-gray-300 bg-white font-medium"
+            placeholder="e.g. Store Videos & YouTube Reels"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+            Section Subtitle
+          </label>
+          <input
+            type="text"
+            value={data.subtitle}
+            onChange={(e) => update({ subtitle: e.target.value })}
+            className="w-full px-3 py-2 text-xs rounded-sm border border-gray-300 bg-white"
+            placeholder="e.g. Watch our products in action, store tour & customer experiences"
+          />
+        </div>
+      </div>
+
+      {/* DEDICATED YOUTUBE LINK ADDITION CARD */}
+      <div className="rounded-xl border-2 border-red-200 bg-gradient-to-br from-red-50/50 via-white to-orange-50/30 p-4 sm:p-5 shadow-xs">
+        <div className="flex items-center justify-between gap-3 mb-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-lg bg-red-600 text-white flex items-center justify-center shadow-md shadow-red-600/20 shrink-0">
+              <Youtube className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-tight flex items-center gap-2">
+                <span>Add YouTube Video Link</span>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-700">
+                  Live Store Embed
+                </span>
+              </h4>
+              <p className="text-[11px] text-gray-500">
+                YouTube Video ya YouTube Shorts ka link yahan paste karein. Website par responsive player ke sath play hoga.
+              </p>
+            </div>
+          </div>
+          <span className="text-[11px] font-mono font-bold text-slate-500 shrink-0 bg-white px-2.5 py-1 rounded-md border border-gray-200">
+            {currentVideos.length}/10 Added
+          </span>
+        </div>
+
+        <form onSubmit={handleAddYouTubeVideo} className="space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
+            {/* Video Title Input */}
+            <div className="sm:col-span-5">
+              <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-700 mb-1">
+                Video Title (Optional)
+              </label>
+              <input
+                type="text"
+                value={videoTitleInput}
+                onChange={(e) => setVideoTitleInput(e.target.value)}
+                placeholder="e.g. Dukaan Tour, New Stock Unboxing, Demo"
+                className="w-full px-3 py-2 text-xs rounded-lg border border-gray-300 bg-white focus:outline-hidden focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all font-medium text-slate-800"
+              />
+            </div>
+
+            {/* YouTube Link Input */}
+            <div className="sm:col-span-7">
+              <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-700 mb-1 flex items-center justify-between">
+                <span>YouTube URL / Link *</span>
+                <span className="text-[10px] text-red-600 font-semibold lowercase">
+                  (watch link, youtu.be, shorts)
+                </span>
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-red-600">
+                  <Youtube className="w-4 h-4" />
+                </div>
+                <input
+                  type="text"
+                  required
+                  value={videoUrlInput}
+                  onChange={(e) => setVideoUrlInput(e.target.value)}
+                  placeholder="https://www.youtube.com/watch?v=... or https://youtu.be/..."
+                  className="w-full pl-9 pr-3 py-2 text-xs rounded-lg border border-gray-300 bg-white focus:outline-hidden focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all font-mono text-slate-800"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Instant Live URL Preview if valid */}
+          {videoUrlInput.trim() && (
+            <div className="p-3 bg-white rounded-lg border border-gray-200">
+              {previewEmbedUrl ? (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-[11px]">
+                    <span className="text-emerald-600 font-bold flex items-center gap-1.5">
+                      <Check className="w-3.5 h-3.5 text-emerald-600" />
+                      Valid YouTube Link detected - Instant Preview:
+                    </span>
+                    <span className="text-gray-400 font-mono text-[10px] truncate max-w-[250px]">
+                      {videoUrlInput}
+                    </span>
+                  </div>
+                  <div className="relative max-w-sm aspect-video bg-black rounded-lg overflow-hidden shadow-inner">
+                    <iframe
+                      src={previewEmbedUrl}
+                      title="YouTube Video Preview"
+                      className="w-full h-full border-0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 text-amber-700 text-xs font-medium">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-amber-600" />
+                  <span>Kripya valid YouTube video link dalein (jaise: https://youtu.be/dQw4w9WgXcQ ya https://www.youtube.com/watch?v=...)</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Action row & formats guide */}
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+            <div className="flex flex-wrap items-center gap-1.5 text-[10px] text-gray-500">
+              <span className="font-semibold text-slate-600">Supported:</span>
+              <span className="px-1.5 py-0.5 rounded bg-gray-100 font-mono">youtube.com/watch?v=...</span>
+              <span className="px-1.5 py-0.5 rounded bg-gray-100 font-mono">youtu.be/...</span>
+              <span className="px-1.5 py-0.5 rounded bg-gray-100 font-mono">youtube.com/shorts/...</span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="submit"
+                disabled={currentVideos.length >= 10 || !videoUrlInput.trim()}
+                className="px-4 py-2 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 disabled:from-gray-300 disabled:to-gray-400 text-white font-bold text-xs rounded-lg shadow-sm flex items-center gap-1.5 transition-all cursor-pointer disabled:cursor-not-allowed"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Add YouTube Video</span>
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      {/* ACTIVE STORE VIDEOS LIST */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h4 className="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-2">
+            <span>Active Store Videos ({currentVideos.length})</span>
+            {currentVideos.length > 0 && (
+              <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                Visible on Storefront
+              </span>
+            )}
+          </h4>
+        </div>
+
+        {currentVideos.length === 0 ? (
+          <div className="p-8 text-center bg-gray-50/80 rounded-xl border border-dashed border-gray-300 space-y-2">
+            <div className="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto">
+              <Youtube className="w-6 h-6" />
+            </div>
+            <h5 className="text-xs font-bold text-slate-800">
+              Abhi tak koi YouTube video add nahi kiya gaya hai
+            </h5>
+            <p className="text-[11px] text-gray-500 max-w-md mx-auto">
+              Apni dukaan, products ya customer review ka YouTube link upar dalein aur <strong>"Add YouTube Video"</strong> par click karein.
+            </p>
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setVideoTitleInput('Demo Product Showcase & Store Tour');
+                  setVideoUrlInput('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 text-xs font-semibold cursor-pointer transition-colors"
+              >
+                <Play className="w-3.5 h-3.5" />
+                <span>Try with Sample YouTube Link</span>
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {currentVideos.map((vid, idx) => {
+              const embedUrl = getYouTubeEmbedUrl(vid.youtubeUrl) || vid.youtubeUrl;
+              return (
+                <div
+                  key={vid.id || idx}
+                  className="bg-white rounded-xl border border-gray-200 shadow-xs overflow-hidden flex flex-col justify-between group hover:border-red-300 transition-all"
+                >
+                  {/* Video Player */}
+                  <div className="relative aspect-video bg-black">
+                    <iframe
+                      src={embedUrl}
+                      title={vid.title}
+                      className="w-full h-full border-0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  </div>
+
+                  {/* Video Info & Controls */}
+                  <div className="p-3 bg-white space-y-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <h5 className="text-xs font-bold text-slate-900 truncate" title={vid.title}>
+                          {vid.title || 'Store Video'}
+                        </h5>
+                        <a
+                          href={vid.youtubeUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-[10px] text-red-600 hover:underline font-mono truncate flex items-center gap-1 mt-0.5"
+                        >
+                          <span className="truncate">{vid.youtubeUrl}</span>
+                          <ExternalLink className="w-2.5 h-2.5 shrink-0" />
+                        </a>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteYouTubeVideo(vid.id, vid.title)}
+                        className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer shrink-0"
+                        title="Delete Video"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 // Helper to render specific editor based on section key
 function renderSectionEditor(
   key: SectionKey,
@@ -2405,48 +2716,15 @@ function renderSectionEditor(
           videos: { ...(prev.videos || data), ...patch },
         }));
       };
-      return (
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                Section Heading
-              </label>
-              <input
-                type="text"
-                value={data.title}
-                onChange={(e) => update({ title: e.target.value })}
-                className="w-full px-3 py-2 text-xs rounded-sm border border-gray-300 bg-white"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                Section Subtitle
-              </label>
-              <input
-                type="text"
-                value={data.subtitle}
-                onChange={(e) => update({ subtitle: e.target.value })}
-                className="w-full px-3 py-2 text-xs rounded-sm border border-gray-300 bg-white"
-              />
-            </div>
-          </div>
 
-          <div className="p-4 bg-red-50/60 rounded-xl border border-red-200 flex items-start gap-3">
-            <div className="w-8 h-8 rounded-lg bg-red-100 text-red-600 flex items-center justify-center shrink-0">
-              <Play className="w-4 h-4 fill-red-600" />
-            </div>
-            <div className="space-y-1">
-              <h4 className="text-xs font-bold text-slate-900">
-                Active Store Videos ({shop.videos?.length || 0})
-              </h4>
-              <p className="text-[11px] text-gray-600 leading-relaxed">
-                Aapki store ke YouTube videos aur product demos is section mein responsive player mein play honge.
-                Videos ko add ya delete karne ke liye dashboard ke <strong>Shop Videos & YouTube Reels</strong> section ka upyog karein.
-              </p>
-            </div>
-          </div>
-        </div>
+      return (
+        <VideoSectionEditor
+          data={data}
+          update={update}
+          shop={shop}
+          onUpdateShop={actions?.onUpdateShop}
+          showToast={showToast}
+        />
       );
     }
 
