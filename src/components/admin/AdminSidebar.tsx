@@ -31,6 +31,7 @@ import { loadUserSession } from '../../services/authSession';
 export type AdminTabKey = 
   | 'SHOPS' 
   | 'DOMAINS' 
+  | 'BACKUPS_SAFETY'
   | 'DATA_EXPORT' 
   | 'BILLING' 
   | 'SECTIONS' 
@@ -181,12 +182,27 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
       },
       {
         id: 'menu_data',
-        label: 'Data Export & Backups',
-        emoji: '📥',
-        icon: Download,
-        directTabKey: 'DATA_EXPORT',
-        badge: 'Hub',
-        badgeColor: 'bg-blue-500/20 text-blue-300 border border-blue-500/30 font-bold',
+        label: 'Backups & Future Safety',
+        emoji: '🛡️',
+        icon: ShieldCheck,
+        subItems: [
+          {
+            id: 'sub_backups_safety',
+            tabKey: 'BACKUPS_SAFETY',
+            label: 'Backup & Future Update Safety',
+            icon: ShieldCheck,
+            badge: 'Immunity',
+            badgeColor: 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold',
+          },
+          {
+            id: 'sub_data_export',
+            tabKey: 'DATA_EXPORT',
+            label: 'Data Export & CSV Reports',
+            icon: Download,
+            badge: 'Sheets',
+            badgeColor: 'bg-blue-500/20 text-blue-300 border border-blue-500/30',
+          },
+        ],
       },
       {
         id: 'menu_cms',

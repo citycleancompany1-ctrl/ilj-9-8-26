@@ -481,3 +481,106 @@ END OF VENDOR STORE DOSSIER - CONFIDENTIAL SUPER ADMIN RECORD
 ================================================================================
 `.trim();
 }
+
+/**
+ * 11. EXPORT SELECTED VENDORS BUNDLE (.JSON)
+ * Exports multiple vendor websites selected by Super Admin in a single unified JSON file.
+ */
+export function exportSelectedVendorsBundleJSON(selectedShops: Shop[], bundleTitle?: string): void {
+  const dateStr = new Date().toISOString().slice(0, 10);
+  const bundlePayload = {
+    metadata: {
+      platform: 'IndianLalaJi Digital SaaS Network',
+      exportType: 'SELECTED_VENDORS_BUNDLE',
+      exportedAt: new Date().toISOString(),
+      totalVendors: selectedShops.length,
+      bundleTitle: bundleTitle || `Selected Vendors (${selectedShops.length})`,
+      platformVersion: 'v2.0',
+    },
+    shops: selectedShops,
+  };
+
+  const filename = `indianlalaji_selected_vendors_${selectedShops.length}_${dateStr}.json`;
+  downloadJSON(filename, bundlePayload);
+}
+
+/**
+ * 12. EXPORT CUSTOM DOMAIN VENDORS BUNDLE (.JSON)
+ * Directly filters and exports all shops that have a custom domain configured.
+ */
+export function exportCustomDomainVendorsBundleJSON(allShops: Shop[]): void {
+  const domainShops = allShops.filter((s) => Boolean(s.customDomain));
+  const dateStr = new Date().toISOString().slice(0, 10);
+  const bundlePayload = {
+    metadata: {
+      platform: 'IndianLalaJi Digital SaaS Network',
+      exportType: 'CUSTOM_DOMAIN_VENDORS_VAULT',
+      exportedAt: new Date().toISOString(),
+      totalVendors: domainShops.length,
+      description: 'Dedicated backup of all vendors having custom domain & DNS configurations',
+      platformVersion: 'v2.0',
+    },
+    shops: domainShops,
+  };
+
+  const filename = `indianlalaji_custom_domain_vendors_${domainShops.length}_${dateStr}.json`;
+  downloadJSON(filename, bundlePayload);
+}
+
+/**
+ * Helper to parse and validate any vendor bundle JSON
+ */
+export function parseVendorsBundleJSON(jsonString: string): {
+  success: boolean;
+  shops: Shop[];
+  metadata?: any;
+  error?: string;
+} {
+  try {
+    const parsed = JSON.parse(jsonString);
+    let shopsList: Shop[] = [];
+
+    if (Array.isArray(parsed)) {
+      shopsList = parsed;
+    } else if (Array.isArray(parsed.shops)) {
+      shopsList = parsed.shops;
+    } else if (parsed.data && Array.isArray(parsed.data.shops)) {
+      shopsList = parsed.data.shops;
+    } else if (parsed.shopId && parsed.businessName) {
+      // Single shop JSON
+      shopsList = [parsed];
+    } else if (parsed.data && parsed.data.shopId) {
+      // Single shop wrapped in backup
+      shopsList = [parsed.data];
+    } else {
+      return {
+        success: false,
+        shops: [],
+        error: 'Invalid file format! Expected an array of shops or a vendor backup JSON.',
+      };
+    }
+
+    // Validate each shop has shopId
+    const validShops = shopsList.filter((s) => s && typeof s.shopId === 'string' && s.shopId.length > 0);
+    if (validShops.length === 0) {
+      return {
+        success: false,
+        shops: [],
+        error: 'No valid vendor shop records found in this file.',
+      };
+    }
+
+    return {
+      success: true,
+      shops: validShops,
+      metadata: parsed.metadata || null,
+    };
+  } catch (err) {
+    return {
+      success: false,
+      shops: [],
+      error: 'Failed to parse JSON file. Please check file validity.',
+    };
+  }
+}
+

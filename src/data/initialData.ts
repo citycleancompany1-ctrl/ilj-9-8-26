@@ -1,5 +1,6 @@
 import { Shop, AdvertisementPopup, PricingPackage, TutorialVideo, ShopInquiry, PlatformLead, PlatformState } from '../types';
 import { INDIAN_LAYOUT_THEMES } from './indianThemes';
+import { DEFAULT_PLATFORM_VERSIONS, DEFAULT_AUTO_BACKUP_CONFIG, ensureShopSafetyDefaults } from '../utils/moduleRegistry';
 
 export interface SuperAdminAccount {
   email: string;
@@ -806,6 +807,8 @@ export const INITIAL_STATE: PlatformState = {
   },
   themes: INDIAN_LAYOUT_THEMES,
   saasBackups: [],
+  platformVersions: DEFAULT_PLATFORM_VERSIONS,
+  autoBackupConfig: DEFAULT_AUTO_BACKUP_CONFIG,
 };
 
 const STORAGE_KEY = 'INDIANLALAJI_SAAS_STATE_V1';
@@ -827,13 +830,26 @@ export function loadPlatformState(): PlatformState {
         if (!parsed.saasBackups) {
           parsed.saasBackups = [];
         }
+        if (!parsed.platformVersions) {
+          parsed.platformVersions = DEFAULT_PLATFORM_VERSIONS;
+        }
+        if (!parsed.autoBackupConfig) {
+          parsed.autoBackupConfig = DEFAULT_AUTO_BACKUP_CONFIG;
+        }
+        // STRICT VENDOR IMMUNITY & SAFETY: Ensure every shop has safe defaults without changing custom data
+        if (Array.isArray(parsed.shops)) {
+          parsed.shops = parsed.shops.map((s: Shop) => ensureShopSafetyDefaults(s));
+        }
         return parsed;
       }
     }
   } catch (e) {
     console.error('Failed to load local state:', e);
   }
-  return INITIAL_STATE;
+  return {
+    ...INITIAL_STATE,
+    shops: INITIAL_STATE.shops.map((s) => ensureShopSafetyDefaults(s)),
+  };
 }
 
 export function savePlatformState(state: PlatformState): void {

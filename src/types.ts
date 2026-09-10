@@ -156,6 +156,62 @@ export interface Shop {
 
   // Isolated Website Backups (Snapshots)
   backups?: VendorWebsiteBackup[];
+
+  // Versioning & Future-Update Safety (Strict Immortality & Immunity)
+  shopVersion?: string; // e.g. 'v1.0' | 'v1.1' | 'v2.0'
+  versionLock?: boolean; // When true, platform updates/new features NEVER automatically modify this shop's schema/design
+  installedModules?: string[]; // e.g. ['core_ecommerce', 'modular_sections', 'module_ai_voice', 'module_doctor_clinic', 'module_motor_garage', 'module_salon_spa']
+  migrationHistory?: VendorMigrationRecord[];
+}
+
+export interface VendorMigrationRecord {
+  id: string;
+  fromVersion: string;
+  toVersion: string;
+  migratedAt: string;
+  backupId: string; // ID of the snapshot taken automatically before migration
+  enabledModules?: string[];
+  note?: string;
+  appliedBy: string; // e.g. 'Super Admin (rkmehra331996@gmail.com)'
+}
+
+export interface PlatformModuleDefinition {
+  id: string;
+  name: string;
+  category: 'AI' | 'VERTICAL' | 'ECOMMERCE' | 'INFRA';
+  description: string;
+  icon: string;
+  versionIntroduced: string;
+  isBeta?: boolean;
+  features: string[];
+}
+
+export interface PlatformVersionDefinition {
+  version: string;
+  name: string;
+  releaseDate: string;
+  description: string;
+  features: string[];
+  modules: string[];
+  isStable: boolean;
+  isLTS: boolean;
+}
+
+export interface AutoBackupConfig {
+  enabled: boolean;
+  frequency: 'DAILY' | 'HOURLY_12' | 'ON_MAJOR_CHANGE';
+  lastBackupAt?: string;
+  keepMaxSnapshots: number;
+}
+
+export interface SelectedVendorsBackup {
+  backupId: string;
+  createdAt: string;
+  version: string;
+  type: 'SELECTED_VENDORS' | 'ALL_VENDORS' | 'CUSTOM_DOMAIN_VENDORS';
+  description?: string;
+  totalVendors: number;
+  shops: Shop[];
 }
 
 export interface CustomDomainRecord {
@@ -589,6 +645,8 @@ export interface PlatformState {
   themes?: IndianTheme[];
   saasBackups?: SaaSPlatformBackup[];
   customDomainRecords?: CustomDomainRecord[];
+  platformVersions?: PlatformVersionDefinition[];
+  autoBackupConfig?: AutoBackupConfig;
 }
 
 export interface CartItem {

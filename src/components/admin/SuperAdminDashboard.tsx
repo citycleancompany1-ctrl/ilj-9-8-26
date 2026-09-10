@@ -56,6 +56,7 @@ import { ConnectWebsiteModal } from './ConnectWebsiteModal';
 import { DataExportManager } from './DataExportManager';
 import { VendorDataExportModal } from './VendorDataExportModal';
 import { AdminDomainManagement } from './AdminDomainManagement';
+import { AdminBackupsManager } from './AdminBackupsManager';
 import { AdminSidebar, AdminTabKey } from './AdminSidebar';
 
 interface SuperAdminDashboardProps {
@@ -865,6 +866,15 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
           state={state}
           onUpdateState={onUpdateState}
           showToast={showToast}
+          onNavigateToShop={onNavigateToShop}
+        />
+      )}
+
+      {/* TAB: BACKUP & FUTURE UPDATE SAFETY */}
+      {activeTab === 'BACKUPS_SAFETY' && (
+        <AdminBackupsManager
+          state={state}
+          onUpdateState={onUpdateState}
           onNavigateToShop={onNavigateToShop}
         />
       )}
