@@ -1262,19 +1262,7 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
             <span>Visit Website</span>
           </button>
 
-          <button
-            id="vendor-qr-standee-btn"
-            type="button"
-            onClick={() => {
-              setStandeeModalTab('STANDEE');
-              setShowStandeeModal(true);
-            }}
-            className="flex-1 sm:flex-none px-3.5 py-2.5 rounded-sm bg-emerald-600 hover:bg-emerald-700 text-white font-bold uppercase tracking-wider text-xs shadow-md shadow-emerald-600/20 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-            title="Dukaan Counter QR Standee & Website QR Code"
-          >
-            <QrCode className="w-4 h-4 text-emerald-200" />
-            <span>QR Standee</span>
-          </button>
+          
 
           <button
             id="vendor-copy-store-url-btn"
@@ -1297,15 +1285,7 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
             <span className="hidden sm:inline">Help</span>
           </a>
 
-          <button
-            id="vendor-logout-btn"
-            onClick={onLogout}
-            className="px-3.5 py-2.5 rounded-sm bg-gray-100 hover:bg-red-50 hover:text-red-700 text-slate-700 font-bold uppercase tracking-wider text-xs transition-colors flex items-center justify-center gap-1"
-          >
-            <LogOut className="w-3.5 h-3.5" />
-            <span>Logout</span>
-          </button>
-        </div>
+      </div>
       </div>
 
       {/* 1-YEAR SUBSCRIPTION & STORE VALIDITY CARD (ACTIVE DATE & EXPIRY DATE) */}
@@ -1400,19 +1380,7 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
                 Official Admin UPI Helpline: <strong className="text-white">+91 {adminPhone}</strong>
               </div>
               <div className="flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setActiveMainTab('SECTIONS')}
-                  className="px-3.5 py-1.5 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white font-black uppercase tracking-wider text-[11px] rounded-sm flex items-center gap-1.5 shadow-md transition-transform hover:scale-102"
-                >
-                  <Layout className="w-3.5 h-3.5" />
-                  <span>Website Sections Builder</span>
-                  <span className="bg-emerald-500 text-slate-950 text-[9px] font-black px-1.5 py-0.2 rounded">
-                    ON/OFF
-                  </span>
-                </button>
-
-                <button
+                              <button
                   type="button"
                   onClick={() => setShowInvoiceModal(true)}
                   className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-orange-300 hover:text-white border border-slate-700 font-bold uppercase tracking-wider text-[11px] rounded-sm flex items-center gap-1.5 shadow-xs transition-colors"
@@ -1560,85 +1528,6 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
         </div>
       )}
 
-      {/* MASTER WEBSITE PRICE VISIBILITY & CATALOG MODE CARD */}
-      <div className={`p-4 sm:p-5 rounded-2xl border transition-all shadow-xs ${
-        currentShop.hideAllPrices
-          ? 'bg-amber-50/90 border-amber-300 ring-2 ring-amber-400/30'
-          : 'bg-white border-gray-200'
-      }`}>
-        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-          <div className="flex items-start sm:items-center gap-3.5">
-            <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 shadow-2xs ${
-              currentShop.hideAllPrices
-                ? 'bg-amber-600 text-white'
-                : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-            }`}>
-              {currentShop.hideAllPrices ? <EyeOff className="w-6 h-6" /> : <Eye className="w-6 h-6" />}
-            </div>
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="font-bold text-slate-900 text-sm sm:text-base font-['Outfit',sans-serif]">
-                  Website Price Visibility (वेबसाइट पर दाम दिखेगा या छुपेगा)
-                </h3>
-                <span className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${
-                  currentShop.hideAllPrices
-                    ? 'bg-amber-600 text-white border-amber-600 shadow-xs'
-                    : 'bg-emerald-100 text-emerald-800 border-emerald-300'
-                }`}>
-                  {currentShop.hideAllPrices ? '👁️❌ PRICES HIDDEN (Catalog Mode)' : '👁️✅ PRICES VISIBLE (Normal Mode)'}
-                </span>
-              </div>
-              <p className="text-xs text-slate-600 mt-1 max-w-2xl leading-relaxed">
-                {currentShop.hideAllPrices ? (
-                  <span>
-                    <strong>Catalog Mode Active:</strong> Live website par sabhi products aur services ke prices chhupe hue hain aur unki jagah <strong>"Price on Request / कीमत पूछें"</strong> direct WhatsApp inquiry button dikh raha hai.
-                  </span>
-                ) : (
-                  <span>
-                    Live website par sabhi items ki regular prices aur discounts customers ko dikh rahe hain. Aap kisi bhi samay niche diye button se sabhi items ke price ko ek click me chupa sakte hain.
-                  </span>
-                )}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto shrink-0">
-            {currentShop.hideAllPrices ? (
-              <button
-                type="button"
-                id="vendor-show-all-prices-btn"
-                onClick={() => handleToggleHideAllPrices(false)}
-                className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase tracking-wider shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
-                title="Website par sabhi prices vapas dikhayein"
-              >
-                <Eye className="w-4 h-4" />
-                <span>Sabhi Price Dikhayein (Restore Prices)</span>
-              </button>
-            ) : (
-              <button
-                type="button"
-                id="vendor-hide-all-prices-btn"
-                onClick={() => handleToggleHideAllPrices(true)}
-                className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-black text-xs uppercase tracking-wider shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
-                title="Website par sabhi prices hide karein"
-              >
-                <EyeOff className="w-4 h-4" />
-                <span>Sabhi Price Chhupayein (Hide All Prices)</span>
-              </button>
-            )}
-
-            <button
-              type="button"
-              onClick={() => onNavigateToShop(currentShop.shopId)}
-              className="px-3.5 py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-slate-800 font-bold text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
-              title="Check live website preview"
-            >
-              <ExternalLink className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Preview</span>
-            </button>
-          </div>
-        </div>
-      </div>
 
       {/* STORE ANALYTICS & PERFORMANCE OVERVIEW SECTION */}
       <div id="section-analytics" className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-6 shadow-xs space-y-4">

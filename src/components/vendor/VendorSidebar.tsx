@@ -103,7 +103,7 @@ export const VendorSidebar: React.FC<VendorSidebarProps> = ({
     () => [
       {
         id: 'dashboard',
-        label: 'DASHBOARDdddd',
+        label: 'DASHBOARD + ',
         icon: LayoutDashboard,
       },
       {
