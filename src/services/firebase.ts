@@ -9,7 +9,9 @@ import {
   deleteDoc,
   onSnapshot,
   Firestore,
-  writeBatch
+  writeBatch,
+  query,
+  where,
 } from 'firebase/firestore';
 import { Shop, PlatformState } from '../types';
 import firebaseConfigRaw from '../../firebase-applet-config.json';
@@ -199,6 +201,55 @@ export async function fetchShopFromFirestore(shopId: string): Promise<Shop | nul
 }
 
 /**
+ * Fetch a shop by mapped custom domain directly from Firestore
+ * Ensures multi-tenant isolation: domain -> mapped shopId
+ */
+export async function fetchShopByCustomDomain(domain: string): Promise<Shop | null> {
+  if (!domain) return null;
+  const cleanDomain = domain.trim().toLowerCase().replace(/^https?:\/\//i, '').replace(/\/$/, '');
+  const rootDomain = cleanDomain.replace(/^www\./i, '');
+  const wwwDomain = `www.${rootDomain}`;
+
+  if (isQuotaExhaustedState) return null;
+
+  try {
+    const shopsColl = collection(db, SHOPS_COLLECTION);
+    
+    // 1. Query for exact custom domain
+    const q1 = query(shopsColl, where('customDomain', '==', cleanDomain));
+    const snap1 = await getDocs(q1);
+    if (!snap1.empty) {
+      return snap1.docs[0].data() as Shop;
+    }
+
+    // 2. Query for root domain (without www)
+    if (cleanDomain !== rootDomain) {
+      const q2 = query(shopsColl, where('customDomain', '==', rootDomain));
+      const snap2 = await getDocs(q2);
+      if (!snap2.empty) {
+        return snap2.docs[0].data() as Shop;
+      }
+    }
+
+    // 3. Query with www prefix
+    if (cleanDomain !== wwwDomain) {
+      const q3 = query(shopsColl, where('customDomain', '==', wwwDomain));
+      const snap3 = await getDocs(q3);
+      if (!snap3.empty) {
+        return snap3.docs[0].data() as Shop;
+      }
+    }
+  } catch (error) {
+    if (isQuotaExhaustionError(error)) {
+      markQuotaExhausted(`fetchShopByCustomDomain:${cleanDomain}`);
+      return null;
+    }
+    console.warn(`[Firestore] Notice querying shop by domain ${cleanDomain}:`, error);
+  }
+  return null;
+}
+
+/**
  * Subscribe to real-time changes for a specific shop
  * Guarantees that any product entry or update made on one device (e.g. mobile)
  * is immediately pushed and rendered on all other devices viewing that shop without refresh.
@@ -268,6 +319,7 @@ export async function savePlatformConfigToFirestore(state: Partial<PlatformState
     if (state.mainWebsiteSectionsConfig !== undefined) payload.mainWebsiteSectionsConfig = state.mainWebsiteSectionsConfig;
     if (state.themes !== undefined) payload.themes = state.themes;
     if (state.saasBackups !== undefined) payload.saasBackups = state.saasBackups;
+    if (state.customDomainRecords !== undefined) payload.customDomainRecords = state.customDomainRecords;
 
     const sanitized = JSON.parse(JSON.stringify(payload));
     await setDoc(configRef, sanitized, { merge: true });

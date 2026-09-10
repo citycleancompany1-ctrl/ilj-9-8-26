@@ -54,6 +54,7 @@ import { AddWebsiteModal } from './AddWebsiteModal';
 import { ConnectWebsiteModal } from './ConnectWebsiteModal';
 import { DataExportManager } from './DataExportManager';
 import { VendorDataExportModal } from './VendorDataExportModal';
+import { AdminDomainManagement } from './AdminDomainManagement';
 
 interface SuperAdminDashboardProps {
   state: PlatformState;
@@ -68,7 +69,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
   onLogout,
   onNavigateToShop,
 }) => {
-  const [activeTab, setActiveTab] = useState<'SHOPS' | 'DATA_EXPORT' | 'BILLING' | 'SECTIONS' | 'POPUPS' | 'PRICING' | 'VIDEOS' | 'LEADS' | 'PLATFORM_SETTINGS'>('SHOPS');
+  const [activeTab, setActiveTab] = useState<'SHOPS' | 'DOMAINS' | 'DATA_EXPORT' | 'BILLING' | 'SECTIONS' | 'POPUPS' | 'PRICING' | 'VIDEOS' | 'LEADS' | 'PLATFORM_SETTINGS'>('SHOPS');
   
   // Website Add & Connect Modals
   const [showAddShopModal, setShowAddShopModal] = useState(false);
@@ -420,6 +421,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
       <div className="flex items-center gap-2 border-b border-gray-200 pb-2 overflow-x-auto scrollbar-none">
         {[
           { id: 'SHOPS', label: 'Vendors & Stores Management', icon: Store, count: state.shops.length },
+          { id: 'DOMAINS', label: '🌐 Custom Domains & DNS Mapping', icon: Globe, count: state.shops.filter(s => Boolean(s.customDomain)).length },
           { id: 'DATA_EXPORT', label: '📥 Data Export & Backups (Pure Portal / All Shops / Specific Vendor)', icon: Download },
           { id: 'BILLING', label: 'Billing & Website Earnings (Day/Month/Year)', icon: Receipt },
           { id: 'SECTIONS', label: 'Website Sections (ON / OFF)', icon: Sliders },
@@ -717,6 +719,16 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
           </div>
 
         </div>
+      )}
+
+      {/* TAB: CUSTOM DOMAINS & DNS MANAGEMENT */}
+      {activeTab === 'DOMAINS' && (
+        <AdminDomainManagement
+          state={state}
+          onUpdateState={onUpdateState}
+          showToast={showToast}
+          onNavigateToShop={onNavigateToShop}
+        />
       )}
 
       {/* TAB: DATA EXPORT & BACKUPS (PURE PORTAL / ALL SHOPS / SPECIFIC VENDOR) */}

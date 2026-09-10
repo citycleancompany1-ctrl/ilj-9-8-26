@@ -33,9 +33,15 @@ import {
   savePlatformConfigToFirestore,
   saveShopToFirestore,
   fetchShopFromFirestore,
+  fetchShopByCustomDomain,
   isCloudQuotaExhausted,
   subscribeToQuotaStatus
 } from './services/firebase';
+import { 
+  findShopByCustomDomain, 
+  isPlatformSystemHost, 
+  normalizeDomain 
+} from './utils/customDomainMatcher';
 import { 
   loadUserSession, 
   saveUserSession, 
@@ -151,9 +157,10 @@ export default function App() {
       }
 
       const shopParam = searchParams.get('shop') || (!isLoginAction ? searchParams.get('shopId') : null) || searchParams.get('id');
+      const cleanPath = (path || '').replace(/^\//, '') || 'home';
 
-      // Check URL search param first (?shop=SHP...)
-      if (shopParam && !isLoginAction) {
+      // Check URL search param first (?shop=SHP...) ONLY if not accessing vendor-dashboard
+      if (shopParam && !isLoginAction && cleanPath !== 'vendor-dashboard') {
         setCurrentView('shop');
         setActiveShopId(shopParam);
         return;
@@ -174,8 +181,6 @@ export default function App() {
         setActiveShopId(matchShop[1]);
         return;
       }
-
-      const cleanPath = (path || '').replace(/^\//, '') || 'home';
 
       // STRICT ROUTE GUARD: Vendor Dashboard
       if (cleanPath === 'vendor-dashboard') {
@@ -215,6 +220,37 @@ export default function App() {
       if (cleanPath === 'templates') {
         setCurrentView('stores');
         return;
+      }
+
+      // Check if current hostname is a Client's Custom Domain (e.g. trustedweb.online)
+      const currentHost = typeof window !== 'undefined' ? window.location.hostname : '';
+      const isSystemHost = isPlatformSystemHost(currentHost);
+
+      if (!isSystemHost && !shopParam && !isLoginAction) {
+        // 1. Check in local loaded state
+        const matchingShop = findShopByCustomDomain(platformState.shops || [], currentHost);
+        if (matchingShop) {
+          setCurrentView('shop');
+          setActiveShopId(matchingShop.shopId);
+          return;
+        }
+
+        // 2. Direct asynchronous cloud lookup from Firestore for new/first-time visitors
+        fetchShopByCustomDomain(currentHost).then((cloudShop) => {
+          if (cloudShop && cloudShop.shopId) {
+            setPlatformState((prev) => {
+              const exists = prev.shops.some((s) => s.shopId === cloudShop.shopId);
+              const updatedShops = exists
+                ? prev.shops.map((s) => (s.shopId === cloudShop.shopId ? cloudShop : s))
+                : [cloudShop, ...prev.shops];
+              const nextState = { ...prev, shops: updatedShops };
+              savePlatformState(nextState);
+              return nextState;
+            });
+            setCurrentView('shop');
+            setActiveShopId(cloudShop.shopId);
+          }
+        });
       }
 
       if (['home', 'stores', 'how-it-works', 'pricing', 'contact', 'disclaimer'].includes(cleanPath)) {

@@ -292,12 +292,12 @@ export const VendorCustomDomainManager: React.FC<VendorCustomDomainManagerProps>
                 <tr className="hover:bg-gray-50 transition-colors">
                   <td className="py-3 px-4 font-bold text-indigo-700">A Record</td>
                   <td className="py-3 px-4 text-slate-800">@ (or root)</td>
-                  <td className="py-3 px-4 text-slate-900 font-bold">76.76.21.21</td>
+                  <td className="py-3 px-4 text-slate-900 font-bold">145.223.124.49</td>
                   <td className="py-3 px-4 text-gray-500 font-sans">Automatic / 300s</td>
                   <td className="py-3 px-4 text-right">
                     <button
                       type="button"
-                      onClick={() => copyToClipboard('76.76.21.21', 'a_record')}
+                      onClick={() => copyToClipboard('145.223.124.49', 'a_record')}
                       className="px-2.5 py-1 bg-gray-100 hover:bg-gray-200 text-slate-700 rounded-md font-sans text-xs font-semibold inline-flex items-center gap-1 cursor-pointer"
                     >
                       {copiedField === 'a_record' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}

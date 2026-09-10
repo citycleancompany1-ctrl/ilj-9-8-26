@@ -141,6 +141,10 @@ export interface Shop {
   customDomain?: string; // e.g. "www.myshop.com" or "shop.brand.in"
   connectedWebsiteUrl?: string; // e.g. "https://external-website.com"
   domainConnectStatus?: 'NOT_CONNECTED' | 'PENDING_DNS' | 'CONNECTED';
+  domainVerificationStatus?: 'VERIFIED' | 'PENDING' | 'FAILED';
+  dnsStatus?: 'PROPAGATED' | 'PENDING' | 'ERROR';
+  sslStatus?: 'ACTIVE' | 'ISSUING' | 'PENDING' | 'EXPIRED';
+  isCustomDomainActive?: boolean;
 
   // Floating Action Circle Buttons (Bottom Right: WhatsApp, Call, Multi-Language, Google Location)
   floatingButtons?: FloatingButtonsConfig;
@@ -150,6 +154,22 @@ export interface Shop {
 
   // Isolated Website Backups (Snapshots)
   backups?: VendorWebsiteBackup[];
+}
+
+export interface CustomDomainRecord {
+  id: string;
+  shopId: string;
+  businessName: string;
+  domain: string;
+  domainVerificationStatus: 'VERIFIED' | 'PENDING' | 'FAILED';
+  dnsStatus: 'PROPAGATED' | 'PENDING' | 'ERROR';
+  sslStatus: 'ACTIVE' | 'ISSUING' | 'PENDING' | 'EXPIRED';
+  status: 'active' | 'inactive';
+  createdAt: string;
+  updatedAt: string;
+  targetHost?: string;
+  targetIp?: string;
+  notes?: string;
 }
 
 export interface VendorWebsiteBackup {
@@ -558,6 +578,7 @@ export interface PlatformState {
   mainWebsiteSectionsConfig?: MainWebsiteSectionsConfig;
   themes?: IndianTheme[];
   saasBackups?: SaaSPlatformBackup[];
+  customDomainRecords?: CustomDomainRecord[];
 }
 
 export interface CartItem {
