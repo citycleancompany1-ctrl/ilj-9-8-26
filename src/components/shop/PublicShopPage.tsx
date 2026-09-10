@@ -860,7 +860,7 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
       {/* 14. CONTACT US & CUSTOMER INQUIRY FORM SECTION (ON/OFF & Custom Builder Config) */}
       {(!sectionsConfig || sectionsConfig.contact.enabled) && (
       <section id="contact-inquiry" ref={inquirySectionRef} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 space-y-8">
-        <div className="bg-gradient-to-br from-orange-50/80 via-white to-white rounded-3xl border border-orange-200/80 p-6 sm:p-10 lg:p-12 shadow-sm">
+        <div className="bg-gradient-to-br from-orange-50/80 via-white to-white rounded-3xl border border-orange-200/80 p-4 sm:p-10 lg:p-12 shadow-sm">
           
           <div className="text-center max-w-2xl mx-auto space-y-2 mb-10">
             <div className="inline-flex items-center gap-1.5 bg-orange-600 text-white text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-md shadow-xs">
@@ -878,7 +878,7 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
             
             {/* Left: Contact Info Cards */}
             <div className="lg:col-span-5 space-y-4">
-              <div className="bg-white rounded-2xl border border-gray-200/90 p-6 shadow-xs space-y-5">
+              <div className="bg-white rounded-2xl border border-gray-200/90 p-4 sm:p-6 shadow-xs space-y-5">
                 <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 border-b border-gray-100 pb-3 flex items-center justify-between">
                   <span>Store Coordinates</span>
                   <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">Verified</span>
@@ -979,7 +979,7 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
                   </button>
                 </div>
               ) : (
-                <form onSubmit={handleInquirySubmit} className="bg-white p-6 sm:p-8 rounded-2xl border border-gray-200/90 shadow-sm space-y-4">
+                <form onSubmit={handleInquirySubmit} className="bg-white p-4 sm:p-8 rounded-2xl border border-gray-200/90 shadow-sm space-y-4">
                   <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 border-b border-gray-100 pb-3 flex items-center justify-between">
                     <span>Send Direct Message / Inquiry</span>
                     <span className="text-[10px] text-gray-400 font-normal">Direct Vendor Inbox</span>
@@ -1072,7 +1072,7 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
       {/* 17. STORE FOOTER WITH VENDOR PAYMENT QR (LIGHT THEME) */}
       {(!sectionsConfig || sectionsConfig.footer.enabled) && (
       <footer className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-20 mb-8">
-        <div className="bg-white text-slate-900 rounded-3xl border border-gray-200/90 p-8 sm:p-10 lg:p-12 shadow-sm grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 text-xs">
+        <div className="bg-white text-slate-900 rounded-3xl border border-gray-200/90 p-5 sm:p-10 lg:p-12 shadow-sm grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 text-xs">
           
           {/* Shop Bio */}
           <div className="space-y-3.5">

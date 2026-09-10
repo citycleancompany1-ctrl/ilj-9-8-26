@@ -227,7 +227,7 @@ export const HeroSectionRenderer: React.FC<{
         )}
 
         {/* Hero Main Content Overlay */}
-        <div className="relative z-10 w-full p-6 sm:p-10 lg:p-14 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+        <div className="relative z-10 w-full p-4 sm:p-10 lg:p-14 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
           
           {/* Left: Text & Actions */}
           <div className="lg:col-span-7 space-y-4 sm:space-y-6">
@@ -408,7 +408,7 @@ export const AboutSectionRenderer: React.FC<{
 
   return (
     <section id="about" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16">
-      <div className="bg-white rounded-3xl border border-gray-200 p-6 sm:p-10 lg:p-12 shadow-xs">
+      <div className="bg-white rounded-3xl border border-gray-200 p-4 sm:p-10 lg:p-12 shadow-xs">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
           
           {/* Left: About Image with Badges */}
@@ -523,7 +523,7 @@ export const FeaturesSectionRenderer: React.FC<{
         {config.items.map((item, idx) => (
           <div
             key={item.id || idx}
-            className="bg-white rounded-2xl border border-gray-200 p-6 shadow-xs hover:shadow-md hover:border-orange-300 transition-all group space-y-3"
+            className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-6 shadow-xs hover:shadow-md hover:border-orange-300 transition-all group space-y-3"
           >
             <div className="w-10 h-10 rounded-xl bg-orange-50 text-orange-600 border border-orange-100 flex items-center justify-center font-bold group-hover:scale-110 transition-transform">
               <Sparkles className="w-5 h-5" />
@@ -664,7 +664,7 @@ export const HowItWorksSectionRenderer: React.FC<{
 
   return (
     <section id="how-it-works" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16">
-      <div className="bg-gradient-to-br from-indigo-50/50 via-white to-indigo-50/30 rounded-3xl border border-indigo-100 p-6 sm:p-10 shadow-xs">
+      <div className="bg-gradient-to-br from-indigo-50/50 via-white to-indigo-50/30 rounded-3xl border border-indigo-100 p-4 sm:p-10 shadow-xs">
         
         <div className="text-center max-w-2xl mx-auto space-y-2 mb-10">
           <div className="inline-flex items-center gap-1.5 bg-indigo-100 text-indigo-800 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-sm">
@@ -682,7 +682,7 @@ export const HowItWorksSectionRenderer: React.FC<{
           {config.steps.map((step, idx) => (
             <div
               key={step.id || idx}
-              className="bg-white rounded-2xl border border-gray-200 p-6 shadow-xs relative space-y-3 group hover:border-indigo-300 transition-all"
+              className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-6 shadow-xs relative space-y-3 group hover:border-indigo-300 transition-all"
             >
               {/* Step Number Circle */}
               <div className="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center font-black text-sm shadow-md">
@@ -731,7 +731,7 @@ export const BenefitsSectionRenderer: React.FC<{
         {config.items.map((b, idx) => (
           <div
             key={b.id || idx}
-            className="bg-white rounded-2xl border border-gray-200 p-6 shadow-xs hover:shadow-md hover:border-yellow-400 transition-all space-y-3"
+            className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-6 shadow-xs hover:shadow-md hover:border-yellow-400 transition-all space-y-3"
           >
             <div className="flex items-center justify-between">
               <div className="w-10 h-10 rounded-xl bg-yellow-50 text-yellow-700 border border-yellow-100 flex items-center justify-center font-bold">
@@ -851,7 +851,7 @@ export const TestimonialsSectionRenderer: React.FC<{
           {config.items.map((review, idx) => (
             <div
               key={`expanded-rev-${review.id || idx}`}
-              className="bg-white rounded-2xl border border-gray-200 p-6 shadow-xs hover:shadow-md hover:border-rose-300 transition-all flex flex-col justify-between space-y-4"
+              className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-6 shadow-xs hover:shadow-md hover:border-rose-300 transition-all flex flex-col justify-between space-y-4"
             >
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
@@ -910,7 +910,7 @@ export const TestimonialsSectionRenderer: React.FC<{
               return (
                 <div
                   key={`carousel-rev-${review.id || idx}-${currentReviewIndex}`}
-                  className={`${visibilityClass} bg-white rounded-2xl border border-gray-200 p-6 shadow-xs hover:shadow-md hover:border-rose-300 transition-all flex-col justify-between space-y-4 animate-in fade-in duration-300`}
+                  className={`${visibilityClass} bg-white rounded-2xl border border-gray-200 p-4 sm:p-6 shadow-xs hover:shadow-md hover:border-rose-300 transition-all flex-col justify-between space-y-4 animate-in fade-in duration-300`}
                 >
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
@@ -1381,7 +1381,7 @@ export const PricingSectionRenderer: React.FC<{
         {config.plans.map((plan, idx) => (
           <div
             key={plan.id || idx}
-            className={`rounded-2xl p-6 transition-all flex flex-col justify-between relative ${
+            className={`rounded-2xl p-4 sm:p-6 transition-all flex flex-col justify-between relative ${
               plan.isPopular
                 ? 'bg-slate-900 text-white shadow-xl border-2 border-orange-500 ring-2 ring-orange-500/20'
                 : 'bg-white text-slate-900 border border-gray-200 shadow-xs hover:shadow-md'
@@ -1513,7 +1513,7 @@ export const PortfolioSectionRenderer: React.FC<{
       <div className="block md:hidden">
         {!isExpanded ? (
           /* Mobile Slider */
-          <div className="flex gap-2.5 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-2 pt-1 -mx-4 px-4 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+          <div className="flex gap-2.5 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-2 pt-1 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
             {config.items.map((item, idx) => (
               <div
                 key={`mob-slider-port-${item.id || idx}`}
@@ -2065,7 +2065,7 @@ export const VideoSectionRenderer: React.FC<{
       <div className="block md:hidden">
         {!isExpanded ? (
           /* Mobile Slider: 2 items properly visible + ~10% peek of next item */
-          <div className="flex gap-2.5 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-2 pt-1 -mx-4 px-4 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+          <div className="flex gap-2.5 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-2 pt-1 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
             {allVideos.map((vid, idx) => {
               const embedUrl = getYouTubeEmbedUrl(vid.youtubeUrl) || vid.youtubeUrl;
               return (
@@ -2483,8 +2483,8 @@ export const SocialMediaSectionRenderer: React.FC<{
 
   return (
     <section id="social-media" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 scroll-mt-20">
-      <div className="bg-white rounded-3xl border border-orange-200/90 p-6 sm:p-8 lg:p-10 shadow-sm space-y-8">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-gray-100">
+      <div className="bg-white rounded-3xl border border-orange-200/90 p-4 sm:p-8 lg:p-10 shadow-sm space-y-6 sm:space-y-8">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 sm:pb-6 border-b border-gray-100">
           <div className="space-y-1.5">
             <div className="inline-flex items-center gap-1.5 bg-orange-100 text-orange-800 text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-md shadow-xs">
               <Share2 className="w-3.5 h-3.5" /> Social Media & Online Profiles
@@ -2504,7 +2504,7 @@ export const SocialMediaSectionRenderer: React.FC<{
 
         {/* 1. MOBILE VIEW: Social Media icons in a single horizontal line */}
         <div className="block sm:hidden">
-          <div className="flex items-center justify-center gap-3.5 overflow-x-auto py-2.5 px-1 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden flex-nowrap">
+          <div className="flex items-center justify-start sm:justify-center gap-3 overflow-x-auto py-2 px-0.5 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden flex-nowrap">
             {channels.map((chan) => {
               const IconComp = chan.icon;
               return (
@@ -2626,7 +2626,7 @@ export const TeamSectionRenderer: React.FC<{
       <div className="block md:hidden">
         {!isExpanded ? (
           /* Mobile Slider: 2 items properly visible + ~10% peek of next item */
-          <div className="flex gap-2.5 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-2 pt-1 -mx-4 px-4 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+          <div className="flex gap-2.5 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-2 pt-1 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
             {config.members.map((member, idx) => (
               <div
                 key={`mob-slider-team-${member.id || idx}`}
@@ -2810,7 +2810,7 @@ export const CtaSectionRenderer: React.FC<{
 
   return (
     <section id="cta" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16">
-      <div className="bg-gradient-to-r from-orange-600 via-amber-600 to-orange-700 text-white rounded-3xl p-8 sm:p-12 shadow-xl text-center relative overflow-hidden">
+      <div className="bg-gradient-to-r from-orange-600 via-amber-600 to-orange-700 text-white rounded-3xl p-5 sm:p-12 shadow-xl text-center relative overflow-hidden">
         <div className="relative z-10 max-w-2xl mx-auto space-y-4">
           {config.badge && (
             <span className="inline-block bg-white/20 text-white text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full backdrop-blur-xs">
@@ -2943,7 +2943,7 @@ export const BlogSectionRenderer: React.FC<{
       <div className="block md:hidden">
         {!isExpanded ? (
           /* Mobile Slider: 2 items properly visible + ~10% peek of next item */
-          <div className="flex gap-2.5 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-2 pt-1 -mx-4 px-4 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+          <div className="flex gap-2.5 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-2 pt-1 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
             {config.posts.map((post, idx) => (
               <article
                 key={`mob-slider-post-${post.id || idx}`}
