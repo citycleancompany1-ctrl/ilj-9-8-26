@@ -17,7 +17,7 @@ interface FooterProps {
 
 export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenAuth }) => {
   return (
-    <footer className="bg-slate-900 text-gray-400 border-t border-slate-800 pt-16 pb-12">
+    <footer className="bg-slate-900 text-gray-400 border-t border-slate-800 pt-16 pb-3 sm:pb-4">
       <div className="max-w-7xl mx-auto px-4 sm:px-8">
         
         {/* Top Editorial CTA Banner */}

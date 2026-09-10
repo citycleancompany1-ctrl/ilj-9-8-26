@@ -506,7 +506,7 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
   )}`;
 
   return (
-    <div className={`min-h-screen bg-[#FBF9F6] bg-gradient-to-b ${activeTheme.bgGradient} text-slate-900 font-sans pb-16`}>
+    <div className={`min-h-screen bg-[#FBF9F6] bg-gradient-to-b ${activeTheme.bgGradient} text-slate-900 font-sans pb-0`}>
       
       {/* 1. TOP TRUST & DIRECT MERCHANT ANNOUNCEMENT BAR (LIGHT THEME) */}
       {shop.status !== 'PUBLISHED' && (
@@ -1071,7 +1071,7 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
 
       {/* 17. STORE FOOTER WITH VENDOR PAYMENT QR (LIGHT THEME) */}
       {(!sectionsConfig || sectionsConfig.footer.enabled) && (
-      <footer className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-20 mb-8">
+      <footer className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 sm:mt-20 mb-0 pb-0">
         <div className="bg-white text-slate-900 rounded-3xl border border-gray-200/90 p-5 sm:p-10 lg:p-12 shadow-sm grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 text-xs">
           
           {/* Shop Bio */}
@@ -1171,7 +1171,7 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
 
         </div>
 
-        <div className="text-center text-[11px] text-slate-500 py-6">
+        <div className="text-center text-[11px] text-slate-500 pt-4 pb-1.5 sm:pb-2">
           {sectionsConfig?.footer?.copyrightText || `© ${new Date().getFullYear()} ${shop.businessName}. All rights reserved. Verified direct store powered by IndianLalaJi.`}
         </div>
       </footer>
