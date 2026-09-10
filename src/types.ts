@@ -92,6 +92,8 @@ export interface Shop {
   banners: string[]; // General/fallback banners
   desktopBanners?: string[]; // Desktop hero carousel banners (maximum 4)
   mobileBanners?: string[]; // Mobile hero carousel banners (maximum 3)
+  useDesktopBannerOnMobile?: boolean; // When ON, mobile ignores mobileBanners and displays desktopBanners on mobile
+  heroBannerEnabled?: boolean; // Independent toggle for hero banner carousel
   bannerTitle?: string;
   bannerSubtitle?: string;
   aboutPhotoUrl: string;
@@ -202,6 +204,13 @@ export interface FloatingButtonsConfig {
 // ==========================================
 // 16 PAGE BUILDER SECTIONS INTERFACES
 // ==========================================
+
+export interface HeroBannerSectionConfig {
+  enabled: boolean;
+  title?: string;
+  subtitle?: string;
+  useDesktopBannerOnMobile?: boolean; // When ON, mobile ignores mobileBanners and displays desktopBanners on mobile
+}
 
 export interface HeroSectionConfig {
   enabled: boolean;
@@ -474,6 +483,7 @@ export interface FooterSectionConfig {
 }
 
 export interface ShopSectionsConfig {
+  heroBanner?: HeroBannerSectionConfig;
   hero: HeroSectionConfig;
   about: AboutSectionConfig;
   features: FeaturesSectionConfig; // Why Choose Us

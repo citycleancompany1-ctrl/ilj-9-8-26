@@ -116,7 +116,7 @@ export const CheckoutInvoiceModal: React.FC<CheckoutInvoiceModalProps> = ({
     // Store Tagline / Phone
     ctx.fillStyle = '#475569';
     ctx.font = '12px sans-serif';
-    const storeContactText = `Phone/WhatsApp: ${shop.phone || shop.whatsapp || 'N/A'} • ${shop.category || 'Direct Merchant'}`;
+    const storeContactText = `Phone/WhatsApp: ${shop.phone || shop.whatsapp || 'N/A'} • Verified Merchant`;
     ctx.fillText(storeContactText, 40, currentY);
 
     currentY += 18;

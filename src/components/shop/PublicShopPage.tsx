@@ -52,6 +52,7 @@ import { FloatingActionButtons } from './FloatingActionButtons';
 import { SupportedLanguage, SUPPORTED_LANGUAGES, getTranslation } from '../../utils/shopTranslations';
 import { initGoogleTranslate, applyGoogleTranslation } from '../../utils/googleTranslate';
 import {
+  HeroBannerRenderer,
   HeroSectionRenderer,
   AboutSectionRenderer,
   FeaturesSectionRenderer,
@@ -576,8 +577,12 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
               </div>
               <div className="flex items-center gap-2 text-xs text-gray-500 truncate">
                 <span className="font-mono font-bold text-orange-600 text-[11px]">{shop.shopId}</span>
-                <span className="text-gray-300">•</span>
-                <span className="truncate">{shop.category}</span>
+                {shop.city && (
+                  <>
+                    <span className="text-gray-300">•</span>
+                    <span className="truncate">{shop.city}</span>
+                  </>
+                )}
               </div>
             </div>
           </a>
@@ -753,11 +758,20 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
         </div>
       )}
 
+      {/* 0. HERO BANNER SLIDER (ON/OFF & Custom Builder Config) */}
+      {sectionsConfig && (sectionsConfig.heroBanner ? sectionsConfig.heroBanner.enabled !== false : shop.heroBannerEnabled !== false) && (
+        <HeroBannerRenderer
+          config={sectionsConfig?.heroBanner}
+          shop={shop}
+        />
+      )}
+
       {/* 1. HERO SECTION (ON/OFF & Custom Builder Config) */}
       {sectionsConfig && sectionsConfig.hero.enabled && (
         <HeroSectionRenderer
           config={sectionsConfig.hero}
           shop={shop}
+          renderBannerSeparately={true}
           onCtaClick={() => {
             const el = document.getElementById('products');
             if (el) el.scrollIntoView({ behavior: 'smooth' });
@@ -1092,7 +1106,7 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
                 <h4 className="font-black uppercase tracking-tight text-slate-950 font-['Outfit',sans-serif] text-sm truncate">
                   {shop.businessName}
                 </h4>
-                <div className="text-[10px] text-orange-600 font-bold">{shop.category} • Verified Local Merchant</div>
+                <div className="text-[10px] text-orange-600 font-bold">Verified Local Merchant</div>
                 <div className="font-mono text-slate-500 font-bold text-[10px]">{shop.shopId}</div>
               </div>
             </div>

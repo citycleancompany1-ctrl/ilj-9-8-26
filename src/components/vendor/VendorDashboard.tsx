@@ -3890,21 +3890,84 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
                 </div>
               </div>
 
+              {/* Responsive Mobile Override Checkbox */}
+              <div className="p-4 bg-orange-50 border-2 border-orange-200 rounded-2xl space-y-2">
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(currentShop.useDesktopBannerOnMobile)}
+                    onChange={(e) => {
+                      const isChecked = e.target.checked;
+                      setCurrentShop({
+                        ...currentShop,
+                        useDesktopBannerOnMobile: isChecked,
+                        sectionsConfig: {
+                          ...(currentShop.sectionsConfig || {}),
+                          heroBanner: {
+                            ...((currentShop.sectionsConfig as any)?.heroBanner || { enabled: true }),
+                            useDesktopBannerOnMobile: isChecked,
+                          },
+                        },
+                      });
+                      showToast(
+                        isChecked
+                          ? 'Mobile par Desktop Banner mode ON! (Mobile uploaded banner hide hoga)'
+                          : 'Separate mobile banner system active!'
+                      );
+                    }}
+                    className="w-5 h-5 text-orange-600 rounded mt-0.5 focus:ring-orange-500 cursor-pointer"
+                  />
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-black text-slate-900">
+                        Mobile par bhi Desktop Banner show karein (Ignore Mobile Banners)
+                      </span>
+                      {currentShop.useDesktopBannerOnMobile ? (
+                        <span className="px-2 py-0.5 text-[10px] font-black uppercase tracking-wider bg-orange-600 text-white rounded-full">
+                          Active
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-gray-200 text-gray-700 rounded-full">
+                          Separate Mobile
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-gray-700 leading-relaxed font-medium">
+                      <strong>Checkbox ON</strong> karte hi Mobile ka uploaded banner completely ignore/hide hoga, aur mobile par sirf Desktop banner show hoga. <strong>Checkbox OFF</strong> ho to existing separate mobile-banner system chalega.
+                    </p>
+                  </div>
+                </label>
+              </div>
+
               {/* 2. Mobile Banners Carousel (Max 3 Banners) */}
               <div className="space-y-3 pt-4 border-t border-gray-100">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h4 className="text-xs font-black uppercase tracking-wider text-slate-900">
-                      Mobile Hero Carousel Banners (Maximum 3 Banners)
+                    <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 flex items-center gap-2">
+                      <span>Mobile Hero Carousel Banners (Maximum 3 Banners)</span>
+                      {currentShop.useDesktopBannerOnMobile && (
+                        <span className="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-300">
+                          Ignored on Mobile (Checkbox ON)
+                        </span>
+                      )}
                     </h4>
                     <p className="text-[11px] text-gray-500">
-                      Smartphones ke liye separate portrait banners (4:5 ya 9:16). Mobile device par sirf ye banners show honge, desktop banners use nahi honge.
+                      Smartphones ke liye separate portrait banners (4:5 ya 9:16). Agar upar diya gaya checkbox OFF hai to mobile device par ye show honge.
                     </p>
                   </div>
                   <span className="text-[10px] font-bold text-purple-800 bg-purple-100 px-2 py-0.5 rounded">
                     Mobile View (Max 3)
                   </span>
                 </div>
+
+                {currentShop.useDesktopBannerOnMobile && (
+                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-xs flex items-center gap-2.5">
+                    <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+                    <span>
+                      <strong>Mobile Banner Ignore Active:</strong> Checkbox ON hone ke karan mobile par sirf Desktop banner show hoga aur ye mobile banners completely hide rahenge.
+                    </span>
+                  </div>
+                )}
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   {[0, 1, 2].map((idx) => {

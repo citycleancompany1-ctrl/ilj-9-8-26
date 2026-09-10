@@ -30,6 +30,14 @@ export function getDefaultSectionsConfig(shop: Partial<Shop> = {}): ShopSections
   const aboutImage = shop.aboutPhotoUrl || shop.logoUrl || 'https://images.unsplash.com/photo-1556742049-0a67c5574f73?w=800';
 
   return {
+    // 0. Hero Banner Section (Carousel Slider)
+    heroBanner: {
+      enabled: shop.heroBannerEnabled !== false,
+      title: 'Hero Banner Slider',
+      subtitle: 'Desktop & Mobile carousel banners',
+      useDesktopBannerOnMobile: Boolean(shop.useDesktopBannerOnMobile),
+    },
+
     // 1. Hero Section
     hero: {
       enabled: true,

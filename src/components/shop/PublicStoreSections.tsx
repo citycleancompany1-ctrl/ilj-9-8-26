@@ -49,6 +49,7 @@ import {
 import {
   Shop,
   ShopSectionsConfig,
+  HeroBannerSectionConfig,
   HeroSectionConfig,
   AboutSectionConfig,
   FeaturesSectionConfig,
@@ -79,37 +80,42 @@ import { getWhatsAppDirectUrl, formatINR, getYouTubeEmbedUrl } from '../../utils
 import { StoreItemsCarouselSection } from './StoreItemsCarouselSection';
 
 // ==========================================
-// 1. HERO SECTION
+// 0. HERO BANNER SLIDER (STANDALONE SECTION)
 // ==========================================
-export const HeroSectionRenderer: React.FC<{
-  config: HeroSectionConfig;
+export const HeroBannerRenderer: React.FC<{
+  config?: HeroBannerSectionConfig;
   shop: Shop;
-  onCtaClick?: () => void;
-}> = ({ config, shop, onCtaClick }) => {
-  if (!config.enabled) return null;
+}> = ({ config, shop }) => {
+  const isEnabled = config ? config.enabled !== false : shop.heroBannerEnabled !== false;
+  if (!isEnabled) return null;
 
   // 1. DESKTOP BANNERS (Strictly up to 4 banners)
   const rawDesktopBanners = (shop.desktopBanners && shop.desktopBanners.filter(Boolean).length > 0)
     ? shop.desktopBanners.filter(Boolean)
     : (shop.banners && shop.banners.filter(Boolean).length > 0)
       ? shop.banners.filter(Boolean)
-      : config.backgroundImage
-        ? [config.backgroundImage]
-        : [
-            'https://images.unsplash.com/photo-1542838132-92c53300491e?w=1600&auto=format&fit=crop&q=80',
-            'https://images.unsplash.com/photo-1608686207856-001b95cf60ca?w=1600&auto=format&fit=crop&q=80',
-          ];
+      : [
+          'https://images.unsplash.com/photo-1542838132-92c53300491e?w=1600&auto=format&fit=crop&q=80',
+          'https://images.unsplash.com/photo-1608686207856-001b95cf60ca?w=1600&auto=format&fit=crop&q=80',
+        ];
   const desktopBanners = rawDesktopBanners.slice(0, 4);
 
-  // 2. MOBILE BANNERS (Strictly up to 3 banners, separate from desktop)
-  // STRICT REQUIREMENT: Mobile device par sirf mobile banners show hon. Desktop banners mobile par use na hon.
-  const rawMobileBanners = (shop.mobileBanners && shop.mobileBanners.filter(Boolean).length > 0)
-    ? shop.mobileBanners.filter(Boolean)
-    : [
-        'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&h=1000&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1608686207856-001b95cf60ca?w=800&h=1000&fit=crop&q=80',
-      ];
-  const mobileBanners = rawMobileBanners.slice(0, 3);
+  // 2. MOBILE BANNERS
+  // USER REQUIREMENT:
+  // "Checkbox ON karte hi Mobile ka uploaded banner completely ignore/hide hoga, aur mobile par sirf Desktop banner show hoga. Checkbox OFF ho to existing separate mobile-banner system chalega."
+  const useDesktopOnMobile = Boolean(
+    config?.useDesktopBannerOnMobile ?? shop.useDesktopBannerOnMobile ?? shop.sectionsConfig?.heroBanner?.useDesktopBannerOnMobile
+  );
+
+  const rawMobileBanners = useDesktopOnMobile
+    ? desktopBanners
+    : (shop.mobileBanners && shop.mobileBanners.filter(Boolean).length > 0)
+      ? shop.mobileBanners.filter(Boolean)
+      : [
+          'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&h=1000&fit=crop&q=80',
+          'https://images.unsplash.com/photo-1608686207856-001b95cf60ca?w=800&h=1000&fit=crop&q=80',
+        ];
+  const mobileBanners = rawMobileBanners.slice(0, useDesktopOnMobile ? 4 : 3);
 
   // Desktop Carousel State
   const [desktopIndex, setDesktopIndex] = useState(0);
@@ -177,53 +183,19 @@ export const HeroSectionRenderer: React.FC<{
     const distance = touchStartX.current - touchEndX.current;
     const minSwipeDistance = 45;
     if (distance > minSwipeDistance) {
-      // Swiped left -> next
       setMobileIndex((prev) => (prev + 1) % mobileBanners.length);
     } else if (distance < -minSwipeDistance) {
-      // Swiped right -> prev
       setMobileIndex((prev) => (prev - 1 + mobileBanners.length) % mobileBanners.length);
     }
     touchStartX.current = null;
     touchEndX.current = null;
   };
 
-  const handleCta = () => {
-    if (config.ctaLink === 'whatsapp') {
-      window.open(
-        getWhatsAppDirectUrl(shop.whatsapp || shop.phone, `Namaste ${shop.businessName}! I am interested in your products/services.`),
-        '_blank'
-      );
-    } else if (config.ctaLink.startsWith('#')) {
-      const el = document.querySelector(config.ctaLink);
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth' });
-      }
-    } else if (config.ctaLink) {
-      window.open(config.ctaLink, '_blank');
-    } else if (onCtaClick) {
-      onCtaClick();
-    }
-  };
-
-  const handleSecondaryCta = () => {
-    window.open(
-      getWhatsAppDirectUrl(shop.whatsapp || shop.phone, `Namaste! I would like to chat with ${shop.vendorName}.`),
-      '_blank'
-    );
-  };
-
   return (
-    <section 
-      id="hero" 
-      className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 space-y-4 sm:space-y-6"
-    >
-      {/* =========================================================================
-          1. HERO BANNER SLIDER (Placed strictly above Store Profile Header)
-          ========================================================================= */}
-
+    <div id="hero-banner" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6">
       {/* A) DESKTOP BANNER SLIDER (hidden md:block) - Up to 4 banners */}
       <div 
-        className="hidden md:block relative rounded-2xl lg:rounded-3xl overflow-hidden border border-gray-200/90 shadow-sm bg-slate-100 group w-full"
+        className="hidden md:block relative rounded-2xl lg:rounded-3xl overflow-hidden border border-gray-200/90 shadow-xs bg-slate-100 group w-full"
         onMouseEnter={() => setIsDesktopPaused(true)}
         onMouseLeave={() => setIsDesktopPaused(false)}
       >
@@ -248,7 +220,7 @@ export const HeroSectionRenderer: React.FC<{
           })}
         </div>
 
-        {/* Desktop Controls: Left & Right Arrows (Only if multiple banners) */}
+        {/* Desktop Controls: Left & Right Arrows */}
         {desktopBanners.length > 1 && (
           <>
             <button
@@ -294,7 +266,7 @@ export const HeroSectionRenderer: React.FC<{
         )}
       </div>
 
-      {/* B) MOBILE BANNER SLIDER (block md:hidden) - Up to 3 mobile banners strictly */}
+      {/* B) MOBILE BANNER SLIDER (block md:hidden) */}
       <div 
         className="block md:hidden relative rounded-2xl overflow-hidden border border-gray-200 shadow-xs bg-slate-100 w-full"
         onTouchStart={handleTouchStart}
@@ -329,7 +301,7 @@ export const HeroSectionRenderer: React.FC<{
           </div>
         )}
 
-        {/* Mobile Navigation Controls: Subtle Arrows & Dots */}
+        {/* Mobile Navigation Controls */}
         {mobileBanners.length > 1 && (
           <>
             <button
@@ -369,6 +341,59 @@ export const HeroSectionRenderer: React.FC<{
           </>
         )}
       </div>
+    </div>
+  );
+};
+
+// ==========================================
+// 1. HERO SECTION (STORE PROFILE & HEADLINE)
+// ==========================================
+export const HeroSectionRenderer: React.FC<{
+  config: HeroSectionConfig;
+  shop: Shop;
+  onCtaClick?: () => void;
+  renderBannerSeparately?: boolean;
+}> = ({ config, shop, onCtaClick, renderBannerSeparately = false }) => {
+  if (!config.enabled) return null;
+
+  const handleCta = () => {
+    if (config.ctaLink === 'whatsapp') {
+      window.open(
+        getWhatsAppDirectUrl(shop.whatsapp || shop.phone, `Namaste ${shop.businessName}! I am interested in your products/services.`),
+        '_blank'
+      );
+    } else if (config.ctaLink.startsWith('#')) {
+      const el = document.querySelector(config.ctaLink);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' });
+      }
+    } else if (config.ctaLink) {
+      window.open(config.ctaLink, '_blank');
+    } else if (onCtaClick) {
+      onCtaClick();
+    }
+  };
+
+  const handleSecondaryCta = () => {
+    window.open(
+      getWhatsAppDirectUrl(shop.whatsapp || shop.phone, `Namaste! I would like to chat with ${shop.vendorName}.`),
+      '_blank'
+    );
+  };
+
+  const showInternalBanner = !renderBannerSeparately && (
+    shop.sectionsConfig?.heroBanner ? shop.sectionsConfig.heroBanner.enabled !== false : shop.heroBannerEnabled !== false
+  );
+
+  return (
+    <section 
+      id="hero" 
+      className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 space-y-4 sm:space-y-6"
+    >
+      {/* If banner is not rendered as its own section above, render it here when enabled */}
+      {showInternalBanner && (
+        <HeroBannerRenderer config={shop.sectionsConfig?.heroBanner} shop={shop} />
+      )}
 
       {/* =========================================================================
           2. STORE PROFILE HEADER SECTION (Placed right under Hero Banner Slider)
@@ -409,8 +434,12 @@ export const HeroSectionRenderer: React.FC<{
                 </h2>
                 <div className="flex flex-wrap items-center gap-2 text-xs text-gray-600 mt-0.5">
                   <span className="font-mono font-bold text-orange-600 text-[11px]">{shop.shopId}</span>
-                  <span>•</span>
-                  <span className="truncate">{shop.category} • {shop.city}</span>
+                  {shop.city && (
+                    <>
+                      <span>•</span>
+                      <span className="truncate">{shop.city}{shop.state ? `, ${shop.state}` : ''}</span>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -2509,7 +2538,7 @@ export const GallerySectionRenderer: React.FC<{
                   </div>
                   <div>
                     <span className="text-[10px] font-bold text-cyan-300 uppercase tracking-wider">
-                      {shop.category || 'Store Showcase'}
+                      Photo Showcase
                     </span>
                     <p className="text-xs font-bold text-white flex items-center gap-1.5 mt-0.5">
                       <span>View High-Res Photo #{idx + 1}</span>

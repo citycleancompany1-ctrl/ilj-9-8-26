@@ -50,6 +50,7 @@ import {
   ProductItem,
   ProductType,
   ShopSectionsConfig,
+  HeroBannerSectionConfig,
   HeroSectionConfig,
   AboutSectionConfig,
   FeaturesSectionConfig,
@@ -333,7 +334,8 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
   React.useEffect(() => {
     if (initialExpandedSection) {
       let targetKey: SectionKey = initialExpandedSection as SectionKey;
-      if (initialExpandedSection === 'hero_banner' || initialExpandedSection === 'hero') targetKey = 'hero';
+      if (initialExpandedSection === 'hero_banner' || initialExpandedSection === 'heroBanner') targetKey = 'heroBanner';
+      else if (initialExpandedSection === 'hero') targetKey = 'hero';
       else if (initialExpandedSection === 'why_choose_us' || initialExpandedSection === 'features') targetKey = 'features';
       else if (initialExpandedSection === 'social_media' || initialExpandedSection === 'socialMedia') targetKey = 'socialMedia';
       else if (initialExpandedSection === 'video' || initialExpandedSection === 'videos') targetKey = 'videos';
@@ -371,7 +373,7 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
 
   // Toggle Section ON / OFF
   const handleToggleSection = (key: SectionKey) => {
-    const isCurrentlyEnabled = config[key]?.enabled !== false;
+    const isCurrentlyEnabled = (config[key] as { enabled?: boolean })?.enabled !== false;
     const nextVal = !isCurrentlyEnabled;
     const updated: ShopSectionsConfig = {
       ...config,
@@ -381,6 +383,15 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
       },
     };
     setConfig(updated);
+    if (key === 'heroBanner') {
+      const updatedShop: Shop = {
+        ...shop,
+        heroBannerEnabled: nextVal,
+        sectionsConfig: updated,
+        updatedAt: new Date().toISOString(),
+      };
+      onUpdateShop(updatedShop);
+    }
     if (onAnyChange) onAnyChange();
     handleSaveConfig(
       updated,
@@ -394,14 +405,14 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
       const defaults = getDefaultSectionsConfig(shop);
       setConfig(defaults);
       if (onAnyChange) onAnyChange();
-      handleSaveConfig(defaults, 'Sabhi 16 sections defaults par reset ho gaye!');
+      handleSaveConfig(defaults, 'Sabhi 18 sections defaults par reset ho gaye!');
     }
   };
 
   // Count active sections within builder
   const activeCount = Object.values(config).filter((s) => (s as { enabled?: boolean })?.enabled !== false).length;
 
-  // Metadata for the 17 Modular Website Sections (Strict parity with public store website)
+  // Metadata for the 18 Modular Website Sections (Strict parity with public store website)
   const SECTION_METAS: Array<{
     key: SectionKey;
     number: number;
@@ -411,8 +422,16 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
     color: string;
   }> = [
     {
-      key: 'hero',
+      key: 'heroBanner',
       number: 1,
+      title: 'Hero Banner',
+      subtitle: 'Desktop & Mobile carousel slider banners with mobile sync display mode',
+      icon: ImageIcon,
+      color: 'text-indigo-600 bg-indigo-50',
+    },
+    {
+      key: 'hero',
+      number: 2,
       title: 'Hero Section',
       subtitle: 'Main heading, short description, CTA button & badge',
       icon: Sparkles,
@@ -420,7 +439,7 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
     },
     {
       key: 'about',
-      number: 2,
+      number: 3,
       title: 'About Us',
       subtitle: 'Company / store / owner story & achievements',
       icon: Award,
@@ -428,7 +447,7 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
     },
     {
       key: 'features',
-      number: 3,
+      number: 4,
       title: 'Why Choose Us',
       subtitle: 'Key store highlights & why customers choose you',
       icon: CheckCircle2,
@@ -436,7 +455,7 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
     },
     {
       key: 'services',
-      number: 4,
+      number: 5,
       title: 'Service',
       subtitle: 'Professional services, consultations & booking offerings',
       icon: Wrench,
@@ -444,7 +463,7 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
     },
     {
       key: 'products',
-      number: 5,
+      number: 6,
       title: 'Product',
       subtitle: 'Products showcase catalogue with prices & stock',
       icon: Tag,
@@ -452,7 +471,7 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
     },
     {
       key: 'courses',
-      number: 6,
+      number: 7,
       title: 'Course',
       subtitle: 'Structured courses, syllabus, fees & certification batches',
       icon: GraduationCap,
@@ -460,7 +479,7 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
     },
     {
       key: 'videos',
-      number: 7,
+      number: 8,
       title: 'Video',
       subtitle: 'Showcase store walkthroughs, product reels & YouTube demos',
       icon: Play,
@@ -468,7 +487,7 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
     },
     {
       key: 'offers',
-      number: 8,
+      number: 9,
       title: 'Offer',
       subtitle: 'Promotional banners with coupon codes & direct WhatsApp deals',
       icon: Sparkles,
@@ -476,7 +495,7 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
     },
     {
       key: 'gallery',
-      number: 9,
+      number: 10,
       title: 'Photo Gallery',
       subtitle: 'Store photos, showroom images & photo showcase',
       icon: ImageIcon,
@@ -484,7 +503,7 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
     },
     {
       key: 'portfolio',
-      number: 10,
+      number: 11,
       title: 'Portfolio',
       subtitle: 'Previous work, client projects & work showcase',
       icon: Briefcase,
@@ -492,7 +511,7 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
     },
     {
       key: 'team',
-      number: 11,
+      number: 12,
       title: 'Team',
       subtitle: 'Staff & specialists (Photo, name, role & bio)',
       icon: Users,
@@ -500,7 +519,7 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
     },
     {
       key: 'faq',
-      number: 12,
+      number: 13,
       title: 'FAQ',
       subtitle: 'Frequently asked questions & customer answers',
       icon: HelpCircle,
@@ -508,7 +527,7 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
     },
     {
       key: 'cta',
-      number: 13,
+      number: 14,
       title: 'CTA',
       subtitle: 'Prominent banner encouraging customer order or booking',
       icon: Zap,
@@ -516,7 +535,7 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
     },
     {
       key: 'contact',
-      number: 14,
+      number: 15,
       title: 'Contact Us',
       subtitle: 'Phone, WhatsApp, email, address, working hours & inquiry form',
       icon: Phone,
@@ -524,7 +543,7 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
     },
     {
       key: 'socialMedia',
-      number: 15,
+      number: 16,
       title: 'Social Media',
       subtitle: 'Instagram, Facebook, YouTube, WhatsApp & social channel links',
       icon: Share2,
@@ -532,7 +551,7 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
     },
     {
       key: 'blog',
-      number: 16,
+      number: 17,
       title: 'Blog',
       subtitle: 'Latest store news, buying guides & expert articles',
       icon: FileText,
@@ -540,7 +559,7 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
     },
     {
       key: 'footer',
-      number: 17,
+      number: 18,
       title: 'Footer',
       subtitle: 'Copyright text, quick links, disclaimer & social profiles',
       icon: Globe,
@@ -1363,6 +1382,331 @@ function renderSectionEditor(
   }
 ) {
   switch (key) {
+    // 0. HERO BANNER SLIDER
+    case 'heroBanner': {
+      const data = config.heroBanner || {
+        enabled: shop.heroBannerEnabled !== false,
+        useDesktopBannerOnMobile: Boolean(shop.useDesktopBannerOnMobile),
+      };
+      const isMobileIgnored = Boolean(data.useDesktopBannerOnMobile ?? shop.useDesktopBannerOnMobile);
+      const update = (patch: Partial<HeroBannerSectionConfig>) => {
+        const nextHeroBanner = {
+          enabled: true,
+          useDesktopBannerOnMobile: Boolean(shop.useDesktopBannerOnMobile),
+          ...(config.heroBanner || {}),
+          ...patch,
+        };
+        setConfig((prev) => ({ ...prev, heroBanner: nextHeroBanner }));
+        if (patch.useDesktopBannerOnMobile !== undefined) {
+          const updated = {
+            ...shop,
+            useDesktopBannerOnMobile: patch.useDesktopBannerOnMobile,
+            sectionsConfig: {
+              ...config,
+              heroBanner: nextHeroBanner,
+            },
+          };
+          actions?.onUpdateShop?.(updated);
+        }
+      };
+
+      return (
+        <div className="space-y-6">
+          {/* Top Info Banner */}
+          <div className="p-3.5 bg-indigo-50 border border-indigo-200 rounded-xl flex items-start gap-3 text-indigo-900 text-xs">
+            <ImageIcon className="w-5 h-5 text-indigo-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-bold">Hero Banner Slider Settings</p>
+              <p className="text-[11px] text-indigo-700 mt-0.5 leading-relaxed">
+                Yahan se aap desktop (16:9) aur mobile ke liye responsive banners upload aur manage kar sakte hain. Dono screens ke liye auto-sliding carousel chalega.
+              </p>
+            </div>
+          </div>
+
+          {/* 1. Desktop Hero Carousel Banners (Max 4) */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="text-xs font-black uppercase tracking-wider text-slate-900">
+                  Desktop Hero Slider Banners (Maximum 4 Banners)
+                </h4>
+                <p className="text-[11px] text-gray-500">
+                  Desktop aur laptop screens ke liye horizontal wide banners (16:9 ya 21:9). Carousel slider mein auto-slide honge.
+                </p>
+              </div>
+              <span className="text-[10px] font-bold text-orange-800 bg-orange-100 px-2 py-0.5 rounded">
+                Desktop (Max 4)
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              {[0, 1, 2, 3].map((idx) => {
+                const bannerSrc = (shop.desktopBanners && shop.desktopBanners[idx]) || (idx === 0 ? (shop.banners?.[0] || config.hero?.backgroundImage) : '') || '';
+                return (
+                  <div key={`desk-sec-banner-${idx}`} className="border border-gray-200 rounded-xl p-2.5 bg-gray-50/50 space-y-2 flex flex-col justify-between">
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between text-[11px]">
+                        <span className="font-bold text-slate-800">Banner #{idx + 1}</span>
+                        {bannerSrc ? (
+                          <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                            Uploaded
+                          </span>
+                        ) : (
+                          <span className="text-[9px] font-medium text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">
+                            Empty
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="aspect-16/9 rounded-lg bg-gray-200 overflow-hidden border border-gray-300 relative group flex items-center justify-center">
+                        {bannerSrc ? (
+                          <img src={bannerSrc} alt={`Desktop Banner ${idx + 1}`} className="w-full h-full object-contain bg-slate-900/5" />
+                        ) : (
+                          <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 text-xs">
+                            <ImageIcon className="w-5 h-5 mb-0.5 text-gray-300" />
+                            <span className="text-[10px]">No Banner</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 pt-1">
+                      <label className="cursor-pointer flex-1 py-1.5 bg-white border border-gray-300 hover:bg-orange-50 text-slate-700 hover:text-orange-700 rounded text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-1 transition-colors shadow-2xs">
+                        <Upload className="w-3 h-3 text-orange-600 shrink-0" />
+                        <span>{bannerSrc ? `Change` : `Upload`}</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            try {
+                              const base64 = await fileToBase64(file, 1600, 800);
+                              const currentList = [...(shop.desktopBanners || shop.banners || [])];
+                              while (currentList.length <= idx) currentList.push('');
+                              currentList[idx] = base64;
+                              const updated = {
+                                ...shop,
+                                desktopBanners: currentList,
+                                banners: currentList,
+                              };
+                              actions?.onUpdateShop?.(updated);
+                              showToast(`Desktop Banner #${idx + 1} updated!`);
+                            } catch (err) {
+                              showToast('Image upload failed');
+                            }
+                          }}
+                        />
+                      </label>
+
+                      {bannerSrc && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const currentList = [...(shop.desktopBanners || shop.banners || [])];
+                            if (idx < currentList.length) {
+                              currentList[idx] = '';
+                              while (currentList.length > 0 && !currentList[currentList.length - 1]) {
+                                currentList.pop();
+                              }
+                              const updated = {
+                                ...shop,
+                                desktopBanners: currentList,
+                                banners: currentList,
+                              };
+                              actions?.onUpdateShop?.(updated);
+                              showToast(`Desktop Banner #${idx + 1} removed.`);
+                            }
+                          }}
+                          className="p-1.5 bg-white border border-rose-200 hover:bg-rose-50 text-rose-600 rounded transition-colors shadow-2xs cursor-pointer"
+                          title={`Remove Banner #${idx + 1}`}
+                        >
+                          <Trash2 className="w-3.5 h-3.5 text-rose-500" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 2. THE REQUIRED CHECKBOX: Mobile par Desktop Banner show karein */}
+          <div className="p-4 bg-orange-50 border-2 border-orange-200 rounded-2xl space-y-2">
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={isMobileIgnored}
+                onChange={(e) => {
+                  const isChecked = e.target.checked;
+                  update({ useDesktopBannerOnMobile: isChecked });
+                  const updated = {
+                    ...shop,
+                    useDesktopBannerOnMobile: isChecked,
+                    sectionsConfig: {
+                      ...config,
+                      heroBanner: {
+                        ...(config.heroBanner || { enabled: true }),
+                        useDesktopBannerOnMobile: isChecked,
+                      },
+                    },
+                  };
+                  actions?.onUpdateShop?.(updated);
+                  showToast(
+                    isChecked
+                      ? 'Mobile par Desktop Banner mode ON! (Mobile uploaded banner hide hoga)'
+                      : 'Separate mobile banner system active!'
+                  );
+                }}
+                className="w-5 h-5 text-orange-600 rounded mt-0.5 focus:ring-orange-500 cursor-pointer"
+              />
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-black text-slate-900">
+                    Mobile par bhi Desktop Banner show karein (Ignore Mobile Banners)
+                  </span>
+                  {isMobileIgnored ? (
+                    <span className="px-2 py-0.5 text-[10px] font-black uppercase tracking-wider bg-orange-600 text-white rounded-full">
+                      Active
+                    </span>
+                  ) : (
+                    <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-gray-200 text-gray-700 rounded-full">
+                      Separate Mobile
+                    </span>
+                  )}
+                </div>
+                <p className="text-[11px] text-gray-700 leading-relaxed font-medium">
+                  <strong>Checkbox ON</strong> karte hi Mobile ka uploaded banner completely ignore/hide hoga, aur mobile par sirf Desktop banner show hoga. <strong>Checkbox OFF</strong> ho to existing separate mobile-banner system chalega.
+                </p>
+              </div>
+            </label>
+          </div>
+
+          {/* 3. Mobile Hero Carousel Banners (Max 3) */}
+          <div className="space-y-3 pt-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 flex items-center gap-2">
+                  <span>Mobile Hero Slider Banners (Maximum 3 Banners)</span>
+                  {isMobileIgnored && (
+                    <span className="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-300">
+                      Ignored on Storefront (Checkbox ON)
+                    </span>
+                  )}
+                </h4>
+                <p className="text-[11px] text-gray-500">
+                  Smartphones ke liye separate portrait banners (4:5 ya 9:16). Agar upar diya gaya checkbox OFF hai to mobile par ye show honge.
+                </p>
+              </div>
+              <span className="text-[10px] font-bold text-purple-800 bg-purple-100 px-2 py-0.5 rounded">
+                Mobile (Max 3)
+              </span>
+            </div>
+
+            {isMobileIgnored && (
+              <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-xs flex items-center gap-2.5">
+                <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+                <span>
+                  <strong>Mobile Banner Ignore Active:</strong> Checkbox ON hone ke karan mobile visitors ko ye banners nahi dikhenge balki upar wale Desktop banners dikhenge. Separate mobile banner dikhane ke liye upar diya gaya checkbox OFF karein.
+                </span>
+              </div>
+            )}
+
+            <div className={`grid grid-cols-1 sm:grid-cols-3 gap-3 transition-opacity ${isMobileIgnored ? 'opacity-70' : 'opacity-100'}`}>
+              {[0, 1, 2].map((idx) => {
+                const bannerSrc = shop.mobileBanners?.[idx] || '';
+                return (
+                  <div key={`mob-sec-banner-${idx}`} className="border border-gray-200 rounded-xl p-2.5 bg-gray-50/50 space-y-2 flex flex-col justify-between">
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between text-[11px]">
+                        <span className="font-bold text-slate-800">Mobile Banner #{idx + 1}</span>
+                        {bannerSrc ? (
+                          <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                            Uploaded
+                          </span>
+                        ) : (
+                          <span className="text-[9px] font-medium text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">
+                            Empty
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="aspect-4/5 max-h-40 mx-auto rounded-lg bg-gray-200 overflow-hidden border border-gray-300 relative group flex items-center justify-center">
+                        {bannerSrc ? (
+                          <img src={bannerSrc} alt={`Mobile Banner ${idx + 1}`} className="w-full h-full object-contain bg-slate-900/5" />
+                        ) : (
+                          <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 text-xs">
+                            <ImageIcon className="w-5 h-5 mb-0.5 text-gray-300" />
+                            <span className="text-[10px]">No Banner</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 pt-1">
+                      <label className="cursor-pointer flex-1 py-1.5 bg-white border border-gray-300 hover:bg-purple-50 text-slate-700 hover:text-purple-700 rounded text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-1 transition-colors shadow-2xs">
+                        <Upload className="w-3 h-3 text-purple-600 shrink-0" />
+                        <span>{bannerSrc ? `Change` : `Upload`}</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            try {
+                              const base64 = await fileToBase64(file, 900, 1200);
+                              const currentList = [...(shop.mobileBanners || [])];
+                              while (currentList.length <= idx) currentList.push('');
+                              currentList[idx] = base64;
+                              const updated = {
+                                ...shop,
+                                mobileBanners: currentList,
+                              };
+                              actions?.onUpdateShop?.(updated);
+                              showToast(`Mobile Banner #${idx + 1} updated!`);
+                            } catch (err) {
+                              showToast('Image upload failed');
+                            }
+                          }}
+                        />
+                      </label>
+
+                      {bannerSrc && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const currentList = [...(shop.mobileBanners || [])];
+                            if (idx < currentList.length) {
+                              currentList[idx] = '';
+                              while (currentList.length > 0 && !currentList[currentList.length - 1]) {
+                                currentList.pop();
+                              }
+                              const updated = {
+                                ...shop,
+                                mobileBanners: currentList,
+                              };
+                              actions?.onUpdateShop?.(updated);
+                              showToast(`Mobile Banner #${idx + 1} removed.`);
+                            }
+                          }}
+                          className="p-1.5 bg-white border border-rose-200 hover:bg-rose-50 text-rose-600 rounded transition-colors shadow-2xs cursor-pointer"
+                          title={`Remove Mobile Banner #${idx + 1}`}
+                        >
+                          <Trash2 className="w-3.5 h-3.5 text-rose-500" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     // 1. HERO SECTION
     case 'hero': {
       const data = config.hero;
@@ -1448,222 +1792,6 @@ function renderSectionEditor(
                 placeholder="e.g. ★ Verified Local Merchant 🇮🇳"
                 className="w-full px-3 py-2 text-xs rounded-sm border border-gray-300 bg-white"
               />
-            </div>
-
-            {/* Desktop Hero Carousel Banners (Max 4) */}
-            <div className="sm:col-span-2 pt-3 border-t border-gray-100 space-y-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="text-xs font-black uppercase tracking-wider text-slate-900">
-                    Desktop Hero Slider Banners (Maximum 4 Banners)
-                  </h4>
-                  <p className="text-[11px] text-gray-500">
-                    Desktop aur laptop screens ke liye horizontal wide banners (16:9 ya 21:9). Carousel slider mein auto-slide honge.
-                  </p>
-                </div>
-                <span className="text-[10px] font-bold text-orange-800 bg-orange-100 px-2 py-0.5 rounded">
-                  Desktop (Max 4)
-                </span>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                {[0, 1, 2, 3].map((idx) => {
-                  const bannerSrc = (shop.desktopBanners && shop.desktopBanners[idx]) || (idx === 0 ? (shop.banners?.[0] || data.backgroundImage) : '') || '';
-                  return (
-                    <div key={`desk-sec-banner-${idx}`} className="border border-gray-200 rounded-xl p-2.5 bg-gray-50/50 space-y-2 flex flex-col justify-between">
-                      <div className="space-y-1.5">
-                        <div className="flex items-center justify-between text-[11px]">
-                          <span className="font-bold text-slate-800">Banner #{idx + 1}</span>
-                          {bannerSrc ? (
-                            <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
-                              Uploaded
-                            </span>
-                          ) : (
-                            <span className="text-[9px] font-medium text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">
-                              Empty
-                            </span>
-                          )}
-                        </div>
-
-                        <div className="aspect-16/9 rounded-lg bg-gray-200 overflow-hidden border border-gray-300 relative group flex items-center justify-center">
-                          {bannerSrc ? (
-                            <img src={bannerSrc} alt={`Desktop Banner ${idx + 1}`} className="w-full h-full object-contain bg-slate-900/5" />
-                          ) : (
-                            <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 text-xs">
-                              <ImageIcon className="w-5 h-5 mb-0.5 text-gray-300" />
-                              <span className="text-[10px]">No Banner</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-1.5 pt-1">
-                        <label className="cursor-pointer flex-1 py-1.5 bg-white border border-gray-300 hover:bg-orange-50 text-slate-700 hover:text-orange-700 rounded text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-1 transition-colors shadow-2xs">
-                          <Upload className="w-3 h-3 text-orange-600 shrink-0" />
-                          <span>{bannerSrc ? `Change` : `Upload`}</span>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={async (e) => {
-                              const file = e.target.files?.[0];
-                              if (!file) return;
-                              try {
-                                const base64 = await fileToBase64(file, 1600, 800);
-                                const currentList = [...(shop.desktopBanners || shop.banners || [])];
-                                while (currentList.length <= idx) currentList.push('');
-                                currentList[idx] = base64;
-                                const updated = {
-                                  ...shop,
-                                  desktopBanners: currentList,
-                                  banners: currentList,
-                                };
-                                actions?.onUpdateShop?.(updated);
-                                showToast(`Desktop Banner #${idx + 1} updated!`);
-                              } catch (err) {
-                                showToast('Image upload failed');
-                              }
-                            }}
-                          />
-                        </label>
-
-                        {bannerSrc && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const currentList = [...(shop.desktopBanners || shop.banners || [])];
-                              if (idx < currentList.length) {
-                                currentList[idx] = '';
-                                while (currentList.length > 0 && !currentList[currentList.length - 1]) {
-                                  currentList.pop();
-                                }
-                                const updated = {
-                                  ...shop,
-                                  desktopBanners: currentList,
-                                  banners: currentList,
-                                };
-                                actions?.onUpdateShop?.(updated);
-                                showToast(`Desktop Banner #${idx + 1} removed.`);
-                              }
-                            }}
-                            className="p-1.5 bg-white border border-rose-200 hover:bg-rose-50 text-rose-600 rounded transition-colors shadow-2xs cursor-pointer"
-                            title={`Remove Banner #${idx + 1}`}
-                          >
-                            <Trash2 className="w-3.5 h-3.5 text-rose-500" />
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Mobile Hero Carousel Banners (Max 3) */}
-            <div className="sm:col-span-2 pt-3 border-t border-gray-100 space-y-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="text-xs font-black uppercase tracking-wider text-slate-900">
-                    Mobile Hero Slider Banners (Maximum 3 Banners)
-                  </h4>
-                  <p className="text-[11px] text-gray-500">
-                    Smartphones ke liye separate portrait banners (4:5 ya 9:16). Mobile par sirf ye show honge.
-                  </p>
-                </div>
-                <span className="text-[10px] font-bold text-purple-800 bg-purple-100 px-2 py-0.5 rounded">
-                  Mobile (Max 3)
-                </span>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {[0, 1, 2].map((idx) => {
-                  const bannerSrc = shop.mobileBanners?.[idx] || '';
-                  return (
-                    <div key={`mob-sec-banner-${idx}`} className="border border-gray-200 rounded-xl p-2.5 bg-gray-50/50 space-y-2 flex flex-col justify-between">
-                      <div className="space-y-1.5">
-                        <div className="flex items-center justify-between text-[11px]">
-                          <span className="font-bold text-slate-800">Mobile Banner #{idx + 1}</span>
-                          {bannerSrc ? (
-                            <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
-                              Uploaded
-                            </span>
-                          ) : (
-                            <span className="text-[9px] font-medium text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">
-                              Empty
-                            </span>
-                          )}
-                        </div>
-
-                        <div className="aspect-4/5 max-h-40 mx-auto rounded-lg bg-gray-200 overflow-hidden border border-gray-300 relative group flex items-center justify-center">
-                          {bannerSrc ? (
-                            <img src={bannerSrc} alt={`Mobile Banner ${idx + 1}`} className="w-full h-full object-contain bg-slate-900/5" />
-                          ) : (
-                            <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 text-xs">
-                              <ImageIcon className="w-5 h-5 mb-0.5 text-gray-300" />
-                              <span className="text-[10px]">No Banner</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-1.5 pt-1">
-                        <label className="cursor-pointer flex-1 py-1.5 bg-white border border-gray-300 hover:bg-purple-50 text-slate-700 hover:text-purple-700 rounded text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-1 transition-colors shadow-2xs">
-                          <Upload className="w-3 h-3 text-purple-600 shrink-0" />
-                          <span>{bannerSrc ? `Change` : `Upload`}</span>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={async (e) => {
-                              const file = e.target.files?.[0];
-                              if (!file) return;
-                              try {
-                                const base64 = await fileToBase64(file, 900, 1200);
-                                const currentList = [...(shop.mobileBanners || [])];
-                                while (currentList.length <= idx) currentList.push('');
-                                currentList[idx] = base64;
-                                const updated = {
-                                  ...shop,
-                                  mobileBanners: currentList,
-                                };
-                                actions?.onUpdateShop?.(updated);
-                                showToast(`Mobile Banner #${idx + 1} updated!`);
-                              } catch (err) {
-                                showToast('Image upload failed');
-                              }
-                            }}
-                          />
-                        </label>
-
-                        {bannerSrc && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const currentList = [...(shop.mobileBanners || [])];
-                              if (idx < currentList.length) {
-                                currentList[idx] = '';
-                                while (currentList.length > 0 && !currentList[currentList.length - 1]) {
-                                  currentList.pop();
-                                }
-                                const updated = {
-                                  ...shop,
-                                  mobileBanners: currentList,
-                                };
-                                actions?.onUpdateShop?.(updated);
-                                showToast(`Mobile Banner #${idx + 1} removed.`);
-                              }
-                            }}
-                            className="p-1.5 bg-white border border-rose-200 hover:bg-rose-50 text-rose-600 rounded transition-colors shadow-2xs cursor-pointer"
-                            title={`Remove Mobile Banner #${idx + 1}`}
-                          >
-                            <Trash2 className="w-3.5 h-3.5 text-rose-500" />
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
             </div>
           </div>
         </div>
