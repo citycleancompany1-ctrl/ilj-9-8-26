@@ -223,24 +223,25 @@ export const HeroSectionRenderer: React.FC<{
 
       {/* A) DESKTOP BANNER SLIDER (hidden md:block) - Up to 4 banners */}
       <div 
-        className="hidden md:block relative rounded-2xl lg:rounded-3xl overflow-hidden border border-gray-200/90 shadow-sm bg-slate-900 group"
+        className="hidden md:block relative rounded-2xl lg:rounded-3xl overflow-hidden border border-gray-200/90 shadow-sm bg-slate-100 group w-full"
         onMouseEnter={() => setIsDesktopPaused(true)}
         onMouseLeave={() => setIsDesktopPaused(false)}
       >
-        <div className="relative aspect-[21/8] lg:aspect-[21/7] max-h-[420px] w-full overflow-hidden">
+        <div className="relative w-full">
           {desktopBanners.map((imgUrl, idx) => {
             const isActive = idx === desktopIndex;
             return (
               <div
                 key={`desk-slide-${idx}`}
-                className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
-                  isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'
+                className={`w-full transition-opacity duration-500 ease-in-out ${
+                  isActive ? 'relative opacity-100 z-10' : 'absolute inset-0 opacity-0 z-0 pointer-events-none'
                 }`}
               >
                 <img
                   src={imgUrl}
                   alt={`${shop.businessName} Desktop Banner ${idx + 1}`}
-                  className="w-full h-full object-cover object-center"
+                  className="w-full h-auto block select-none"
+                  loading="eager"
                 />
               </div>
             );
@@ -295,25 +296,26 @@ export const HeroSectionRenderer: React.FC<{
 
       {/* B) MOBILE BANNER SLIDER (block md:hidden) - Up to 3 mobile banners strictly */}
       <div 
-        className="block md:hidden relative rounded-2xl overflow-hidden border border-gray-200 shadow-xs bg-slate-900"
+        className="block md:hidden relative rounded-2xl overflow-hidden border border-gray-200 shadow-xs bg-slate-100 w-full"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
-        <div className="relative aspect-[16/9] sm:aspect-[2/1] min-h-[190px] max-h-[250px] w-full overflow-hidden">
+        <div className="relative w-full">
           {mobileBanners.map((imgUrl, idx) => {
             const isActive = idx === mobileIndex;
             return (
               <div
                 key={`mob-slide-${idx}`}
-                className={`absolute inset-0 transition-opacity duration-500 ease-in-out ${
-                  isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'
+                className={`w-full transition-opacity duration-500 ease-in-out ${
+                  isActive ? 'relative opacity-100 z-10' : 'absolute inset-0 opacity-0 z-0 pointer-events-none'
                 }`}
               >
                 <img
                   src={imgUrl}
                   alt={`${shop.businessName} Mobile Banner ${idx + 1}`}
-                  className="w-full h-full object-cover object-center"
+                  className="w-full h-auto block select-none"
+                  loading="eager"
                 />
               </div>
             );

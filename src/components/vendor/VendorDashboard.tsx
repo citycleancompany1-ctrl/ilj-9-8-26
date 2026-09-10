@@ -4264,9 +4264,9 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
                             )}
                           </div>
 
-                          <div className="aspect-16/9 rounded-lg bg-gray-200 overflow-hidden border border-gray-300 relative group">
+                          <div className="aspect-16/9 rounded-lg bg-gray-200 overflow-hidden border border-gray-300 relative group flex items-center justify-center">
                             {bannerSrc ? (
-                              <img src={bannerSrc} alt={`Desktop Banner ${idx + 1}`} className="w-full h-full object-cover" />
+                              <img src={bannerSrc} alt={`Desktop Banner ${idx + 1}`} className="w-full h-full object-contain bg-slate-900/5" />
                             ) : (
                               <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 text-xs">
                                 <ImageIcon className="w-6 h-6 mb-1 text-gray-300" />
@@ -4340,9 +4340,9 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
                             )}
                           </div>
 
-                          <div className="aspect-4/5 max-h-48 mx-auto rounded-lg bg-gray-200 overflow-hidden border border-gray-300 relative group">
+                          <div className="aspect-4/5 max-h-48 mx-auto rounded-lg bg-gray-200 overflow-hidden border border-gray-300 relative group flex items-center justify-center">
                             {bannerSrc ? (
-                              <img src={bannerSrc} alt={`Mobile Banner ${idx + 1}`} className="w-full h-full object-cover" />
+                              <img src={bannerSrc} alt={`Mobile Banner ${idx + 1}`} className="w-full h-full object-contain bg-slate-900/5" />
                             ) : (
                               <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 text-xs">
                                 <ImageIcon className="w-6 h-6 mb-1 text-gray-300" />
