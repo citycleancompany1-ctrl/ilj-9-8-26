@@ -105,9 +105,9 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
     adminPaymentQrUrl: state.adminPaymentQrUrl || 'https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=upi://pay?pa=7087033009@paytm&pn=IndianLalaJi%20Official&cu=INR',
     adminUpiId: state.adminUpiId || '7087033009@paytm',
     adminAccountHolder: state.adminAccountHolder || 'IndianLalaJi Platform (R. K. Mehra)',
-    platformHeroHeading: state.platformHeroHeading || '2 MINUTE MEIN WEBSITE LIVE KARO.',
-    platformHeroSubheading: state.platformHeroSubheading || 'Apne mobile se banaye professional digital store website. Bilkul simple, fast, aur modern. WhatsApp direct orders, 0% UPI QR code, aur unique Shop ID paayein.',
-    platformAboutStory: state.platformAboutStory || 'IndianLalaJi.com is built specifically for Indian local vendors. Hum samajhte hain ki ek local dukandar ke liye costly coders ya complex technical software chalana mushkil hota hai. Isi liye humne banaya hai 100% Mobile-Friendly Store Maker — jahan aap seedhe mobile se gallery se photo upload karein, price dalein, apna UPI QR code lagayein aur aapki dukaan active ho jaye!',
+    platformHeroHeading: state.platformHeroHeading || 'LAUNCH YOUR WEBSITE IN 2 MINUTES.',
+    platformHeroSubheading: state.platformHeroSubheading || 'Build a professional digital storefront directly from your mobile phone. Simple, fast, and modern. Accept direct WhatsApp orders, collect direct UPI payments, and get your own unique Shop ID.',
+    platformAboutStory: state.platformAboutStory || 'IndianLalaJi.com is built specifically for local merchants and growing businesses. We empower retailers with a mobile-friendly store creator where you can upload product photos, set prices, display direct UPI payment QR codes, and take your business digital in 2 minutes.',
     platformAboutPhotos: state.platformAboutPhotos || [
       'https://images.unsplash.com/photo-1542838132-92c53300491e?w=1000&auto=format&fit=crop&q=80',
       'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=1000&auto=format&fit=crop&q=80',
@@ -128,13 +128,13 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
     price: 1499,
     period: 'Per Year (1 Year Validity - 365 Days)',
     badge: '1-YEAR ALL-IN-ONE PLAN 🇮🇳',
-    description: 'Complete mobile-first digital store solution with 1-Year validity, WhatsApp order engine, 0% UPI QR, photo gallery, videos, and full vendor dashboard.',
+    description: 'Complete mobile-first digital store solution with 1-Year validity, WhatsApp order engine, direct UPI QR, photo gallery, videos, and full vendor dashboard.',
     features: [
       '1 Full Year (365 Days) Store Hosting & Live Validity',
       'Dedicated Unique Shop Link (e.g. indianlalaji.com/?shop=SHP01234454)',
       'Unlimited Products & Services Showcase',
       '1-Click WhatsApp Direct Ordering & Cart System',
-      '0% Commission Direct UPI QR Code Payment Setup',
+      'Direct UPI QR Code Payment Setup',
       'Up to 8 YouTube Video Tutorials & Demos Embeds',
       'HD Photo Gallery with Full Masonry Showcase',
       'Dynamic Theme & Color Palette Switcher',
@@ -1962,7 +1962,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
               <div className="p-3 bg-orange-50 rounded-xl border border-orange-200 space-y-2.5">
                 <div className="flex items-center gap-1.5 text-xs font-black text-orange-900 uppercase tracking-wider">
                   <QrCode className="w-4 h-4 text-orange-600" />
-                  <span>Vendor 0% Payment QR Code & UPI ID</span>
+                  <span>Vendor Direct Payment QR Code & UPI ID</span>
                 </div>
 
                 <div>

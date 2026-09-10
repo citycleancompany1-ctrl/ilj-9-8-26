@@ -63,7 +63,7 @@ export const LiveStoresPage: React.FC<LiveStoresPageProps> = ({
             Explore Verified Indian Digital Stores
           </h1>
           <p className="text-gray-300 text-xs sm:text-sm leading-relaxed max-w-2xl">
-            Ye woh dukaanein hain jo IndianLalaJi.com par live hain aur WhatsApp orders & UPI payments accept kar rahi hain. Aap bhi apni dukaan sirf 2 minute mein live kar sakte hain!
+            These are verified digital stores live on IndianLalaJi.com accepting direct WhatsApp orders and instant direct UPI payments. You can also launch your digital store in just 2 minutes!
           </p>
         </div>
         <div className="absolute right-6 bottom-6 hidden lg:block">
@@ -136,7 +136,7 @@ export const LiveStoresPage: React.FC<LiveStoresPageProps> = ({
       {filteredShops.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-2xl border border-gray-200 p-8 space-y-3">
           <Store className="w-12 h-12 text-gray-300 mx-auto" />
-          <h3 className="text-lg font-bold text-slate-700 uppercase tracking-tight">Koi store nahi mila</h3>
+          <h3 className="text-lg font-bold text-slate-700 uppercase tracking-tight">No stores found</h3>
           <p className="text-xs text-gray-500 max-w-sm mx-auto">
             Try adjusting your search query or filter to find live vendor storefronts.
           </p>

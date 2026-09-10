@@ -56,7 +56,7 @@ export function getShopDescription(shop: Shop): string {
   if (shop.aboutStory && shop.aboutStory.trim()) {
     return shop.aboutStory.trim().slice(0, 160);
   }
-  return `${shop.businessName} ki official digital dukaan. Online catalogue dekhein aur WhatsApp par direct 0% commission par order karein.`;
+  return `Official online storefront of ${shop.businessName}. Explore our catalogue and place direct orders via WhatsApp.`;
 }
 
 export function getShopOgImage(shop: Shop): string {

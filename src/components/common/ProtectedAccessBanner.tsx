@@ -34,8 +34,8 @@ export const ProtectedAccessBanner: React.FC<ProtectedAccessBannerProps> = ({
 
           <p className="text-xs text-gray-600 leading-relaxed max-w-sm mx-auto">
             {isVendor
-              ? 'Aap logged in nahi hain ya aapka session logout ho chuka hai. Vendor Dashboard access karne ke liye kripya apne registered Mobile Number / Shop ID aur Password se login karein.'
-              : 'Super Admin Dashboard access karne ke liye authorized Super Admin credentials se login karein.'}
+              ? 'You are not logged in or your session has expired. To access your Vendor Dashboard, please sign in with your registered mobile number / Shop ID and password.'
+              : 'Please sign in with your authorized Super Admin credentials to access the administrative dashboard.'}
           </p>
         </div>
 
@@ -45,7 +45,7 @@ export const ProtectedAccessBanner: React.FC<ProtectedAccessBannerProps> = ({
             <span>Security Notice</span>
           </div>
           <p className="text-gray-700 text-[11px]">
-            Logout ke baad ya bina credentials ke direct URL enter karne par kisi ko bhi kisi aur ki shop ya dashboard ka access nahi diya jata.
+            To protect merchant privacy, unauthorized direct URL access to any store dashboard without active authentication is strictly prohibited.
           </p>
         </div>
 

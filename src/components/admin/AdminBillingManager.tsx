@@ -603,7 +603,7 @@ export const AdminBillingManager: React.FC<AdminBillingManagerProps> = ({
                         <div className="font-black text-slate-900 font-['Outfit',sans-serif] text-sm">
                           {formatINR(record.amount)}
                         </div>
-                        <div className="text-[10px] text-gray-400">0% Commission Direct</div>
+                        <div className="text-[10px] text-gray-400">Direct Store Payment</div>
                       </td>
 
                       {/* Status & Quick Toggle */}

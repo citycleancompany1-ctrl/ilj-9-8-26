@@ -362,7 +362,7 @@ export const ThemeLivePreviewModal: React.FC<ThemeLivePreviewModalProps> = ({
                   {selectedTheme.name}
                 </span>
                 <span className="text-gray-400 hidden sm:inline">•</span>
-                <span className="text-gray-300 hidden sm:inline">0% Extra Commission</span>
+                <span className="text-gray-300 hidden sm:inline">Direct Store Pricing</span>
               </div>
               <div className="flex items-center gap-2 text-[10px] text-emerald-300 font-bold">
                 <ShieldCheck className="w-3 h-3" />

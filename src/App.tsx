@@ -185,7 +185,7 @@ export default function App() {
           setCurrentView('home');
           setCurrentRole('VISITOR');
           setLoggedVendorShopId(null);
-          handleOpenAuth('LOGIN', 'Aap logged in nahi hain! Vendor Dashboard access karne ke liye pehle apna Mobile / Shop ID aur Password se Login karein.');
+          handleOpenAuth('LOGIN', 'You are not logged in! Please sign in with your Mobile / Shop ID and Password to access the Vendor Dashboard.');
           return;
         }
         setCurrentRole('VENDOR');
@@ -203,7 +203,7 @@ export default function App() {
           setCurrentView('home');
           setCurrentRole('VISITOR');
           setLoggedVendorShopId(null);
-          handleOpenAuth('ADMIN', 'Super Admin Dashboard access karne ke liye Super Admin credentials se login karein.');
+          handleOpenAuth('ADMIN', 'Please log in with Super Admin credentials to access the Super Admin Dashboard.');
           return;
         }
         setCurrentRole('ADMIN');
@@ -265,7 +265,7 @@ export default function App() {
     } else if (view === 'vendor-dashboard') {
       const session = loadUserSession();
       if (session.role !== 'VENDOR' || !session.shopId) {
-        handleOpenAuth('LOGIN', 'Vendor Dashboard open karne ke liye kripya pehle Login karein.');
+        handleOpenAuth('LOGIN', 'Please sign in first to access your Vendor Dashboard.');
         return;
       }
       setLoggedVendorShopId(session.shopId);
@@ -275,7 +275,7 @@ export default function App() {
     } else if (view === 'admin-dashboard') {
       const session = loadUserSession();
       if (session.role !== 'ADMIN') {
-        handleOpenAuth('ADMIN', 'Super Admin Dashboard ke liye Admin Login karein.');
+        handleOpenAuth('ADMIN', 'Please sign in with Admin credentials to access the Super Admin Dashboard.');
         return;
       }
       setActiveShopId(null);
@@ -582,7 +582,7 @@ export default function App() {
           ) : (
             <ProtectedAccessBanner
               requiredRole="VENDOR"
-              onLogin={() => handleOpenAuth('LOGIN', 'Vendor Dashboard open karne ke liye kripya apna Login karein.')}
+              onLogin={() => handleOpenAuth('LOGIN', 'Please sign in to access your Vendor Dashboard.')}
               onGoHome={() => handleNavigate('home')}
             />
           )
@@ -600,7 +600,7 @@ export default function App() {
           ) : (
             <ProtectedAccessBanner
               requiredRole="ADMIN"
-              onLogin={() => handleOpenAuth('ADMIN', 'Super Admin Dashboard ke liye Admin credentials se login karein.')}
+              onLogin={() => handleOpenAuth('ADMIN', 'Please sign in with Admin credentials to access the Super Admin Dashboard.')}
               onGoHome={() => handleNavigate('home')}
             />
           )

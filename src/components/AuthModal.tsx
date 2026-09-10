@@ -115,7 +115,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
     const query = loginEmailOrPhone.trim().toLowerCase();
     if (!query || !loginPassword) {
-      setErrorMsg('Kripya apna email/mobile/Shop ID aur password bharein.');
+      setErrorMsg('Please enter your registered email/mobile/Shop ID and password.');
       return;
     }
 
@@ -136,7 +136,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
 
     if (!foundShop) {
-      setErrorMsg('Account nahi mila! Kripya apna registered Mobile number ya Shop ID darj karein, ya naya account Register karein.');
+      setErrorMsg('Account not found! Please check your registered mobile number or Shop ID, or register a new store account.');
       return;
     }
 
@@ -144,7 +144,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     const isValid = await verifyPassword(loginPassword, storedCredential, foundShop.shopId);
 
     if (!isValid) {
-      setErrorMsg('Galat Password! Kripya apna sahi password darj karein ya Super Admin se reset karwayein (Customer Care: 7087033009).');
+      setErrorMsg('Incorrect password! Please enter the correct password or contact customer support at +91 7087033009 for a password reset.');
       return;
     }
 
@@ -191,18 +191,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     setErrorMsg(null);
 
     if (!ownerName.trim() || !businessName.trim() || !regEmail.trim() || !mobileNumber.trim() || !regPassword) {
-      setErrorMsg('Kripya sabhi zaroori fields bharein.');
+      setErrorMsg('Please fill in all required fields.');
       return;
     }
 
     if (regPassword !== confirmPassword) {
-      setErrorMsg('Password aur Confirm Password match nahi ho rahe hain.');
+      setErrorMsg('Password and Confirm Password do not match.');
       return;
     }
 
     const cleanPhone = (mobileNumber || '').replace(/[^0-9]/g, '');
     if (cleanPhone.length < 10) {
-      setErrorMsg('Kripya 10-digit valid mobile number darj karein.');
+      setErrorMsg('Please enter a valid 10-digit mobile number.');
       return;
     }
 
@@ -249,10 +249,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         banners: [
           'https://images.unsplash.com/photo-1542838132-92c53300491e?w=1200&auto=format&fit=crop&q=80',
         ],
-        bannerTitle: `${businessName.trim()} Ki Online Dukan`,
-        bannerSubtitle: 'Aapki apni bharosemand dukaan ab digital ho chuki hai. WhatsApp pe order karein!',
+        bannerTitle: `${businessName.trim()} Online Store`,
+        bannerSubtitle: 'Your trusted store is now digital. Browse products and place orders directly on WhatsApp!',
         aboutPhotoUrl: 'https://images.unsplash.com/photo-1556740738-b6a63e27c4df?w=600&auto=format&fit=crop&q=80',
-        aboutStory: `${businessName.trim()} mein aapka swaagat hai. Hum provide karte hain behtareen quality aur genuine service.`,
+        aboutStory: `Welcome to ${businessName.trim()}. We offer premium quality products and trusted customer service.`,
         establishedYear: '2024',
         galleryImages: [],
         paymentQrUrl: `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=upi://pay?pa=${cleanPhone}@upi&pn=${encodeURIComponent(businessName)}&cu=INR`,
@@ -284,24 +284,24 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
       if (sendWhatsApp) {
         // WhatsApp message with Username/ID, Mobile, Password, Login URL
-        const whatsappMsg = `*Namaste ${ownerName.trim()} ji!* 🙏\n\n` +
-          `Aapka *IndianLalaJi Digital Store* account successfully create ho gaya hai!\n\n` +
+        const whatsappMsg = `*Hello ${ownerName.trim()}!* 🙏\n\n` +
+          `Your *IndianLalaJi Digital Store* account has been created successfully!\n\n` +
           `🏪 *Shop Name:* ${businessName.trim()}\n` +
           `🆔 *Username / Shop ID:* ${newShopId}\n` +
           `📱 *Registered Mobile:* ${cleanPhone}\n` +
           `🔑 *Password:* ${rawPass}\n` +
           `🌐 *System Generated Login URL:* ${loginUrl}\n\n` +
-          `👉 *Login Link:* Is link ko click karne par Login Window direct khulegi aur aapka Shop ID pehle se bhara milega. Sirf apna Password darj karein.\n\n` +
-          `_IndianLalaJi Platform Network - 2 Minute Mein Website Live_`;
+          `👉 *Direct Login Link:* Click this link to open the login screen with your Shop ID prefilled. Enter your password to access your dashboard.\n\n` +
+          `_IndianLalaJi Platform Network - Launch Your Website in 2 Minutes_`;
 
         const whatsappUrl = `https://api.whatsapp.com/send?phone=91${cleanPhone}&text=${encodeURIComponent(whatsappMsg)}`;
         window.open(whatsappUrl, '_blank');
       }
 
       setSuccessMsg(
-        `Mubarak ho! Aapka Store ID: ${newShopId} create ho chuka hai. ${
-          sendWhatsApp ? 'WhatsApp par ID aur Password bhej diya gaya hai. ' : ''
-        }Dashboard open ho raha hai...`
+        `Congratulations! Your Store ID: ${newShopId} has been created. ${
+          sendWhatsApp ? 'Your ID and password have been sent to your WhatsApp. ' : ''
+        }Opening your dashboard...`
       );
 
       setTimeout(() => {
@@ -312,7 +312,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       }, 1000);
     } catch (err) {
       console.error(err);
-      setErrorMsg('Store create karne mein error aaya. Kripya dobara koshish karein.');
+      setErrorMsg('Error creating your store account. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -342,7 +342,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 Indian<span className="text-orange-500">LalaJi</span>.com Portal
               </h2>
               <p className="text-xs text-gray-300 font-medium">
-                2 Minute Mein Website Live Karo — Mobile Se Banao Apni Website
+                Launch Your Website in 2 Minutes — Build & Manage from Your Smartphone
               </p>
             </div>
           </div>
@@ -427,7 +427,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     id="vendor-login-email"
                     type="text"
                     required
-                    placeholder="e.g. ramesh.kirana@gmail.com ya 9876543210"
+                    placeholder="e.g. ramesh.store@gmail.com or 9876543210"
                     value={loginEmailOrPhone}
                     onChange={(e) => setLoginEmailOrPhone(e.target.value)}
                     className="w-full pl-10 pr-3 py-2.5 rounded-sm border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-gray-50/50"
@@ -474,13 +474,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
 
               <div className="text-center pt-2">
-                <span className="text-xs text-gray-500"> <b> Password Bhool Gaye?</b></span>
-                <span className="text-xs text-gray-500"> <b>कस्टमर केयर: 7087033009 — अपना शॉप नंबर / रजिस्टर्ड मोबाइल नंबर बताएं।</b></span>
+                <span className="text-xs text-gray-500"> <b> Forgot Password? </b></span>
+                <span className="text-xs text-gray-500"> <b>Customer Support: +91 7087033009 — Provide your Shop ID or registered mobile.</b></span>
               </div>
             
 
               <div className="text-center pt-2">
-                <span className="text-xs text-gray-500">Naya store banana hai? </span>
+                <span className="text-xs text-gray-500">Need to create a new store? </span>
                 <button
                   type="button"
                   onClick={() => setActiveTab('REGISTER')}

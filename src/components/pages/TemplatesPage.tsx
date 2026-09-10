@@ -39,7 +39,7 @@ export const TemplatesPage: React.FC<TemplatesPageProps> = ({
         </h1>
 
         <p className="text-gray-600 text-xs sm:text-sm leading-relaxed max-w-2xl mx-auto">
-          Apne vyapar ke anusaar category chunein. Har business ke liye tailored layout, mobile-friendly design, 15 customizable sections, WhatsApp ordering aur instant UPI payment support pehle se tayar hai.
+          Choose a category tailored to your business. Every business comes with a tailored layout, mobile-friendly design, 15 customizable sections, direct WhatsApp ordering, and zero-fee UPI payment support ready out of the box.
         </p>
 
         {/* Category Filter Pills */}
@@ -130,12 +130,12 @@ export const TemplatesPage: React.FC<TemplatesPageProps> = ({
       {/* 3. TRUST & ONBOARDING STRIP */}
       <div className="bg-slate-900 text-white rounded-2xl p-6 sm:p-8 border border-slate-800 shadow-md flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="space-y-1 text-center md:text-left">
-          <div className="text-xs font-black uppercase tracking-wider text-orange-400">Sabhi Templates Par</div>
+          <div className="text-xs font-black uppercase tracking-wider text-orange-400">Included With Every Template</div>
           <h2 className="text-xl sm:text-2xl font-black font-['Outfit',sans-serif]">
             1-Year Official LalaJi Store Plan Included
           </h2>
           <p className="text-xs text-gray-400 max-w-xl">
-            0% Commission, Direct WhatsApp Orders, Instant UPI Payments, Unlimited Products, aur Super Fast PWA Mobile App.
+            Direct WhatsApp orders, instant UPI payments, unlimited products, and super-fast mobile experience.
           </p>
         </div>
 
@@ -144,7 +144,7 @@ export const TemplatesPage: React.FC<TemplatesPageProps> = ({
           onClick={() => onOpenAuth('REGISTER')}
           className="px-6 py-3 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-black text-xs uppercase tracking-wider shadow-lg flex items-center gap-2 cursor-pointer shrink-0 transition-transform active:scale-98"
         >
-          <span>Apni Dukaan Shuru Karein</span>
+          <span>Launch Your Store Now</span>
           <ArrowRight className="w-4 h-4" />
         </button>
       </div>

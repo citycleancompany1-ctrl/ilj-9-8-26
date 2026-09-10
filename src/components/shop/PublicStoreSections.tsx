@@ -240,7 +240,7 @@ export const HeroSectionRenderer: React.FC<{
               </span>
               <span className="inline-flex items-center gap-1 bg-emerald-100/95 text-emerald-900 border border-emerald-200 text-[11px] font-bold px-2.5 py-0.5 rounded-full shadow-xs backdrop-blur-xs">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                <span>0% Commission Direct Store</span>
+                <span>Verified Direct Store</span>
               </span>
 
               {totalSlides > 1 && (
@@ -2838,7 +2838,7 @@ export const CtaSectionRenderer: React.FC<{
 
             <div className="flex flex-wrap items-center justify-center gap-4 text-[11px] text-orange-100/90 pt-2 font-medium">
               <span className="flex items-center gap-1">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-300" /> 0% Platform Commission
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-300" /> Direct Store Pricing
               </span>
               <span className="hidden sm:inline">•</span>
               <span className="flex items-center gap-1">

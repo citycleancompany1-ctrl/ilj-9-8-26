@@ -325,7 +325,7 @@ export const WhatsAppAddonView: React.FC<VendorSubViewProps> = ({
             </div>
           </div>
           <div className="text-[11px] text-emerald-900 mt-4 bg-white/70 p-3 rounded-xl border border-emerald-200">
-            ✅ <strong>0% Commission:</strong> Direct orders directly to your WhatsApp. No third-party cuts or middleman delays.
+            ✅ <strong>Direct Orders:</strong> Direct orders directly to your WhatsApp. No third-party cuts or middleman delays.
           </div>
         </div>
       </div>
@@ -497,13 +497,13 @@ export const PaymentQrAddonView: React.FC<VendorSubViewProps> = ({
         <div>
           <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold uppercase tracking-wider mb-2">
             <QrCode className="w-3.5 h-3.5" />
-            <span>0% Commission UPI Addon</span>
+            <span>Direct UPI Addon</span>
           </div>
           <h2 className="text-xl sm:text-2xl font-black text-slate-900 font-['Outfit',sans-serif]">
             Direct UPI Payment QR Code
           </h2>
           <p className="text-xs text-gray-500 mt-1">
-            Grahak PhonePe, Google Pay, Paytm, BHIM se seedha aapke bank account mein 0% commission par payment bhej sakein.
+            Allow customers to send payments directly to your bank account via PhonePe, Google Pay, Paytm, or BHIM UPI.
           </p>
         </div>
       </div>
@@ -1007,7 +1007,7 @@ export const MyPlanView: React.FC<VendorSubViewProps> = ({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-700">
           {[
             'Unlimited Products & Services catalog showcase',
-            'Direct WhatsApp ordering engine (0% commission)',
+            'Direct WhatsApp ordering engine (Direct customer orders)',
             'Custom Domain (.com / .in / .org) connection with SSL',
             'Full 16 modular website sections suite',
             'Printable A4 Dukaan QR Standee generator',

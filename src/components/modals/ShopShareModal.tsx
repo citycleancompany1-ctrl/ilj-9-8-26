@@ -40,7 +40,7 @@ export const ShopShareModal: React.FC<ShopShareModalProps> = ({
   const logoUrl = getShopOgImage(shop);
 
   // Formatted WhatsApp caption with Shop Name, Title, and Link
-  const fullShareText = `🏪 *${shop.businessName}*\n✨ *${title}*\n🏷️ ${description}\n\n📍 Address: ${shop.address || 'Local Store'}\n📞 Contact: ${shop.phone || shop.whatsapp || ''}\n\n👇 *Dukaan ka Catalogue & Products dekhne ke liye click karein:*\n${shopUrl}\n\n_Powered by IndianLalaJi.com — 0% Commission Local Dukaan_`;
+  const fullShareText = `🏪 *${shop.businessName}*\n✨ *${title}*\n🏷️ ${description}\n\n📍 Address: ${shop.address || 'Local Store'}\n📞 Contact: ${shop.phone || shop.whatsapp || ''}\n\n👇 *Click here to view our catalogue & order directly:*\n${shopUrl}\n\n_Powered by IndianLalaJi.com — Verified Direct Store_`;
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(shopUrl);
@@ -168,7 +168,7 @@ export const ShopShareModal: React.FC<ShopShareModalProps> = ({
               {/* Card Meta Content */}
               <div className="p-4 bg-white space-y-1.5">
                 <div className="text-[10px] font-bold uppercase tracking-wider text-orange-700 flex items-center gap-1">
-                  <span>INDIANLALAJI.COM • OFFICIAL DUKAAN</span>
+                  <span>INDIANLALAJI.COM • OFFICIAL STORE</span>
                 </div>
                 
                 {/* Shop Name (Bold) */}

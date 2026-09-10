@@ -23,26 +23,26 @@ export const HowToStartPage: React.FC<HowToStartPageProps> = ({
   const steps = [
     {
       step: '1',
-      title: 'Mobile Se Register Karein (30 Seconds)',
-      desc: 'Apna Owner Name, Dukaan Ka Naam, Mobile Number aur Category select karke register karein.',
+      title: 'Register in 30 Seconds',
+      desc: 'Enter your owner name, business name, mobile number, and select your store category to register.',
       icon: Smartphone,
     },
     {
       step: '2',
-      title: 'Products, Services Aur Photos Upload Karein',
-      desc: 'Mobile gallery se photo chunein, rate dalein, UPI Payment QR code upload karein.',
+      title: 'Upload Products, Services & Photos',
+      desc: 'Select photos from your mobile gallery, set pricing, and upload your UPI payment QR code.',
       icon: QrCode,
     },
     {
       step: '3',
       title: 'Admin Verification & Live Store URL',
-      desc: 'Submit karte hi IndianLalaJi admin team review karke aapka store publish kar deti hai.',
+      desc: 'Once submitted, the IndianLalaJi team reviews and activates your unique live store URL.',
       icon: ShieldCheck,
     },
     {
       step: '4',
-      title: 'Grahakon Ko Share Karein & Order Paayein',
-      desc: 'Apna Shop ID (/shop/SHP01234454) WhatsApp, Instagram aur visiting card par lagayein.',
+      title: 'Share With Customers & Receive Orders',
+      desc: 'Share your unique Shop link on WhatsApp, social media, and visiting cards to receive direct orders.',
       icon: Share2,
     },
   ];
@@ -56,10 +56,10 @@ export const HowToStartPage: React.FC<HowToStartPageProps> = ({
           <Video className="w-3.5 h-3.5" /> 4 Video Tutorials & Help Guides
         </div>
         <h1 className="text-3xl sm:text-4xl font-black text-slate-900 uppercase tracking-tight font-['Outfit',sans-serif]">
-          Mobile Se Dukaan Live Karne Ka <span className="text-orange-600">Aasan Tarika</span>
+          The Simplest Way to <span className="text-orange-600">Launch Your Digital Store</span>
         </h1>
         <p className="text-gray-600 text-sm">
-          Niche diye gaye 4 video guides ko dekhein ya step-by-step instructions follow karein.
+          Watch our step-by-step video guides below or follow the simple 4-step walkthrough.
         </p>
       </div>
 
@@ -121,7 +121,7 @@ export const HowToStartPage: React.FC<HowToStartPageProps> = ({
       {/* Bottom CTA */}
       <div className="bg-slate-900 text-white rounded-2xl p-8 text-center space-y-4 shadow-lg">
         <h3 className="text-2xl font-black uppercase tracking-tight font-['Outfit',sans-serif]">
-          Abhi Apna Store Banayein — 2 Minute Lagte Hain
+          Launch Your Digital Store Now — Takes Just 2 Minutes
         </h3>
         <p className="text-gray-300 text-xs sm:text-sm max-w-xl mx-auto">
           No credit card required. Free registration with your mobile number.

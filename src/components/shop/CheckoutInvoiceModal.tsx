@@ -276,36 +276,28 @@ export const CheckoutInvoiceModal: React.FC<CheckoutInvoiceModalProps> = ({
     // Items Subtotal
     ctx.fillStyle = '#475569';
     ctx.font = '12px sans-serif';
-    ctx.fillText(`Items Subtotal (${totalItemsCount} items):`, totalBoxX + 15, currentY + 28);
+    ctx.fillText(`Items Subtotal (${totalItemsCount} items):`, totalBoxX + 15, currentY + 34);
     ctx.textAlign = 'right';
     ctx.fillStyle = '#0F172A';
     ctx.font = 'bold 13px sans-serif';
-    ctx.fillText(`₹${totalAmount.toLocaleString('en-IN')}`, totalBoxX + totalBoxW - 15, currentY + 28);
-    ctx.textAlign = 'left';
-
-    // 0% Platform Fee / Direct Store
-    ctx.fillStyle = '#15803D'; // Emerald
-    ctx.font = 'bold 11px sans-serif';
-    ctx.fillText('Platform Commission / Fee:', totalBoxX + 15, currentY + 54);
-    ctx.textAlign = 'right';
-    ctx.fillText('₹0 (0% Direct Store)', totalBoxX + totalBoxW - 15, currentY + 54);
+    ctx.fillText(`₹${totalAmount.toLocaleString('en-IN')}`, totalBoxX + totalBoxW - 15, currentY + 34);
     ctx.textAlign = 'left';
 
     // Grand Total Divider
     ctx.strokeStyle = '#E2E8F0';
     ctx.beginPath();
-    ctx.moveTo(totalBoxX + 10, currentY + 68);
-    ctx.lineTo(totalBoxX + totalBoxW - 10, currentY + 68);
+    ctx.moveTo(totalBoxX + 10, currentY + 58);
+    ctx.lineTo(totalBoxX + totalBoxW - 10, currentY + 58);
     ctx.stroke();
 
     // Grand Total
     ctx.fillStyle = '#0F172A';
     ctx.font = '900 14px sans-serif';
-    ctx.fillText('TOTAL PAYABLE:', totalBoxX + 15, currentY + 95);
+    ctx.fillText('TOTAL PAYABLE:', totalBoxX + 15, currentY + 88);
     ctx.textAlign = 'right';
     ctx.fillStyle = '#EA580C'; // Orange
     ctx.font = '900 19px sans-serif';
-    ctx.fillText(`₹${totalAmount.toLocaleString('en-IN')}`, totalBoxX + totalBoxW - 15, currentY + 95);
+    ctx.fillText(`₹${totalAmount.toLocaleString('en-IN')}`, totalBoxX + totalBoxW - 15, currentY + 88);
     ctx.textAlign = 'left';
 
     // Left side: Payment Instructions & IndianLalaJi Trust Seal
@@ -323,7 +315,7 @@ export const CheckoutInvoiceModal: React.FC<CheckoutInvoiceModalProps> = ({
 
     ctx.fillStyle = '#7C2D12';
     ctx.font = '10px sans-serif';
-    ctx.fillText('• 0% Middleman Commission store', 55, currentY + 46);
+    ctx.fillText('• Verified Direct Store with original merchant pricing', 55, currentY + 46);
     ctx.fillText('• Pay directly to store via Cash / UPI on Delivery', 55, currentY + 64);
     ctx.fillText(`• Store UPI: ${shop.upiId || '7087033009@paytm'}`, 55, currentY + 82);
     ctx.fillText('• Share this bill on WhatsApp to confirm delivery', 55, currentY + 100);
@@ -445,14 +437,14 @@ export const CheckoutInvoiceModal: React.FC<CheckoutInvoiceModalProps> = ({
                 type="text"
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
-                placeholder="Name / आपका नाम"
+                placeholder="Full Name"
                 className="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-gray-300 focus:outline-none focus:border-orange-500 bg-white placeholder-gray-400 text-slate-900"
               />
               <input
                 type="tel"
                 value={customerPhone}
                 onChange={(e) => setCustomerPhone(e.target.value)}
-                placeholder="Mobile Number / मोबाइल नंबर"
+                placeholder="Mobile Number / WhatsApp"
                 className="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-gray-300 focus:outline-none focus:border-orange-500 bg-white placeholder-gray-400 text-slate-900"
               />
             </div>
@@ -460,7 +452,7 @@ export const CheckoutInvoiceModal: React.FC<CheckoutInvoiceModalProps> = ({
               type="text"
               value={customerAddress}
               onChange={(e) => setCustomerAddress(e.target.value)}
-              placeholder="Delivery Address / पूरा पता (House/Shop No, Area, City)"
+              placeholder="Delivery Address (House/Shop No., Street, Area, City)"
               className="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-gray-300 focus:outline-none focus:border-orange-500 bg-white placeholder-gray-400 text-slate-900"
             />
           </div>

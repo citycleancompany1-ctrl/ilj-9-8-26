@@ -29,10 +29,10 @@ export const PricingPage: React.FC<PricingPageProps> = ({
           <Tag className="w-3.5 h-3.5" /> 1-Year Official LalaJi Store Plan
         </div>
         <h1 className="text-3xl sm:text-4xl font-black text-slate-900 uppercase tracking-tight font-['Outfit',sans-serif]">
-          1-Year All-In-One <span className="text-orange-600">Digital Dukaan Plan</span>
+          1-Year All-In-One <span className="text-orange-600">Digital Storefront Plan</span>
         </h1>
         <p className="text-gray-600 text-sm">
-          Sabhi features included hain 1 saal (365 Din) ke liye. Unlimited products, direct WhatsApp shopping, 0% UPI payments aur priority support.
+          All features are included for a full year (365 days). Unlimited products, direct WhatsApp shopping, direct UPI payments, and priority customer support.
         </p>
       </div>
 
@@ -45,13 +45,13 @@ export const PricingPage: React.FC<PricingPageProps> = ({
           price: 1499,
           period: 'Per Year (1 Year Validity - 365 Days)',
           badge: '1-YEAR ALL-IN-ONE PLAN 🇮🇳',
-          description: 'Complete mobile-first digital store solution with 1-Year validity, WhatsApp order engine, 0% UPI QR, photo gallery, videos, and full vendor dashboard.',
+          description: 'Complete mobile-first digital store solution with 1-Year validity, WhatsApp order engine, direct UPI QR, photo gallery, videos, and full vendor dashboard.',
           features: [
             '1 Full Year (365 Days) Store Hosting & Live Validity',
             'Dedicated Unique Shop Link (e.g. indianlalaji.com/?shop=SHP01234454)',
             'Unlimited Products & Services Showcase',
             '1-Click WhatsApp Direct Ordering & Cart System',
-            '0% Commission Direct UPI QR Code Payment Setup',
+            'Direct UPI QR Code Payment Setup',
             'Up to 8 YouTube Video Tutorials & Demos Embeds',
             'HD Photo Gallery with Full Masonry Showcase',
             'Dynamic Theme & Color Palette Switcher',
@@ -118,7 +118,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({
                   <ArrowRight className="w-4 h-4" />
                 </button>
                 <p className="text-center text-[11px] text-gray-400 mt-2">
-                  1-Year validity with 1-Click WhatsApp orders, 0% UPI QR code, and full mobile dashboard.
+                  1-Year validity with 1-Click WhatsApp orders, direct UPI QR code, and full mobile dashboard.
                 </p>
               </div>
             </div>
@@ -129,13 +129,13 @@ export const PricingPage: React.FC<PricingPageProps> = ({
       {/* Support Box */}
       <div className="bg-white rounded-2xl border border-gray-200 p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-xs">
         <div className="space-y-1 text-center sm:text-left">
-          <h3 className="text-base font-black uppercase tracking-tight text-slate-900">Custom Package Ya Plan Enquiry?</h3>
+          <h3 className="text-base font-black uppercase tracking-tight text-slate-900">Custom Package or Plan Inquiry?</h3>
           <p className="text-xs text-gray-500">
-            Aap hamare support team se baat karke direct payment verification aur setup assistance le sakte hain.
+            Speak directly with our dedicated customer support team for instant payment verification and setup assistance.
           </p>
         </div>
         <a
-          href="https://wa.me/917087033009?text=Namaste%20IndianLalaJi%20Pricing%20Help"
+          href="https://wa.me/917087033009?text=Hello%20IndianLalaJi%20Pricing%20Help"
           target="_blank"
           rel="noreferrer"
           className="px-5 py-3 rounded-sm bg-slate-900 hover:bg-black text-white text-xs font-bold uppercase tracking-wider transition-colors flex items-center gap-2 shadow-xs shrink-0"

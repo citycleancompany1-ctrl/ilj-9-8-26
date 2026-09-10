@@ -58,7 +58,7 @@ export const PackageOrderModal: React.FC<PackageOrderModalProps> = ({
     const mob = phone.trim() || 'Not Provided';
     const utr = utrNumber.trim() ? `\n🔢 *UTR/Transaction ID:* ${utrNumber.trim()}` : '';
 
-    const message = `Namaste IndianLalaJi Admin Ji! 🙏\n\nMaine *1 Single Package* select kiya hai:\n\n📦 *Ordered Plan:* ${selectedPackage.name}\n💰 *Price:* ${formatINR(selectedPackage.price)} (${selectedPackage.period})\n🏬 *Business Name:* ${bName}\n👤 *Owner Name:* ${oName}\n📱 *Mobile Number:* ${mob}${utr}\n\nMaine payment process shuru kar diya hai. Kripya mera digital store setup aur verification confirm karein. Dhanyawaad!`;
+    const message = `Hello IndianLalaJi Admin Team! 🙏\n\nI have selected this *1 Single Package*:\n\n📦 *Ordered Plan:* ${selectedPackage.name}\n💰 *Price:* ${formatINR(selectedPackage.price)} (${selectedPackage.period})\n🏬 *Business Name:* ${bName}\n👤 *Owner Name:* ${oName}\n📱 *Mobile Number:* ${mob}${utr}\n\nI have initiated the payment. Please confirm my digital storefront setup and activation. Thank you!`;
 
     window.open(getWhatsAppDirectUrl(adminPhone, message), '_blank');
   };
@@ -77,7 +77,7 @@ export const PackageOrderModal: React.FC<PackageOrderModalProps> = ({
               Order: <span className="text-orange-400">{selectedPackage.name}</span>
             </h2>
             <p className="text-xs text-gray-300">
-              Aap sirf yeh 1 specific plan order kar rahe hain. 100% Secure & Direct UPI Payment.
+              Ordering this specific store package. 100% Secure & Direct UPI Payment.
             </p>
           </div>
           <button
@@ -136,7 +136,7 @@ export const PackageOrderModal: React.FC<PackageOrderModalProps> = ({
               </div>
 
               <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded mt-2 border border-emerald-200">
-                0% UPI Fee • All Apps Accepted
+                Direct UPI • All Apps Accepted
               </span>
             </div>
 
@@ -177,7 +177,7 @@ export const PackageOrderModal: React.FC<PackageOrderModalProps> = ({
               </div>
 
               <div className="p-2.5 bg-blue-50 border border-blue-200 rounded text-[11px] text-blue-900">
-                💡 <strong>Kaise Pay Karein:</strong> Kisi bhi UPI app (PhonePe, GPay, Paytm) se QR code scan karein aur <strong>{formatINR(selectedPackage.price)}</strong> transfer karein.
+                💡 <strong>How to Pay:</strong> Scan the QR code using any UPI app (PhonePe, GPay, Paytm) and transfer <strong>{formatINR(selectedPackage.price)}</strong>.
               </div>
             </div>
 
@@ -186,17 +186,17 @@ export const PackageOrderModal: React.FC<PackageOrderModalProps> = ({
           {/* Form: Your Details for instant activation */}
           <div className="space-y-3 pt-2 border-t border-gray-200">
             <h4 className="text-xs font-black uppercase tracking-wider text-slate-900">
-              Apni Dukaan Ki Jankari Bharein (Instant Setup)
+              Enter Your Store Information (Instant Setup)
             </h4>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-[10px] font-bold text-gray-700 uppercase mb-1">
-                  Dukaan / Business Name
+                  Business / Store Name
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. Ramesh Kirana Store"
+                  placeholder="e.g. Ramesh General Store"
                   value={businessName}
                   onChange={(e) => setBusinessName(e.target.value)}
                   className="w-full px-3 py-2 text-xs border border-gray-300 rounded bg-gray-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-orange-500"
@@ -205,7 +205,7 @@ export const PackageOrderModal: React.FC<PackageOrderModalProps> = ({
 
               <div>
                 <label className="block text-[10px] font-bold text-gray-700 uppercase mb-1">
-                  Aapka Naam (Owner Name)
+                  Owner Name
                 </label>
                 <input
                   type="text"
@@ -222,7 +222,7 @@ export const PackageOrderModal: React.FC<PackageOrderModalProps> = ({
                 </label>
                 <input
                   type="tel"
-                  placeholder="10 digit mobile number"
+                  placeholder="10-digit mobile number"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   className="w-full px-3 py-2 text-xs border border-gray-300 rounded bg-gray-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-orange-500"

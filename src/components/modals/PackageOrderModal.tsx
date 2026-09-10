@@ -46,11 +46,11 @@ export const PackageOrderModal: React.FC<PackageOrderModalProps> = ({
     setTimeout(() => setCopiedUpi(false), 2500);
   };
 
-  const whatsappOrderMsg = `Namaste IndianLalaJi Team! Main yeh 1-Year Store Package order karna chahta hoon:\n\n` +
+  const whatsappOrderMsg = `Hello IndianLalaJi Team! I would like to order this 1-Year Store Package:\n\n` +
     `*Package Name:* ${selectedPackage.name}\n` +
     `*Price:* ${formatINR(selectedPackage.price)} (Validity: ${selectedPackage.period})\n` +
     `*Admin UPI ID:* ${adminUpiId}\n\n` +
-    `Kripya payment verification aur website setup instructions provide karein. Dhanyawad!`;
+    `Please provide payment verification and website setup instructions. Thank you!`;
 
   const whatsappUrl = getWhatsAppDirectUrl(adminWhatsapp || adminPhone, whatsappOrderMsg);
 
@@ -75,7 +75,7 @@ export const PackageOrderModal: React.FC<PackageOrderModalProps> = ({
             Order Single Package: <span className="text-orange-500">{selectedPackage.name}</span>
           </h3>
           <p className="text-xs text-gray-300 mt-1">
-            0% Platform Commission. Instant verification aur WhatsApp order setup assistance.
+            Instant verification and dedicated WhatsApp order setup assistance.
           </p>
         </div>
 
@@ -108,7 +108,7 @@ export const PackageOrderModal: React.FC<PackageOrderModalProps> = ({
           {/* Included Features */}
           <div>
             <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2 block">
-              Package Mein Included Features:
+              Features Included in this Package:
             </span>
             <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-700">
               {selectedPackage.features.slice(0, 6).map((feat, idx) => (
@@ -128,7 +128,7 @@ export const PackageOrderModal: React.FC<PackageOrderModalProps> = ({
                 <span>Admin Official Payment QR</span>
               </div>
               <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded">
-                0% Direct UPI
+                Direct Verified UPI
               </span>
             </div>
 
@@ -175,7 +175,7 @@ export const PackageOrderModal: React.FC<PackageOrderModalProps> = ({
                 </div>
 
                 <p className="text-[10px] text-gray-500">
-                  PhonePe, Google Pay, Paytm ya kisi bhi UPI app se scan karke payment karein.
+                  Scan and pay securely using PhonePe, Google Pay, Paytm, or any UPI app.
                 </p>
               </div>
             </div>

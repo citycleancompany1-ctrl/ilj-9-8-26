@@ -19,7 +19,7 @@ export function getDefaultFloatingButtons(existing?: Partial<FloatingButtonsConf
  * for all 16 website builder sections for a given shop.
  */
 export function getDefaultSectionsConfig(shop: Partial<Shop> = {}): ShopSectionsConfig {
-  const name = shop.businessName || 'Hamari Digital Dukaan';
+  const name = shop.businessName || 'Our Digital Store';
   const owner = shop.vendorName || 'Merchant Partner';
   const category = shop.category || 'General Store & Services';
   const city = shop.city || 'Local City';
@@ -37,7 +37,7 @@ export function getDefaultSectionsConfig(shop: Partial<Shop> = {}): ShopSections
       subheading:
         shop.bannerSubtitle ||
         shop.tagline ||
-        `Welcome to ${name}. Order authentic ${category} items directly with 0% extra commission, instant WhatsApp confirmation & fastest doorstep service.`,
+        `Welcome to ${name}. Order authentic ${category} items directly with instant WhatsApp confirmation & fastest doorstep service.`,
       ctaText: 'Explore Products & Order',
       ctaLink: '#products',
       secondaryCtaText: 'WhatsApp Direct Chat',
@@ -50,10 +50,10 @@ export function getDefaultSectionsConfig(shop: Partial<Shop> = {}): ShopSections
     about: {
       enabled: true,
       title: `About ${name}`,
-      subtitle: 'Hamari Pehchan Aur Vishwas Ki Kahani',
+      subtitle: 'Our Heritage & Story of Trust',
       description:
         shop.aboutStory ||
-        `${name} aapke shahar mein sabse behtar aur shuddh samaan uplabdh karwata hai. Hamara lakshya har grahak ko imaandari, behtareen quality aur genuine rate provide karna hai. Hum bina kisi teesre bicholiye ke direct aap tak pahunchate hain.`,
+        `${name} delivers the finest and most authentic goods in ${city}. Our mission is to provide every customer with complete honesty, premium quality, and genuine prices, serving you directly without any third-party intermediaries.`,
       storyHeading: `Founded with dedication by ${owner}`,
       imageUrl: aboutImage,
       yearsOfExperience: shop.establishedYear ? `${new Date().getFullYear() - parseInt(shop.establishedYear, 10) || 5}+ Years` : '10+ Years',
@@ -69,30 +69,30 @@ export function getDefaultSectionsConfig(shop: Partial<Shop> = {}): ShopSections
     features: {
       enabled: true,
       title: 'Why Choose Us',
-      subtitle: 'Khas Baatein Jo Hamein Sabse Alag Banati Hain',
+      subtitle: 'Key Highlights That Set Us Apart',
       items: [
         {
           id: 'feat_1',
           title: 'Direct Local Sourcing',
-          description: 'Hamare sabhi items seedhe authentic aur trusted sources se certified check ke baad aate hain.',
+          description: 'All items are procured directly from authentic and certified sources following strict quality inspections.',
           icon: 'ShieldCheck',
         },
         {
           id: 'feat_2',
-          title: '0% Extra Commission',
-          description: 'Kisi app ya bicholiye ko koi commission nahi. Aapko milta hai seedha wholesale aur genuine rate.',
+          title: 'Direct Store Pricing',
+          description: 'No inflated markups or hidden fees. You receive direct store rates and genuine value.',
           icon: 'Zap',
         },
         {
           id: 'feat_3',
           title: 'Instant WhatsApp Connect',
-          description: 'Bina kisi complex checkout ke, 1-click me WhatsApp par store owner se baat karein aur order confirm karein.',
+          description: 'No complex checkout flows. Chat with the store owner in 1 click and confirm your order directly on WhatsApp.',
           icon: 'MessageSquare',
         },
         {
           id: 'feat_4',
           title: 'Same Day Quick Fulfillment',
-          description: 'Aapke order par turant action liya jata hai aur local priority delivery ya quick pickup provide ki jati hai.',
+          description: 'Prompt order preparation with prioritized local doorstep delivery or fast counter pickup.',
           icon: 'Clock',
         },
       ],
@@ -102,7 +102,7 @@ export function getDefaultSectionsConfig(shop: Partial<Shop> = {}): ShopSections
     services: {
       enabled: true,
       title: 'Our Dedicated Services',
-      subtitle: 'Hamari Vishesh Sevaayein Aapke Liye',
+      subtitle: 'Specialized Offerings & Solutions Tailored for You',
       items: [],
     },
 
@@ -110,7 +110,7 @@ export function getDefaultSectionsConfig(shop: Partial<Shop> = {}): ShopSections
     courses: {
       enabled: true,
       title: 'Our Featured Courses & Training',
-      subtitle: 'Skill-up karein hamare structured courses aur practical batches ke sath',
+      subtitle: 'Skill up with our structured curriculum and practical training sessions',
       badge: 'Certified Courses & Training 🎓',
     },
 
@@ -125,26 +125,26 @@ export function getDefaultSectionsConfig(shop: Partial<Shop> = {}): ShopSections
     // 6. How It Works (Disabled per user request)
     howItWorks: {
       enabled: false,
-      title: 'How It Works (Aasan Tarika)',
-      subtitle: 'Sirf 3 Aasan Steps Mein Order Karein',
+      title: 'How It Works',
+      subtitle: 'Order in 3 Simple Steps',
       steps: [
         {
           id: 'step_1',
           stepNumber: 1,
           title: 'Select Items from Catalog',
-          description: 'Hamari digital dukaan se apne pasandeeda items aur quantity select karein.',
+          description: 'Browse our digital store catalogue and choose your preferred items and quantities.',
         },
         {
           id: 'step_2',
           stepNumber: 2,
           title: '1-Click WhatsApp Order',
-          description: '"Order on WhatsApp" button dabayein, aapka pura cart automatic message ban ke tayar ho jayega.',
+          description: 'Click "Order on WhatsApp" to convert your shopping cart into a ready-to-send instant message.',
         },
         {
           id: 'step_3',
           stepNumber: 3,
-          title: 'Confirm & 0% UPI Payment',
-          description: 'Owner se baat karein, direct QR code scan karke pay karein aur fast delivery receive karein.',
+          title: 'Confirm & Direct UPI Payment',
+          description: 'Connect with the store owner, scan the direct UPI QR code, and receive your doorstep delivery.',
         },
       ],
     },
@@ -153,30 +153,30 @@ export function getDefaultSectionsConfig(shop: Partial<Shop> = {}): ShopSections
     benefits: {
       enabled: false,
       title: 'Customer Benefits & Advantages',
-      subtitle: 'Hamare Sath Judne Ke Fayde',
+      subtitle: 'Key Advantages of Shopping With Us',
       items: [
         {
           id: 'ben_1',
           title: 'Pocket Friendly Prices',
-          description: 'Local dukaandar ka vishwas aur online marketplace se 15-20% sasta rate.',
+          description: 'Direct local merchant pricing that is 15-20% more economical than commercial marketplaces.',
           stat: 'Save 15-20%',
         },
         {
           id: 'ben_2',
           title: 'Fresh & Verified Stock',
-          description: 'Har product ki quality testing aur fresh packaging ensure ki jati hai.',
+          description: 'Every product undergoes rigorous quality testing and fresh hygienic packaging.',
           stat: '100% Fresh',
         },
         {
           id: 'ben_3',
           title: 'Direct Merchant Relation',
-          description: 'Kisi bot se nahi, seedhe dukaan ke owner se direct baat aur customer priority.',
+          description: 'Connect directly with the business owner for dedicated assistance, not automated bots.',
           stat: 'Human Touch',
         },
         {
           id: 'ben_4',
           title: 'Secure UPI Payments',
-          description: 'PhonePe, Google Pay, Paytm aur BHIM se 0% commission direct transfer.',
+          description: 'Pay directly with PhonePe, Google Pay, Paytm, or BHIM directly to store QR.',
           stat: 'Instant & Safe',
         },
       ],
@@ -186,14 +186,14 @@ export function getDefaultSectionsConfig(shop: Partial<Shop> = {}): ShopSections
     testimonials: {
       enabled: false,
       title: 'What Customers Say (Reviews)',
-      subtitle: 'Hamare Khush Grahakon Ki Raay',
+      subtitle: 'Real Feedback From Our Happy Customers',
       items: [
         {
           id: 'test_1',
           name: 'Ramesh Sharma',
           location: city,
           rating: 5,
-          text: 'Bahut hi badhiya quality aur fast service! WhatsApp par order diya aur 1 ghante mein saman ghar par deliver ho gaya.',
+          text: 'Outstanding quality and lightning-fast service! Ordered directly on WhatsApp and received everything within an hour.',
           avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120',
         },
         {
@@ -201,7 +201,7 @@ export function getDefaultSectionsConfig(shop: Partial<Shop> = {}): ShopSections
           name: 'Pooja Verma',
           location: `${city} Sector 4`,
           rating: 5,
-          text: 'Price bilkul genuine hain aur store owner bahut humble hain. Sabhi items packaging ke sath perfect condition me mile.',
+          text: 'Completely genuine pricing and the store owner is very courteous. All items arrived in pristine packaging.',
           avatarUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120',
         },
         {
@@ -209,7 +209,7 @@ export function getDefaultSectionsConfig(shop: Partial<Shop> = {}): ShopSections
           name: 'Amit Patel',
           location: city,
           rating: 5,
-          text: 'Local shop se online khareedari ka experience superb raha. 0% UPI payment se seedha payment ho gaya bina kisi extra charge ke.',
+          text: 'A fantastic experience buying directly from a trusted local store. Direct UPI payment made checkout seamless with no extra fees.',
           avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120',
         },
       ],
@@ -219,7 +219,7 @@ export function getDefaultSectionsConfig(shop: Partial<Shop> = {}): ShopSections
     offers: {
       enabled: true,
       title: 'Special Offers & Deals',
-      subtitle: 'Exclusive discounts aur festival offers sirf hamare direct grahakon ke liye',
+      subtitle: 'Exclusive discounts and seasonal promotions for our direct customers',
       banners: [
         {
           id: 'offer_1',
@@ -255,14 +255,14 @@ export function getDefaultSectionsConfig(shop: Partial<Shop> = {}): ShopSections
     gallery: {
       enabled: true,
       title: 'Store Photo Gallery',
-      subtitle: 'Hamari dukaan, taaza stock aur authentic photo showcase',
+      subtitle: 'Our storefront, fresh stock, and verified photo showcase',
     },
 
     // 11. Portfolio / Projects
     portfolio: {
       enabled: true,
       title: 'Our Portfolio & Store Gallery',
-      subtitle: 'Hamara Kaam, Dukaan Aur Past Deliveries Ka Nazara',
+      subtitle: 'Our Storefront, Craftsmanship, and Order Deliveries',
       items: [
         {
           id: 'port_1',
@@ -299,7 +299,7 @@ export function getDefaultSectionsConfig(shop: Partial<Shop> = {}): ShopSections
     team: {
       enabled: true,
       title: 'Meet Our Dedicated Team',
-      subtitle: 'Log Jo Aapke Har Order Ko Kamyab Banate Hain',
+      subtitle: 'The Dedicated People Behind Every Order',
       members: [
         {
           id: 'team_1',
@@ -329,27 +329,27 @@ export function getDefaultSectionsConfig(shop: Partial<Shop> = {}): ShopSections
     faq: {
       enabled: true,
       title: 'Frequently Asked Questions (FAQ)',
-      subtitle: 'Aapke Sawal, Hamare Jawab',
+      subtitle: 'Clear Answers to Your Common Questions',
       items: [
         {
           id: 'faq_1',
-          question: 'Delivery kitne samay mein milti hai?',
-          answer: 'Local orders aam taur par 1 se 3 ghante ke andar deliver kar diye jaate hain. Urgent delivery ke liye WhatsApp par zaroor batayein.',
+          question: 'What is the typical delivery timeframe?',
+          answer: 'Local orders are typically delivered within 1 to 3 hours. For expedited or scheduled deliveries, please inform us on WhatsApp.',
         },
         {
           id: 'faq_2',
-          question: 'Payment ke kaun se options available hain?',
-          answer: 'Aap Cash on Delivery (COD) ya kisi bhi UPI app (Google Pay, PhonePe, Paytm, BHIM) se 0% commission direct QR scan karke pay kar sakte hain.',
+          question: 'What payment options are accepted?',
+          answer: 'We accept Cash on Delivery (COD) as well as all major UPI apps (Google Pay, PhonePe, Paytm, BHIM) via direct QR transfer.',
         },
         {
           id: 'faq_3',
-          question: 'Agar koi saman pasand na aaye ya damaged ho toh kya karein?',
-          answer: 'Hamari taraf se 100% replacement guarantee rehti hai. Delivery ke waqt check karke turant replacement ya refund le sakte hain.',
+          question: 'What if an item is damaged or does not meet expectations?',
+          answer: 'We provide a 100% satisfaction guarantee. You can inspect your items on delivery and request an immediate exchange or refund.',
         },
         {
           id: 'faq_4',
-          question: 'Kya bulk ya wholesale rate mil sakta hai?',
-          answer: 'Haan bilkul! Shaadi, functions ya dukaano ke liye special wholesale rates available hain. Contact form ya WhatsApp par inquiry bhejain.',
+          question: 'Do you offer bulk or wholesale pricing?',
+          answer: 'Yes! We offer attractive wholesale rates for weddings, festive occasions, and bulk merchant purchases. Reach out via WhatsApp or our inquiry form.',
         },
       ],
     },
@@ -368,7 +368,7 @@ export function getDefaultSectionsConfig(shop: Partial<Shop> = {}): ShopSections
     contact: {
       enabled: true,
       title: 'Contact Us & Send Inquiry',
-      subtitle: 'Humse Sampark Karein (Always Ready to Help)',
+      subtitle: 'Get in Touch (Always Here to Help)',
       showForm: true,
       phone: phone,
       email: email,
@@ -380,7 +380,7 @@ export function getDefaultSectionsConfig(shop: Partial<Shop> = {}): ShopSections
     socialMedia: {
       enabled: true,
       title: 'Connect With Us on Social Media',
-      subtitle: 'Hamare official social channels follow karein aur updates payein',
+      subtitle: 'Follow our official social channels for announcements and offers',
       instagram: shop.socialLinks?.instagram || 'https://instagram.com',
       facebook: shop.socialLinks?.facebook || 'https://facebook.com',
       youtube: shop.socialLinks?.youtube || 'https://youtube.com',
@@ -400,13 +400,13 @@ export function getDefaultSectionsConfig(shop: Partial<Shop> = {}): ShopSections
           id: 'post_1',
           title: `How to Choose the Best ${category} in ${city}`,
           snippet: 'Key factors to look for when selecting genuine products, checking batch dates and verifying authenticity.',
-          content: `Jab aap ${city} mein ${category} ki khareedari karte hain, toh sahi aur genuine product chunna sabse ahem hota hai. Hum aapko kuch zaruri baatein batate hain:
+          content: `When purchasing ${category} in ${city}, selecting genuine and fresh products is essential. Here are key recommendations from our team:
 
-1. Batch & Expiry Date Check: Hamesha product par packaging date aur shelf life verify karein.
-2. Direct Merchant Authenticity: Local verified dukaan se lene par aapko seedha bill aur genuine guarantee milti hai.
-3. WhatsApp Fast Inquiry: Kisi bhi product ke baare mein query ho toh aap direct dukaan ke owner se baat kar sakte hain.
+1. Batch & Expiry Verification: Always verify manufacturing dates, batch numbers, and shelf life before purchase.
+2. Direct Merchant Authenticity: Sourcing from an authentic local merchant ensures genuine warranties and direct customer support.
+3. Fast WhatsApp Inquiries: For questions regarding product details or availability, you can consult directly with the store owner.
 
-Hamare paas har ek samaan strict quality check ke baad hi pack kiya jata hai taaki aapko behtareen anubhav mile.`,
+Every item in our catalogue passes thorough quality checks prior to dispatch to ensure an exceptional customer experience.`,
           date: 'August 2026',
           readTime: '3 min read',
           imageUrl: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=600',
@@ -417,15 +417,15 @@ Hamare paas har ek samaan strict quality check ke baad hi pack kiya jata hai taa
           id: 'post_2',
           title: 'Top 5 Tips for Safe Online Ordering via WhatsApp',
           snippet: 'Why ordering directly from local merchants is safer, cheaper, and helps Indian businesses flourish.',
-          content: `WhatsApp par order karna aaj kal sabse aasan aur tez tarika ban chuka hai. 
+          content: `Ordering via WhatsApp has become the fastest and most convenient shopping channel for local commerce.
 
-Iske mukhya fayde:
-• Direct Human Interaction: Kisi machine ya automated bot se nahi, balki dukaan ke owner se direct baat hoti hai.
-• Zero Commission: Online platform fee ya commission nahi lagti, jisse aapko best price milta hai.
-• 0% Fee Direct UPI: Aap PhonePe, Google Pay ya Paytm se seedhe dukaan ke verified QR par payment kar sakte hain.
-• Instant Photo Verification: Saman dispatch hone se pehle aap product ki photo mangwa kar dekh sakte hain.
+Key advantages include:
+• Direct Human Interaction: Communicate directly with the business owner rather than automated response bots.
+• Direct Store Pricing: No inflated markups, ensuring the most competitive prices.
+• Direct UPI: Transfer seamlessly via PhonePe, Google Pay, or Paytm directly to verified store QR codes.
+• Live Photo Verification: Request actual product photos prior to dispatch for complete peace of mind.
 
-Hamari dukaan hamesha aapki suvidha aur suraksha ko pehli priority deti hai.`,
+Our storefront consistently prioritizes customer trust, safety, and rapid service.`,
           date: 'July 2026',
           readTime: '4 min read',
           imageUrl: 'https://images.unsplash.com/photo-1556742049-0a67c5574f73?w=600',
@@ -436,13 +436,13 @@ Hamari dukaan hamesha aapki suvidha aur suraksha ko pehli priority deti hai.`,
           id: 'post_3',
           title: 'Proper Storage & Care Guide for Long-Lasting Freshness',
           snippet: 'Simple home hacks to keep your everyday supplies fresh, preserved, and performing at their best.',
-          content: `Apne khareede gaye items ko lambe samay tak fresh rakhne ke liye in aasan tips ko follow karein:
+          content: `Follow these practical storage recommendations to preserve product freshness:
 
-1. Dry & Cool Storage: Items ko seedhi dhoop aur nami se door rakhein.
-2. Air-Tight Containers: Hawa se bachane ke liye air-tight jars ka upyog karein.
-3. Timely Re-Ordering: Samaan khatam hone se 1-2 din pehle WhatsApp par ek message karke advance booking karein taaki dispatch instant ho sake.
+1. Dry & Cool Storage: Keep goods shielded from direct sunlight, moisture, and extreme temperatures.
+2. Airtight Containers: Use sealed containers to maintain peak aroma and crispness.
+3. Timely Re-Ordering: Reorder 1-2 days before running out to guarantee uninterrupted doorstep supply.
 
-Agar aapko kisi bhi item ke upyog ya storage mein salah chahiye, toh hamare helpline number par kisi bhi samay call ya WhatsApp karein.`,
+Should you need personalized product care advice, reach out to our team at any time via WhatsApp or phone call.`,
           date: 'June 2026',
           readTime: '2 min read',
           imageUrl: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=600',
@@ -455,7 +455,7 @@ Agar aapko kisi bhi item ke upyog ya storage mein salah chahiye, toh hamare help
     // 17. Footer Section
     footer: {
       enabled: true,
-      aboutText: `${name} is a proud verified merchant powered by the IndianLalaJi Platform Network. Providing genuine quality and direct 0% commission local commerce across ${city}.`,
+      aboutText: `${name} is a proud verified merchant powered by the IndianLalaJi Platform Network. Providing genuine quality and authentic local commerce across ${city}.`,
       quickLinks: [
         { label: 'Hero Home', url: '#hero' },
         { label: 'About Us', url: '#about' },
@@ -478,7 +478,7 @@ Agar aapko kisi bhi item ke upyog ya storage mein salah chahiye, toh hamare help
         facebook: shop.socialLinks?.facebook || 'https://facebook.com',
         youtube: shop.socialLinks?.youtube || 'https://youtube.com',
       },
-      copyrightText: `© ${new Date().getFullYear()} ${name}. All Rights Reserved. Built with IndianLalaJi Digital Dukaan.`,
+      copyrightText: `© ${new Date().getFullYear()} ${name}. All Rights Reserved. Built with IndianLalaJi Platform.`,
     },
   };
 }

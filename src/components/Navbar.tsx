@@ -108,7 +108,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           <div className="hidden md:flex items-center gap-3 tracking-widest text-[9.5px]">
             <span>Mon-Fri 10AM-5PM</span>
             <span>•</span>
-            <span>2 MINUTE MEIN WEBSITE LIVE KARO</span>
+            <span>LAUNCH YOUR STORE IN 2 MINUTES</span>
           </div>
 
           {/* Topbar Language Switcher Button */}
@@ -117,7 +117,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               id="topbar-language-btn"
               onClick={() => setIsLangOpen(!isLangOpen)}
               className="flex items-center gap-1.5 bg-black/20 hover:bg-black/35 active:bg-black/40 text-white px-2.5 py-1 rounded-full text-[10.5px] font-bold tracking-normal transition-colors border border-white/20 shadow-xs cursor-pointer notranslate"
-              title="Select Language / भाषा चुनें"
+              title="Select Language"
               aria-label="Change Language"
             >
               <Globe className="w-3.5 h-3.5 text-white" />
@@ -131,7 +131,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 className="absolute right-0 mt-1.5 w-52 bg-white rounded-xl shadow-xl border border-gray-100 py-1.5 text-slate-800 z-50 animate-in fade-in zoom-in-95 duration-100 font-sans normal-case tracking-normal notranslate"
               >
                 <div className="px-3 py-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider border-b border-gray-100 flex items-center justify-between">
-                  <span>Language / भाषा</span>
+                  <span>Language</span>
                   <span className="text-orange-600 font-bold">11 Languages</span>
                 </div>
                 <div className="max-h-64 overflow-y-auto divide-y divide-gray-50 py-1">
@@ -300,7 +300,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1.5 flex items-center justify-between">
                 <span className="flex items-center gap-1.5">
                   <Globe className="w-3 h-3 text-orange-600" />
-                  <span>Choose Language / भाषा चुनें</span>
+                  <span>Choose Language</span>
                 </span>
                 <span className="text-orange-600 font-semibold">{activeLangObj.nativeName}</span>
               </div>

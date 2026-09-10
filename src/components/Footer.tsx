@@ -26,10 +26,10 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenAuth }) => {
           <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-6">
             <div className="max-w-2xl text-center lg:text-left">
               <span className="inline-flex items-center gap-1.5 bg-black/20 text-orange-100 text-[10px] font-black tracking-[0.2em] uppercase px-3 py-1 rounded-sm mb-3">
-                <Sparkles className="w-3.5 h-3.5" /> Bharat Ka Apna Digital Catalogue SaaS
+                <Sparkles className="w-3.5 h-3.5" /> India's Dedicated Digital Storefront SaaS
               </span>
               <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white font-['Outfit',sans-serif]">
-                “2 Minute Mein Website Live Karo — Mobile Se Banao Apni Website”
+                “Launch Your Store in 2 Minutes — Build Your Website Directly from Your Mobile”
               </h2>
               <p className="text-orange-100 text-sm sm:text-base mt-2">
                 Join 5,000+ Indian local businesses, kirana stores, boutiques, restaurants & service vendors today.
@@ -45,7 +45,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenAuth }) => {
                 <ArrowRight className="w-4 h-4" />
               </button>
               <a
-                href="https://wa.me/917087033009?text=Namaste%20IndianLalaJi%20mujhe%20website%20banani%20hai"
+                href="https://wa.me/917087033009?text=Hello%20IndianLalaJi%20I%20want%20to%20create%20a%20store%20website"
                 target="_blank"
                 rel="noreferrer"
                 className="w-full sm:w-auto px-5 py-3.5 rounded-sm bg-slate-900 text-white font-bold uppercase tracking-wider text-xs hover:bg-black transition-colors flex items-center justify-center gap-2 border border-slate-700"

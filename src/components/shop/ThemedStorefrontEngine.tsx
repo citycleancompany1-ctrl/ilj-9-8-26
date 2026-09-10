@@ -360,8 +360,8 @@ export const ThemedHeroSection: React.FC<ThemedHeroSectionProps> = ({
               <div className="md:col-span-4 bg-slate-900 border border-slate-800 p-4 rounded-xl space-y-2 text-xs">
                 <div className="text-slate-400 text-[10px] uppercase tracking-wider">TELEMETRY DATA</div>
                 <div className="flex justify-between text-slate-300">
-                  <span>COMMISSION:</span>
-                  <span className="text-emerald-400 font-bold">0.00%</span>
+                  <span>CHANNEL:</span>
+                  <span className="text-emerald-400 font-bold">DIRECT_STORE</span>
                 </div>
                 <div className="flex justify-between text-slate-300">
                   <span>DISPATCH:</span>
@@ -721,7 +721,7 @@ export const ThemedTrustStrip: React.FC<ThemedTrustStripProps> = ({ theme, shop 
           <div className="flex items-center gap-2">
             <Zap className="w-3.5 h-3.5 text-amber-400" />
             <span className="text-amber-400 font-bold">TELEMETRY:</span>
-            <span>UPI_DIRECT // 0% COMMISSION // GENUINE_PARTS</span>
+            <span>UPI_DIRECT // VERIFIED_STORE // GENUINE_PARTS</span>
           </div>
           <div className="text-[11px] text-slate-400">
             NODE: {shop.city.toUpperCase() || 'LOCAL'} • DISPATCH_READY
@@ -741,7 +741,7 @@ export const ThemedTrustStrip: React.FC<ThemedTrustStripProps> = ({ theme, shop 
         </div>
         <div className="flex items-center gap-1.5 font-bold">
           <Check className="w-4 h-4 text-orange-600" />
-          <span>0% Platform Commission</span>
+          <span>Direct Store Pricing</span>
         </div>
         <div className="flex items-center gap-1.5 font-bold">
           <Clock className="w-4 h-4 text-blue-600" />

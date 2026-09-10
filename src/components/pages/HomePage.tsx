@@ -53,8 +53,8 @@ export const HomePage: React.FC<HomePageProps> = ({
   shops,
   pricingPackages,
   tutorialVideos,
-  platformHeroHeading = '2 MINUTE MEIN WEBSITE LIVE KARO.',
-  platformHeroSubheading = 'Apne mobile se banaye professional digital store website. Bilkul simple, fast, aur modern. WhatsApp direct orders, 0% UPI QR code, aur unique Shop ID paayein.',
+  platformHeroHeading = 'LAUNCH YOUR STORE WEBSITE IN 2 MINUTES.',
+  platformHeroSubheading = 'Build a professional digital storefront directly from your mobile phone. Fast, modern, and effortless. Accept direct WhatsApp orders, collect direct UPI payments, and get your own unique Shop ID.',
   platformAboutStory,
   platformAboutPhotos,
   customerCarePhone = '7087033009',
@@ -75,23 +75,23 @@ export const HomePage: React.FC<HomePageProps> = ({
   const defaultSliderImages = [
     {
       url: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=1000&auto=format&fit=crop&q=80',
-      title: 'Kirana & Retail Dukaan Ko Banayein Online',
-      desc: 'Mobile se photo kheecho, rate dalo aur turant apni live dukaan WhatsApp par share karo.',
+      title: 'Take Your Retail & Grocery Store Online',
+      desc: 'Upload photos from your phone, set prices, and share your live digital store directly on WhatsApp.',
     },
     {
       url: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=1000&auto=format&fit=crop&q=80',
-      title: 'Boutiques & Fashion Sarees Showcase',
-      desc: 'Ethnic wear, bridal lehenga aur handwork poshak ka digital catalogue bina kisi technical knowledge ke.',
+      title: 'Boutiques & Fashion Apparel Showcase',
+      desc: 'Create an elegant digital catalogue for ethnic wear, bridal attire, and designer collections without coding.',
     },
     {
       url: 'https://images.unsplash.com/photo-1599488615731-7e5c2823ff28?w=1000&auto=format&fit=crop&q=80',
-      title: 'Sweets & Restaurant Digital Menu',
-      desc: 'Direct UPI payment QR code aur customer reviews ke saath orders receive karein.',
+      title: 'Restaurants, Cafes & Sweet Shops',
+      desc: 'Receive customer orders with integrated zero-fee UPI payment QR codes and customer reviews.',
     },
     {
       url: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=1000&auto=format&fit=crop&q=80',
       title: 'Home Services, Cleaning & Salons',
-      desc: 'Doorstep service booking aur direct customer lead management apne vendor dashboard se.',
+      desc: 'Manage customer bookings and direct service inquiries directly from your mobile vendor dashboard.',
     },
   ];
 
@@ -237,7 +237,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                           className="w-full h-full object-cover"
                         />
                         <div className="absolute bottom-1 right-1 bg-black/70 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">
-                          0% UPI Active
+                          Direct UPI Active
                         </div>
                       </div>
 
@@ -275,29 +275,29 @@ export const HomePage: React.FC<HomePageProps> = ({
             {/* Left Story Column */}
             <div className="lg:col-span-5 space-y-4">
               <div className="inline-flex items-center gap-1.5 text-[10px] font-black text-orange-700 bg-orange-100 px-3 py-1 rounded-sm uppercase tracking-[0.2em]">
-                <Building className="w-3.5 h-3.5" /> Hamara Mission & Vision
+                <Building className="w-3.5 h-3.5" /> Our Mission & Vision
               </div>
               
               <h2 className="text-2xl sm:text-3xl font-black text-slate-900 font-['Outfit',sans-serif] tracking-tight uppercase">
-                Kyu Banaya Gaya <span className="text-orange-600">IndianLalaJi.com?</span>
+                Why We Built <span className="text-orange-600">IndianLalaJi.com</span>
               </h2>
 
               <p className="text-gray-600 text-sm leading-relaxed">
-                {platformAboutStory || "Bharat ke laakhon local dukandaaron ko heavy e-commerce softwares, commissions aur coding ki zaroorat nahi hai. Unhe chahiye ek aisi sundar digital dukaan jise wo apne phone se 2 minute mein update kar sakein aur customer unhe direct WhatsApp par order kare."}
+                {platformAboutStory || "Local business owners across India do not need complex enterprise software, heavy commissions, or technical barriers. What they need is an intuitive, beautiful digital storefront they can manage in 2 minutes right from their phones—allowing customers to place orders directly on WhatsApp with zero intermediary fees."}
               </p>
 
               <div className="space-y-2 pt-2">
                 <div className="flex items-center gap-2.5 text-xs font-bold text-slate-800">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>Har Business Ka Alag Visual Design & Color Palette</span>
+                  <span>Custom Visual Design & Color Palettes for Every Business</span>
                 </div>
                 <div className="flex items-center gap-2.5 text-xs font-bold text-slate-800">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>Public URLs Protected with Super Admin Approval Flow</span>
+                  <span>Public Storefronts Protected with Super Admin Verification</span>
                 </div>
                 <div className="flex items-center gap-2.5 text-xs font-bold text-slate-800">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>Direct Customer Inquiries & Leads Box</span>
+                  <span>Direct Customer Inquiries & Real-Time Leads Box</span>
                 </div>
               </div>
 
@@ -306,7 +306,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                   onClick={() => onOpenAuth('REGISTER')}
                   className="px-5 py-2.5 rounded-sm bg-slate-900 text-white text-xs font-bold uppercase tracking-wider hover:bg-black transition-colors flex items-center gap-2 shadow-xs"
                 >
-                  <span>Start Your Dukaan Now</span>
+                  <span>Start Your Store Now</span>
                   <ChevronRight className="w-4 h-4 text-orange-400" />
                 </button>
               </div>
@@ -381,7 +381,7 @@ export const HomePage: React.FC<HomePageProps> = ({
             <Play className="w-3.5 h-3.5 fill-orange-700" /> Video Guides & Tutorials
           </div>
           <h2 className="text-2xl sm:text-3xl font-black text-slate-900 font-['Outfit',sans-serif] tracking-tight uppercase">
-            Dekhein Aur Seekhein: <span className="text-orange-600">Video Tutorials</span>
+            Watch & Learn: <span className="text-orange-600">Video Tutorials</span>
           </h2>
           <p className="text-gray-600 text-xs sm:text-sm">
             4 step-by-step video guides to start, manage, and scale your digital store website on IndianLalaJi.
@@ -618,7 +618,7 @@ export const HomePage: React.FC<HomePageProps> = ({
             <div className="lg:col-span-5 flex justify-center">
               <div className="bg-white text-slate-900 p-5 rounded-2xl shadow-2xl border border-gray-200 text-center space-y-3 w-full max-w-xs">
                 <div className="text-[10px] font-black uppercase tracking-wider text-orange-700 bg-orange-50 py-1 rounded">
-                  Official 0% UPI QR Code
+                  Official Direct UPI QR Code
                 </div>
 
                 <div className="w-48 h-48 mx-auto bg-gray-50 rounded-xl border-2 border-dashed border-orange-300 p-2 flex items-center justify-center">
@@ -668,7 +668,7 @@ export const HomePage: React.FC<HomePageProps> = ({
             Stores by <span className="text-orange-600">Business Category</span>
           </h2>
           <p className="text-gray-600 text-xs sm:text-sm">
-            Choose your business type. Har category ke hisaab se customized layout, product cards aur direct WhatsApp ordering uplabdh hai.
+            Choose your business type. Every category features customized layouts, product cards, and direct WhatsApp ordering.
           </p>
         </div>
 
@@ -724,10 +724,10 @@ export const HomePage: React.FC<HomePageProps> = ({
             <Tag className="w-3.5 h-3.5" /> 1-Year All-In-One Plan
           </div>
           <h2 className="text-2xl sm:text-3xl font-black text-slate-900 font-['Outfit',sans-serif] tracking-tight uppercase">
-            Simple 1-Year Plan For <span className="text-orange-600">Every Indian Dukaan</span>
+            Simple 1-Year Plan For <span className="text-orange-600">Every Business</span>
           </h2>
           <p className="text-gray-600 text-xs sm:text-sm">
-            Sabhi features included hain 1 saal (365 Din) ke liye. Koi hidden monthly fees nahi. Direct WhatsApp order, UPI payment setup aur live hosting.
+            All features are included for a full year (365 days) with zero hidden fees. Includes WhatsApp ordering, direct UPI payments, and high-speed hosting.
           </p>
         </div>
 
@@ -739,13 +739,13 @@ export const HomePage: React.FC<HomePageProps> = ({
             price: 1499,
             period: 'Per Year (1 Year Validity - 365 Days)',
             badge: '1-YEAR ALL-IN-ONE PLAN 🇮🇳',
-            description: 'Complete mobile-first digital store solution with 1-Year validity, WhatsApp order engine, 0% UPI QR, photo gallery, videos, and full vendor dashboard.',
+            description: 'Complete mobile-first digital store solution with 1-Year validity, WhatsApp order engine, direct UPI QR, photo gallery, videos, and full vendor dashboard.',
             features: [
               '1 Full Year (365 Days) Store Hosting & Live Validity',
               'Dedicated Unique Shop Link (e.g. indianlalaji.com/?shop=SHP01234454)',
               'Unlimited Products & Services Showcase',
               '1-Click WhatsApp Direct Ordering & Cart System',
-              '0% Commission Direct UPI QR Code Payment Setup',
+              'Direct UPI QR Code Payment Setup',
               'Up to 8 YouTube Video Tutorials & Demos Embeds',
               'HD Photo Gallery with Full Masonry Showcase',
               'Dynamic Theme & Color Palette Switcher',
@@ -814,7 +814,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                     <ArrowRight className="w-4 h-4" />
                   </button>
                   <p className="text-center text-[11px] text-gray-400 mt-2">
-                    Instant activation with 0% commission direct UPI payment & WhatsApp setup.
+                    Instant activation with direct UPI payment & WhatsApp setup.
                   </p>
                 </div>
               </div>
@@ -835,10 +835,10 @@ export const HomePage: React.FC<HomePageProps> = ({
                 ))}
               </div>
               <h2 className="text-2xl sm:text-3xl font-black font-['Outfit',sans-serif] tracking-tight uppercase">
-                “WhatsApp Par Rozana 15+ Naye Orders Aa Rahe Hain”
+                “Receiving 15+ New Customer Orders Daily on WhatsApp”
               </h2>
               <p className="text-gray-300 text-sm italic">
-                “Humne pehle socha tha website banana bohot mushkil hoga. Par IndianLalaJi par humne bas 2 minute mein mobile se photo upload kiya aur hamara link `/shop/SHP01234454` live ho gaya. Ab grahak seedhe WhatsApp par cart bhejte hain!”
+                “We used to think building an e-commerce website was complicated and expensive. With IndianLalaJi, we uploaded product photos from our mobile phone in just 2 minutes and our store link went live immediately. Customers now send their carts directly to our WhatsApp!”
               </p>
               <div className="pt-2">
                 <div className="font-bold text-orange-400 text-sm uppercase tracking-wider">Ramesh Chand Gupta</div>

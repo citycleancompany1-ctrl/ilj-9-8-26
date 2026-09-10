@@ -206,7 +206,7 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
           </div>
           <h2 className="text-xl font-black uppercase tracking-tight text-slate-900">Shop Not Found (404)</h2>
           <p className="text-xs text-gray-600">
-            Shop ID <strong>{shopId}</strong> platform par maujood nahi hai ya remove kar di gayi hai.
+            Shop ID <strong>{shopId}</strong> does not exist on the platform or has been removed.
           </p>
           <button
             onClick={onNavigateHome}
@@ -242,10 +242,10 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
           <div className="p-4 bg-orange-50/60 rounded-xl text-xs text-orange-950 space-y-2 border border-orange-200 text-left">
             <p className="font-bold flex items-center gap-1.5 uppercase tracking-wider">
               <ShieldCheck className="w-4 h-4 text-orange-700" />
-              <span>Dukaan Abhi Under Verification Hai:</span>
+              <span>Store Currently Under Verification:</span>
             </p>
             <p className="text-gray-700">
-              IndianLalaJi security rules ke mutabiq yeh public website tabhi open hogi jab Super Admin isko review karke <strong>PUBLISH</strong> kar dega.
+              In accordance with IndianLalaJi security protocols, this store website will become publicly visible once verified and marked as <strong>PUBLISHED</strong> by Super Admin.
             </p>
           </div>
 
@@ -522,7 +522,7 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
               <span>Verified Direct Store</span>
             </span>
             <span className="text-amber-300 hidden sm:inline">•</span>
-            <span className="text-slate-700 hidden sm:inline font-medium">0% Extra Commission</span>
+            <span className="text-slate-700 hidden sm:inline font-medium">Direct Store Pricing</span>
             <span className="text-amber-300 hidden md:inline">•</span>
             <span className="text-slate-700 hidden md:inline font-medium">Instant WhatsApp Delivery & Booking</span>
           </div>
@@ -611,14 +611,14 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
           {/* Actions: UPI Pay, Cart, Call, WhatsApp, Language, Share */}
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             
-            {/* 0% UPI Payment QR Button */}
+            {/* Direct UPI Payment QR Button */}
             <button
               onClick={() => setShowQrModal(true)}
               className="px-2.5 py-2 sm:px-3.5 sm:py-2 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-800 font-bold uppercase tracking-wider text-xs flex items-center gap-1.5 border border-orange-200 transition-all hover:scale-102 cursor-pointer shadow-xs"
-              title="0% Direct UPI QR Payment"
+              title="Direct UPI QR Payment"
             >
               <QrCode className="w-3.5 h-3.5 text-orange-600" />
-              <span className="hidden sm:inline">0% UPI Pay</span>
+              <span className="hidden sm:inline">UPI Pay</span>
             </button>
 
             {/* Direct WhatsApp Order/Chat */}
@@ -796,7 +796,7 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
         <StoreItemsCarouselSection
           id="products"
           title={getTranslation('nav.products', currentLanguage, 'Store Products')}
-          subtitle="Direct store prices with zero platform commission and instant WhatsApp delivery."
+          subtitle="Direct store prices with verified authentic quality and instant WhatsApp delivery."
           badgeText="Products Catalogue"
           isService={false}
           items={catalogProducts}
@@ -948,7 +948,7 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
                       <QrCode className="w-4 h-4" />
                     </div>
                     <div>
-                      <div className="font-bold text-slate-900 text-xs">0% UPI Direct Pay ID</div>
+                      <div className="font-bold text-slate-900 text-xs">Direct UPI Pay ID</div>
                       <p className="font-mono text-gray-800 text-[11px] font-bold mt-0.5">{shop.upiId || '7087033009@paytm'}</p>
                     </div>
                   </div>
@@ -961,9 +961,9 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
               {inquirySubmitted ? (
                 <div className="bg-white rounded-2xl border border-emerald-300 p-8 text-center space-y-4 shadow-sm animate-in fade-in">
                   <CheckCircle2 className="w-12 h-12 text-emerald-600 mx-auto" />
-                  <h4 className="text-lg font-black text-slate-900 font-['Outfit',sans-serif]">Aapka Sandesh Bhej Diya Gaya Hai!</h4>
+                  <h4 className="text-lg font-black text-slate-900 font-['Outfit',sans-serif]">Your Message Has Been Sent Successfully!</h4>
                   <p className="text-xs text-gray-600 max-w-md mx-auto leading-relaxed">
-                    Store owner <strong>{shop.vendorName}</strong> aapse jald hi call ya WhatsApp par sampark karenge.
+                    Store owner <strong>{shop.vendorName}</strong> will contact you shortly via phone call or WhatsApp.
                   </p>
                   <button
                     onClick={() => {
@@ -988,7 +988,7 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-                        Aapka Naam (Customer Name) *
+                        Your Full Name *
                       </label>
                       <input
                         type="text"
@@ -1017,7 +1017,7 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
 
                   <div>
                     <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-                      Product ya Service Required (Optional)
+                      Product or Service Required (Optional)
                     </label>
                     <input
                       type="text"
@@ -1030,12 +1030,12 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
 
                   <div>
                     <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-                      Aapka Sandesh (Message / Inquiry) *
+                      Your Message / Inquiry Details *
                     </label>
                     <textarea
                       rows={4}
                       required
-                      placeholder="Apna sandesh ya sawal yahan likhein..."
+                      placeholder="Write your message or inquiry details here..."
                       value={custMsg}
                       onChange={(e) => setCustMsg(e.target.value)}
                       className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-xs bg-gray-50/60 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all resize-none"
@@ -1091,7 +1091,7 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
               </div>
             </div>
             <p className="text-slate-600 text-xs leading-relaxed">
-              {shop.tagline || shop.aboutStory || 'Aapki apni bharosemand local dukaan. Behtar quality aur genuine rate ke sath.'}
+              {shop.tagline || shop.aboutStory || 'Your trusted local business store. Delivering premium quality products and direct service with zero middleman markup.'}
             </p>
             <div className="text-[11px] text-slate-600 space-y-1.5 pt-1">
               <div><strong className="text-slate-900">Address:</strong> {shop.address}, {shop.city}, {shop.state} - {shop.pincode}</div>
@@ -1143,7 +1143,7 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
             </div>
 
             <p className="text-[10px] text-slate-600 leading-tight">
-              Pay direct via GPay, PhonePe, Paytm, BHIM. 0% Commission direct to vendor bank account.
+              Pay direct via GPay, PhonePe, Paytm, BHIM directly to the store's verified account.
             </p>
           </div>
 
@@ -1151,7 +1151,7 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
           <div className="space-y-3">
             <h5 className="font-black uppercase tracking-wider text-slate-900 text-xs">Merchant Administration</h5>
             <p className="text-slate-600 text-[11px]">
-              Dukaan ke owner hain? Yahan se login karke product, photo ya price edit karein.
+              Are you the store owner? Log in here to manage your products, photos, prices, and orders.
             </p>
             <button
               onClick={onOpenVendorLogin}
@@ -1204,9 +1204,9 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
                 <div className="text-center py-16 space-y-3 text-gray-500">
                   <ShoppingBag className="w-12 h-12 mx-auto text-gray-300" />
                   <p className="text-sm font-bold text-slate-700">
-                    {getTranslation('cart.empty', currentLanguage, 'Aapka cart abhi khali hai')}
+                    {getTranslation('cart.empty', currentLanguage, 'Your cart is empty')}
                   </p>
-                  <p className="text-xs">Store catalogue se apne manpasand products add karein.</p>
+                  <p className="text-xs">Add your favorite products from the store catalogue to get started.</p>
                   <button
                     onClick={() => setIsCartOpen(false)}
                     className="px-4 py-2 bg-orange-600 text-white font-bold uppercase tracking-wider text-xs rounded-sm"
@@ -1274,10 +1274,6 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
                   <div className="flex justify-between text-gray-600">
                     <span>{getTranslation('cart.subtotal', currentLanguage, 'Items Subtotal')} ({totalCartCount})</span>
                     <span className="font-semibold">{formatINR(totalCartAmount)}</span>
-                  </div>
-                  <div className="flex justify-between text-emerald-700 font-bold">
-                    <span>Middleman Commission</span>
-                    <span>₹0 (0% Extra)</span>
                   </div>
                   <div className="flex justify-between text-base font-black text-slate-900 pt-2 border-t border-gray-200 font-['Outfit',sans-serif]">
                     <span>Total Amount</span>
@@ -1404,7 +1400,7 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
               <h3 className="text-lg font-black uppercase tracking-tight text-slate-900 font-['Outfit',sans-serif]">
                 {shop.businessName}
               </h3>
-              <p className="text-xs text-emerald-700 font-bold">Direct 0% Commission UPI QR Code</p>
+              <p className="text-xs text-emerald-700 font-bold">Direct Verified UPI QR Code</p>
             </div>
 
             {/* QR Image */}
@@ -1428,7 +1424,7 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
             </div>
 
             <p className="text-[11px] text-gray-500 leading-relaxed">
-              Google Pay, PhonePe, Paytm ya kisi bhi UPI app se scan karke payment karein aur screenshot WhatsApp par share karein.
+              Scan with Google Pay, PhonePe, Paytm, or any UPI app to pay directly and share the payment confirmation on WhatsApp.
             </p>
           </div>
         </div>
@@ -1496,7 +1492,7 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
               Install {shop.businessName} on iPhone
             </h3>
             <p className="text-xs text-center text-gray-600 mt-1">
-              Safari browser me ye do aasan steps follow karein aur dukaan ka app phone me install karein:
+              Follow these two simple steps in Safari to add this store shortcut to your home screen:
             </p>
 
             <div className="mt-4 space-y-3 text-xs bg-orange-50/60 p-4 rounded-2xl border border-orange-200">
@@ -1507,7 +1503,7 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
                 <div>
                   <span className="font-bold text-slate-900">Tap Share Button</span>
                   <p className="text-gray-600 text-[11px] mt-0.5">
-                    Safari ke neeche <strong>Share (⎋)</strong> icon par click karein.
+                    Tap the <strong>Share (⎋)</strong> icon at the bottom of Safari.
                   </p>
                 </div>
               </div>
@@ -1519,7 +1515,7 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
                 <div>
                   <span className="font-bold text-slate-900">Add to Home Screen</span>
                   <p className="text-gray-600 text-[11px] mt-0.5">
-                    Neeche scroll karein aur <strong>"Add to Home Screen" (➕)</strong> chunein.
+                    Scroll down and select <strong>"Add to Home Screen" (➕)</strong>.
                   </p>
                 </div>
               </div>
@@ -1529,7 +1525,7 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
               onClick={() => setShowIosPwaGuide(false)}
               className="w-full mt-5 py-3 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs uppercase tracking-wider cursor-pointer"
             >
-              Samajh Gaya!
+              Got It!
             </button>
           </div>
         </div>
@@ -1575,7 +1571,7 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
                   {shop.businessName}
                 </h3>
                 <p className="text-xs text-gray-600 mt-0.5">
-                  Apne phone par app ki tarah save karein aur bina browser khole 1-click me order karein!
+                  Save directly to your home screen for fast 1-click access without needing a browser!
                 </p>
               </div>
             </div>
@@ -1603,26 +1599,26 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
             {/* Step-by-step instructions */}
             <div className="mt-4 space-y-2.5 text-xs bg-gray-50 p-4 rounded-2xl border border-gray-200">
               <div className="font-bold text-[11px] uppercase tracking-wider text-slate-800">
-                Mobile Me Install Karne Ka Tarika:
+                How to Install on Your Mobile Device:
               </div>
               
               <div className="flex items-start gap-2.5 text-[11px] text-gray-700">
                 <span className="w-5 h-5 rounded-full bg-orange-600 text-white font-black flex items-center justify-center shrink-0 text-[10px]">
                   1
                 </span>
-                <span>Chrome ya browser ke menu <strong>(⋮ / 3 dots)</strong> par click karein.</span>
+                <span>Open browser menu <strong>(⋮ / 3 dots)</strong> in your browser.</span>
               </div>
 
               <div className="flex items-start gap-2.5 text-[11px] text-gray-700">
                 <span className="w-5 h-5 rounded-full bg-orange-600 text-white font-black flex items-center justify-center shrink-0 text-[10px]">
                   2
                 </span>
-                <span>Menu me <strong>"Install app"</strong> ya <strong>"Add to Home screen"</strong> par tap karein.</span>
+                <span>Select <strong>"Install app"</strong> or <strong>"Add to Home screen"</strong>.</span>
               </div>
 
               <div className="flex items-start gap-2.5 text-[11px] text-emerald-700 font-medium">
                 <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600 mt-0.5" />
-                <span>Dukaan ka icon aapki phone screen par app ki tarah ban jayega!</span>
+                <span>The store app icon will be pinned directly to your home screen!</span>
               </div>
             </div>
 
@@ -1632,7 +1628,7 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
                 onClick={() => setShowPwaInstallModal(false)}
                 className="w-full py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-black text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center cursor-pointer transition-colors"
               >
-                Theek Hai!
+                Got It!
               </button>
             </div>
           </div>
@@ -1666,7 +1662,7 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
         <div className="fixed top-20 sm:top-24 left-1/2 -translate-x-1/2 z-50 bg-slate-950/95 text-white text-xs font-bold px-4 py-2.5 rounded-full shadow-2xl flex items-center gap-2.5 border border-indigo-400/50 backdrop-blur-md animate-in fade-in slide-in-from-top-2">
           <Globe className="w-4 h-4 text-amber-400" />
           <span className="notranslate" translate="no">
-            Bhasha badal di gayi: {SUPPORTED_LANGUAGES.find(l => l.code === languageToast)?.nativeName || languageToast}
+            Language set to: {SUPPORTED_LANGUAGES.find(l => l.code === languageToast)?.nativeName || languageToast}
           </span>
         </div>
       )}

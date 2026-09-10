@@ -49,7 +49,7 @@ export const FloatingActionButtons: React.FC<FloatingActionButtonsProps> = ({
   // 2. WhatsApp Direct Link resolution
   const handleWhatsAppClick = () => {
     const rawNumber = shop.whatsapp || shop.phone || '7087033009';
-    const message = `Namaste ${shop.businessName}! I am visiting your official website (${window.location.host}) and would like to inquire about your products & services.`;
+    const message = `Hello ${shop.businessName}! I am visiting your official website (${window.location.host}) and would like to inquire about your products & services.`;
     const waUrl = getWhatsAppDirectUrl(rawNumber, message);
     window.open(waUrl, '_blank', 'noopener,noreferrer');
   };
@@ -77,7 +77,7 @@ export const FloatingActionButtons: React.FC<FloatingActionButtonsProps> = ({
             {config.googleLocation && (
               <div className="flex items-center gap-1.5 group">
                 <span className="hidden group-hover:inline-flex bg-slate-900/90 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-md whitespace-nowrap backdrop-blur-xs transition-opacity animate-in fade-in duration-150">
-                  {getTranslation('floating.location', currentLanguage, 'Google Map')}
+                  {getTranslation('floating.location', currentLanguage, 'Google Maps')}
                 </span>
                 <button
                   id="floating-btn-google-location"
@@ -96,13 +96,13 @@ export const FloatingActionButtons: React.FC<FloatingActionButtonsProps> = ({
             {config.language && (
               <div className="flex items-center gap-1.5 group">
                 <span className="hidden group-hover:inline-flex bg-slate-900/90 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-md whitespace-nowrap backdrop-blur-xs transition-opacity animate-in fade-in duration-150">
-                  {getTranslation('floating.language', currentLanguage, 'Language / भाषा')}
+                  {getTranslation('floating.language', currentLanguage, 'Language')}
                 </span>
                 <button
                   id="floating-btn-multilanguage"
                   type="button"
                   onClick={() => setShowLanguageModal(true)}
-                  title="Select Language / भाषा चुनें"
+                  title="Select Language"
                   className="w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white shadow-md hover:shadow-lg flex items-center justify-center transition-all duration-200 hover:scale-108 active:scale-95 border-2 border-white cursor-pointer relative"
                 >
                   <Globe className="w-3.5 h-3.5 sm:w-3.5 sm:h-3.5 drop-shadow-xs" />
@@ -189,7 +189,7 @@ export const FloatingActionButtons: React.FC<FloatingActionButtonsProps> = ({
                 </div>
                 <div>
                   <h3 className="text-sm sm:text-base font-black text-slate-900">
-                    {getTranslation('lang.selectTitle', currentLanguage, 'Select Language / भाषा चुनें')}
+                    {getTranslation('lang.selectTitle', currentLanguage, 'Select Language')}
                   </h3>
                   <p className="text-[10.5px] text-gray-500">
                     {getTranslation('lang.selectSubtitle', currentLanguage, 'Choose your preferred language for this store')}
@@ -243,7 +243,7 @@ export const FloatingActionButtons: React.FC<FloatingActionButtonsProps> = ({
             {/* Active Language Notice & Close */}
             <div className="pt-3 border-t border-gray-100 flex items-center justify-between">
               <div className="text-[11px] text-gray-500 flex items-center gap-1.5 notranslate" translate="no">
-                <span>{getTranslation('lang.active', currentLanguage, 'सक्रिय भाषा')}:</span>
+                <span>{getTranslation('lang.active', currentLanguage, 'Active Language')}:</span>
                 <span className="font-bold text-indigo-700 bg-indigo-50 px-2.5 py-0.5 rounded-md text-xs">
                   {currentLangObj.nativeName}
                 </span>
@@ -253,7 +253,7 @@ export const FloatingActionButtons: React.FC<FloatingActionButtonsProps> = ({
                 onClick={() => setShowLanguageModal(false)}
                 className="px-4 py-2 bg-slate-900 hover:bg-slate-950 text-white text-xs font-bold rounded-xl transition-all cursor-pointer"
               >
-                {getTranslation('floating.close', currentLanguage, 'ठीक है')}
+                {getTranslation('floating.close', currentLanguage, 'Close')}
               </button>
             </div>
           </div>

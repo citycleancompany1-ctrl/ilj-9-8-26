@@ -341,7 +341,7 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
       case 'addon_email':
         return { title: 'Email Inquiry Addon', category: 'ADDONS', desc: 'Store email address and forward inquiry notifications' };
       case 'addon_payment_qr':
-        return { title: 'UPI Payment QR Addon', category: 'ADDONS', desc: 'PhonePe, GPay, Paytm direct 0% commission QR code setup' };
+        return { title: 'UPI Payment QR Addon', category: 'ADDONS', desc: 'PhonePe, GPay, Paytm direct UPI payment QR code setup' };
       case 'addon_custom_domain':
         return { title: 'Custom Domain Addon', category: 'ADDONS', desc: 'Link your own www.yourdomain.com with automatic SSL certificate' };
       case 'themes':
@@ -4525,8 +4525,8 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
                 <QrCode className="w-4 h-4" />
               </div>
               <div>
-                <h3 className="text-sm font-black uppercase tracking-tight text-slate-900">4. Payment QR Code & UPI Details (0% Commission)</h3>
-                <p className="text-[11px] text-gray-500">PhonePe / Google Pay / Paytm QR code photo upload karein</p>
+                <h3 className="text-sm font-black uppercase tracking-tight text-slate-900">4. Payment QR Code & UPI Details (Direct UPI)</h3>
+                <p className="text-[11px] text-gray-500">Upload PhonePe / Google Pay / Paytm QR code image</p>
               </div>
             </div>
             {(openSection === 'PAYMENT_QR' || activeNav === 'payments') ? <ChevronUp className="w-5 h-5 text-orange-600" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
@@ -4541,11 +4541,11 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
                     type="text"
                     value={currentShop.upiId}
                     onChange={(e) => setCurrentShop({ ...currentShop, upiId: e.target.value })}
-                    placeholder="e.g. mobile@paytm ya shop@okaxis"
+                    placeholder="e.g. mobile@paytm or shop@okaxis"
                     className="w-full px-3.5 py-2 rounded-sm border border-gray-300 text-xs focus:ring-2 focus:ring-orange-500 bg-gray-50/50 font-mono font-bold"
                   />
                   <p className="text-[11px] text-gray-500 mt-1">
-                    Grahak seedhe aapke account me 0% commission par payment bhejenge.
+                    Customers will send payments directly to your linked UPI account without intermediary delays.
                   </p>
                 </div>
 
@@ -5179,10 +5179,10 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
                   <span>1-Year Active Subscription</span>
                 </div>
                 <h2 className="text-xl sm:text-2xl font-black text-slate-900 font-['Outfit',sans-serif]">
-                  My Plan & Store Validity (योजना और वैधता)
+                  My Plan & Store Validity
                 </h2>
                 <p className="text-xs text-gray-500 mt-1">
-                  Aapka store IndianLalaJi ke 1-Varshiya Business Plan par active hai jisme 0% commission aur unlimited WhatsApp orders shamil hain.
+                  Your store is active on the 1-Year IndianLalaJi Business Plan with direct payments and unlimited WhatsApp orders included.
                 </p>
               </div>
               <button
@@ -5209,13 +5209,13 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
               <div className="p-5 rounded-2xl bg-amber-50 border border-amber-200 space-y-2">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-amber-800">Days Remaining</span>
                 <div className="text-xl font-black text-amber-950 font-['Outfit',sans-serif]">{calculateDaysRemaining(currentShop.createdAt || '')} Days</div>
-                <div className="text-xs text-amber-700">0% Commission on all orders</div>
+                <div className="text-xs text-amber-700">Direct orders & payments</div>
               </div>
             </div>
 
             <div className="bg-gray-50 rounded-2xl p-5 border border-gray-200 space-y-3">
               <h4 className="text-xs font-black uppercase tracking-wider text-slate-800">
-                Aapke Plan Me Kya-Kya Shamil Hai:
+                Included in Your Plan:
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs text-slate-700">
                 <div className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" /> Unlimited WhatsApp Orders & Inquiries</div>

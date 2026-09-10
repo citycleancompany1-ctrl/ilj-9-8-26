@@ -53,7 +53,7 @@ export const DukaanQrStandeeModal: React.FC<DukaanQrStandeeModalProps> = ({
   };
 
   const handleShareWhatsApp = () => {
-    const text = `Namaste! Humari dukaan "${shop.businessName}" ki digital website yahan se open karein:\n\n👉 ${websiteUrl}\n\nOnline catalogue dekhein aur WhatsApp par direct order karein!`;
+    const text = `Hello! Visit our store "${shop.businessName}" online here:\n\n👉 ${websiteUrl}\n\nBrowse our catalogue and place orders directly on WhatsApp!`;
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
   };
 
@@ -98,7 +98,7 @@ export const DukaanQrStandeeModal: React.FC<DukaanQrStandeeModalProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-base sm:text-lg font-black uppercase tracking-tight font-['Outfit',sans-serif]">
-                  Dukaan Counter QR Standee
+                  Store Counter QR Standee
                 </h3>
                 <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-black px-2 py-0.5 rounded-full uppercase">
                   Website QR
@@ -131,7 +131,7 @@ export const DukaanQrStandeeModal: React.FC<DukaanQrStandeeModalProps> = ({
             }`}
           >
             <Printer className="w-4 h-4" />
-            <span>1. Dukaan Counter Standee (Print Ready A4)</span>
+            <span>1. Store Counter Standee (Print Ready A4)</span>
           </button>
 
           <button
@@ -163,10 +163,10 @@ export const DukaanQrStandeeModal: React.FC<DukaanQrStandeeModalProps> = ({
                   </div>
                   <div className="space-y-0.5">
                     <h4 className="text-xs font-black uppercase tracking-wider text-orange-950">
-                      Counter Standee Printout Kaise Kaam Karta Hai?
+                      How Does the Counter Standee Work?
                     </h4>
                     <p className="text-xs text-orange-900/80 leading-relaxed">
-                      Neeche diye gaye standee ko <strong>"Print Standee (A4)"</strong> button se print karke apni dukaan ke counter par lagayein. Customer camera se scan karte hi seedha aapki online dukaan ki website khul jayegi!
+                      Print the standee below using the <strong>"Print Standee (A4)"</strong> button and place it on your store counter. When customers scan it with their smartphone camera, your digital storefront opens instantly!
                     </p>
                   </div>
                 </div>
@@ -206,7 +206,7 @@ export const DukaanQrStandeeModal: React.FC<DukaanQrStandeeModalProps> = ({
                   <div className="pt-2 space-y-2">
                     <div className="inline-flex items-center gap-1.5 bg-orange-50 border border-orange-200 text-orange-800 text-[10px] font-black uppercase tracking-[0.2em] px-3 py-0.5 rounded-full shadow-xs">
                       <ShieldCheck className="w-3 h-3 text-orange-600" />
-                      <span>Official Digital Dukaan • IndianLalaJi</span>
+                      <span>Official Digital Storefront • IndianLalaJi</span>
                     </div>
 
                     {/* Logo & Business Name */}
@@ -238,14 +238,14 @@ export const DukaanQrStandeeModal: React.FC<DukaanQrStandeeModalProps> = ({
                   <div className="relative p-4 sm:p-5 bg-gradient-to-b from-orange-50/60 to-amber-50/40 rounded-2xl border-2 border-dashed border-orange-300 inline-block mx-auto shadow-inner">
                     <img
                       src={websiteQrImg}
-                      alt="Dukaan Website QR Code"
+                      alt="Store Website QR Code"
                       className="w-56 h-56 sm:w-64 sm:h-64 object-contain mx-auto rounded-xl shadow-xs bg-white p-2"
                     />
 
                     {/* Badge Under QR */}
                     <div className="mt-3 inline-flex items-center gap-1.5 bg-slate-900 text-white px-3.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm">
                       <Globe className="w-3.5 h-3.5 text-orange-400" />
-                      <span>Scan To Open Dukaan Website</span>
+                      <span>Scan To Open Store Website</span>
                     </div>
                   </div>
 
@@ -253,10 +253,10 @@ export const DukaanQrStandeeModal: React.FC<DukaanQrStandeeModalProps> = ({
                   <div className="bg-slate-900 text-white rounded-2xl p-3.5 space-y-1 text-center shadow-sm">
                     <div className="text-xs font-black uppercase tracking-wider text-amber-300 flex items-center justify-center gap-1.5">
                       <Flame className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                      <span>Camera Ya Google Lens Se Scan Karein</span>
+                      <span>Scan with Camera or Google Lens</span>
                     </div>
                     <p className="text-[11px] text-gray-300 leading-snug">
-                      Online catalogue dekhein, items select karein aur WhatsApp par direct order karein!
+                      Browse our catalogue, select items, and place direct orders via WhatsApp!
                     </p>
                   </div>
 
@@ -265,7 +265,7 @@ export const DukaanQrStandeeModal: React.FC<DukaanQrStandeeModalProps> = ({
                     {shop.upiId && (
                       <div className="flex items-center justify-between p-2 rounded-xl bg-emerald-50 border border-emerald-200">
                         <span className="text-[11px] font-black uppercase tracking-wider text-emerald-900">
-                          Direct 0% UPI Payment:
+                          Direct UPI Payment:
                         </span>
                         <span className="font-mono font-bold text-emerald-700 text-xs truncate">
                           {shop.upiId}
@@ -286,7 +286,7 @@ export const DukaanQrStandeeModal: React.FC<DukaanQrStandeeModalProps> = ({
                   </div>
 
                   <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider pt-1">
-                    Powered by IndianLalaJi.com • Bharat Ka Digital Vyapar
+                    Powered by IndianLalaJi.com • Digital Commerce Platform
                   </div>
 
                 </div>
@@ -307,10 +307,10 @@ export const DukaanQrStandeeModal: React.FC<DukaanQrStandeeModalProps> = ({
                   </div>
 
                   <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight font-['Outfit',sans-serif]">
-                    Dukaan Ki Website Open Karein
+                    Open Store Website
                   </h3>
                   <p className="text-xs text-gray-500 leading-relaxed">
-                    Customer is QR code ko scan karke direct aapki online digital dukaan par pahunch jayenge aur catalogue dekhkar order kar sakenge.
+                    Customers can scan this QR code to access your digital storefront and order products directly.
                   </p>
                 </div>
 
@@ -379,7 +379,7 @@ export const DukaanQrStandeeModal: React.FC<DukaanQrStandeeModalProps> = ({
         <div className="p-4 bg-gray-100 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0 no-print text-xs text-gray-500">
           <div className="flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-            <span>Yeh official high-resolution QR code hai jo sabhi mobile phone cameras par 100% kaam karta hai.</span>
+            <span>Official high-resolution QR code compatible with all smartphone cameras.</span>
           </div>
 
           <button

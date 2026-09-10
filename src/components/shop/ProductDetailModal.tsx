@@ -193,7 +193,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                     Price on Request
                   </span>
                   <span className="text-xs text-amber-800 font-bold block mt-0.5">
-                    कीमत पूछें / WhatsApp Inquiry
+                    WhatsApp Inquiry
                   </span>
                 </div>
                 <span className="text-xs font-bold text-amber-900 bg-amber-200/80 px-2.5 py-1 rounded-md">
@@ -227,7 +227,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             {product.description && (
               <div className="space-y-1">
                 <h4 className="text-xs font-bold uppercase tracking-wider text-gray-400">
-                  Description / विवरण
+                  Description
                 </h4>
                 <p className="text-xs sm:text-sm text-slate-700 leading-relaxed whitespace-pre-line bg-gray-50/80 p-3 rounded-xl border border-gray-100">
                   {product.description}
@@ -258,10 +258,10 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                 href={getWhatsAppDirectUrl(
                   shop.whatsapp || shop.phone,
                   isCourse
-                    ? `Namaste ${shop.businessName}! Mujhe aapke course "${product.name}" ke syllabus, batch timings aur enrollment fee ke baare me janna hai.`
+                    ? `Hello ${shop.businessName}! I am interested in the course "${product.name}". Please share details regarding syllabus, schedule, and fees.`
                     : isService
-                    ? `Namaste ${shop.businessName}! Mujhe aapki "${product.name}" service ke charges aur details janni hain.`
-                    : `Namaste ${shop.businessName}! Mujhe "${product.name}" ki price aur details jaanni hain. Kripya best quote share karein.`
+                    ? `Hello ${shop.businessName}! I would like to inquire about your "${product.name}" service details and pricing.`
+                    : `Hello ${shop.businessName}! I am inquiring about "${product.name}". Please share pricing and availability.`
                 )}
                 target="_blank"
                 rel="noreferrer"
@@ -284,18 +284,18 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                   <button
                     onClick={() => onRemoveFromCart(product.id)}
                     className="w-9 h-9 rounded-lg bg-orange-100 text-orange-700 font-black flex items-center justify-center hover:bg-orange-200 transition-colors cursor-pointer"
-                    title="Kam karein"
+                    title="Decrease quantity"
                   >
                     <Minus className="w-4 h-4" />
                   </button>
                   <div className="text-center px-2">
-                    <span className="block text-[10px] text-gray-400 font-bold uppercase">Cart Mein</span>
-                    <span className="font-black text-sm text-slate-900">{inCart.quantity} Item</span>
+                    <span className="block text-[10px] text-gray-400 font-bold uppercase">In Cart</span>
+                    <span className="font-black text-sm text-slate-900">{inCart.quantity} {inCart.quantity === 1 ? 'Item' : 'Items'}</span>
                   </div>
                   <button
                     onClick={() => onAddToCart(product)}
                     className="w-9 h-9 rounded-lg bg-orange-600 text-white font-black flex items-center justify-center hover:bg-orange-700 transition-colors cursor-pointer shadow-xs"
-                    title="Badhayein"
+                    title="Increase quantity"
                   >
                     <Plus className="w-4 h-4" />
                   </button>

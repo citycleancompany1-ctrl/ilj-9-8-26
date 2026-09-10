@@ -50,10 +50,10 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onAddLead }) => {
           <Headphones className="w-3.5 h-3.5" /> Customer Care & Support
         </div>
         <h1 className="text-3xl sm:text-4xl font-black text-slate-900 uppercase tracking-tight font-['Outfit',sans-serif]">
-          Humse Sampark Karein (<span className="text-orange-600">Contact Us</span>)
+          Get in Touch With Us (<span className="text-orange-600">Contact Us</span>)
         </h1>
         <p className="text-gray-600 text-sm">
-          Koi sawal ho, store setup mein madad chahiye ya feedback dena ho — hamari team aapki poori madad karegi.
+          Have a question, need help with store setup, or want to share feedback? Our support team is here to assist you.
         </p>
       </div>
 
@@ -70,14 +70,14 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onAddLead }) => {
               </div>
               <div>
                 <h3 className="text-base font-black uppercase tracking-tight text-slate-900">Official Helpline & WhatsApp</h3>
-                <p className="text-xs text-gray-500">Call ya WhatsApp pe turant judiye</p>
+                <p className="text-xs text-gray-500">Connect directly via phone call or WhatsApp</p>
               </div>
             </div>
             
             <div className="p-3 bg-gray-50 rounded-xl border border-gray-200 flex items-center justify-between">
               <span className="text-base font-black text-slate-900 font-mono">+91 7087033009</span>
               <a
-                href="https://wa.me/917087033009?text=Namaste%20IndianLalaJi%20Support"
+                href="https://wa.me/917087033009?text=Hello%20IndianLalaJi%20Support"
                 target="_blank"
                 rel="noreferrer"
                 className="px-3 py-1.5 rounded-sm bg-slate-900 text-white font-bold text-xs uppercase tracking-wider hover:bg-black transition-colors shadow-xs"
@@ -120,7 +120,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onAddLead }) => {
               <span>100% Indian Business Guarantee</span>
             </div>
             <p className="text-gray-300 leading-relaxed">
-              Sabhi shop verification aur approval Super Admin team dwara 2 ghante ke andar process kiye jaate hain.
+              All store verification and activation requests are reviewed and processed by our Super Admin team within 2 hours.
             </p>
           </div>
 
@@ -134,9 +134,9 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onAddLead }) => {
                 <div className="w-14 h-14 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto">
                   <CheckCircle2 className="w-8 h-8" />
                 </div>
-                <h3 className="text-xl font-black uppercase tracking-tight text-slate-900">Shukriya! Aapka Sandesh Mil Gaya Hai</h3>
+                <h3 className="text-xl font-black uppercase tracking-tight text-slate-900">Thank You! Your Message Has Been Received</h3>
                 <p className="text-xs text-gray-600 max-w-md mx-auto">
-                  Hamari customer care team jaldi hi aapse <strong>+91 {phone}</strong> par contact karegi.
+                  Our customer support team will contact you shortly at <strong>+91 {phone}</strong>.
                 </p>
                 <button
                   onClick={() => {
@@ -154,13 +154,13 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onAddLead }) => {
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-1 mb-2">
-                  <h3 className="text-lg font-black uppercase tracking-tight text-slate-900">Sandesh Ya Enquiry Bhejein</h3>
-                  <p className="text-xs text-gray-500">Niche form bharein aur hamari team turant aapse judegi.</p>
+                  <h3 className="text-lg font-black uppercase tracking-tight text-slate-900">Send an Inquiry or Message</h3>
+                  <p className="text-xs text-gray-500">Fill out the form below and our team will get in touch with you promptly.</p>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Aapka Naam *</label>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Your Name *</label>
                     <input
                       type="text"
                       required
@@ -218,11 +218,11 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onAddLead }) => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Aapka Sandesh / Sawal *</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Your Message / Question *</label>
                   <textarea
                     rows={4}
                     required
-                    placeholder="Aapko website banane mein kya jankari chahiye?"
+                    placeholder="What questions or assistance do you need regarding your store website?"
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     className="w-full px-3.5 py-2 rounded-sm border border-gray-300 text-xs focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-50/50"
