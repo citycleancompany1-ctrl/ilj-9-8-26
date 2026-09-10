@@ -318,6 +318,8 @@ export const StoreItemsCarouselSection: React.FC<StoreItemsCarouselSectionProps>
   const [internalSearch, setInternalSearch] = useState('');
   const isControlledSearch = searchQuery !== undefined;
   const currentSearch = isControlledSearch ? searchQuery : internalSearch;
+  const [isSearchOpen, setIsSearchOpen] = useState(Boolean(currentSearch));
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const handleSearchChange = (val: string) => {
     if (isControlledSearch) {
@@ -468,35 +470,203 @@ export const StoreItemsCarouselSection: React.FC<StoreItemsCarouselSectionProps>
 
   return (
     <section id={id} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 space-y-4">
-      {/* 1. Header Bar: Left = Section Title & Badge, Right = Search Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3.5 sm:p-5 rounded-2xl border border-gray-200/90 shadow-2xs">
-        {/* Left: Heading & Badge Area */}
-        <div className="min-w-0 flex-1">
-          <div className="inline-flex items-center gap-1.5 bg-orange-50 border border-orange-200/80 text-orange-800 text-[10px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider">
-            {isCourse ? (
-              <GraduationCap className="w-3 h-3 text-indigo-600 shrink-0" />
-            ) : isService ? (
-              <Briefcase className="w-3 h-3 text-blue-600 shrink-0" />
-            ) : (
-              <ShoppingBag className="w-3 h-3 text-orange-600 shrink-0" />
+      {/* 1. Header Bar: Left = Section Title & Badge, Right = Search Icon / Search Bar */}
+      <div className="bg-white p-3.5 sm:p-5 rounded-2xl border border-gray-200/90 shadow-2xs space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          {/* Left: Product / Service / Course Heading & Badge Area */}
+          <div className="min-w-0 flex-1">
+            <div
+              className={`inline-flex items-center gap-1.5 text-[10px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider border ${
+                isCourse
+                  ? 'bg-indigo-50 border-indigo-200/80 text-indigo-800'
+                  : isService
+                  ? 'bg-blue-50 border-blue-200/80 text-blue-800'
+                  : 'bg-orange-50 border-orange-200/80 text-orange-800'
+              }`}
+            >
+              {isCourse ? (
+                <GraduationCap className="w-3 h-3 text-indigo-600 shrink-0" />
+              ) : isService ? (
+                <Briefcase className="w-3 h-3 text-blue-600 shrink-0" />
+              ) : (
+                <ShoppingBag className="w-3 h-3 text-orange-600 shrink-0" />
+              )}
+              <span className="truncate">{badgeText}</span>
+            </div>
+
+            <h2 className="text-base sm:text-xl md:text-2xl font-black uppercase tracking-tight text-slate-900 font-['Outfit',sans-serif] mt-1 truncate">
+              {title}
+            </h2>
+
+            {subtitle && (
+              <p className="text-[10px] sm:text-xs text-gray-500 truncate mt-0.5 hidden sm:block">
+                {subtitle}
+              </p>
             )}
-            <span className="truncate">{badgeText}</span>
           </div>
 
-          <h2 className="text-base sm:text-xl md:text-2xl font-black uppercase tracking-tight text-slate-900 font-['Outfit',sans-serif] mt-1 truncate">
-            {title}
-          </h2>
+          {/* Right: Search Icon Button / Interactive Search Bar */}
+          <div className="flex items-center gap-2 shrink-0">
+            {extraHeaderAction}
 
-          {subtitle && (
-            <p className="text-[10px] sm:text-xs text-gray-500 truncate mt-0.5 hidden xs:block">
-              {subtitle}
-            </p>
-          )}
+            {/* Desktop: Expandable Search Bar / Search Button */}
+            <div className="hidden sm:block">
+              {isSearchOpen ? (
+                <div className="relative flex items-center w-64 md:w-72 animate-in fade-in zoom-in-95 duration-200">
+                  <Search className="w-4 h-4 text-gray-400 absolute left-3 pointer-events-none" />
+                  <input
+                    ref={searchInputRef}
+                    type="text"
+                    value={currentSearch}
+                    onChange={(e) => handleSearchChange(e.target.value)}
+                    placeholder={
+                      searchPlaceholder ||
+                      (isCourse ? 'Search courses...' : isService ? 'Search services...' : 'Search products...')
+                    }
+                    className={`w-full pl-9 pr-14 py-2 text-xs rounded-xl border bg-white text-slate-900 focus:outline-none shadow-2xs transition-all ${
+                      isCourse
+                        ? 'border-indigo-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20'
+                        : isService
+                        ? 'border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20'
+                        : 'border-orange-300 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20'
+                    }`}
+                  />
+                  <div className="absolute right-2 flex items-center gap-1">
+                    {currentSearch && (
+                      <button
+                        type="button"
+                        onClick={() => handleSearchChange('')}
+                        className="p-1 text-gray-400 hover:text-gray-600 rounded-md cursor-pointer"
+                        title="Clear search"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleSearchChange('');
+                        setIsSearchOpen(false);
+                      }}
+                      className="p-1 text-gray-400 hover:text-red-500 rounded-md cursor-pointer"
+                      title="Close search"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  id={`${id}-search-btn-desktop`}
+                  onClick={() => {
+                    setIsSearchOpen(true);
+                    setTimeout(() => searchInputRef.current?.focus(), 100);
+                  }}
+                  className={`h-10 px-3.5 rounded-xl border font-bold text-xs flex items-center gap-2 transition-all cursor-pointer shadow-2xs hover:shadow-xs active:scale-95 ${
+                    currentSearch
+                      ? isCourse
+                        ? 'bg-indigo-600 text-white border-indigo-600'
+                        : isService
+                        ? 'bg-blue-600 text-white border-blue-600'
+                        : 'bg-orange-600 text-white border-orange-600'
+                      : isCourse
+                      ? 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-200'
+                      : isService
+                      ? 'bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200'
+                      : 'bg-orange-50 hover:bg-orange-100 text-orange-700 border-orange-200'
+                  }`}
+                  title={isCourse ? 'Search courses' : isService ? 'Search services' : 'Search products'}
+                  aria-label="Search"
+                >
+                  <Search className="w-4 h-4" />
+                  <span>{currentSearch ? `Search: "${currentSearch}"` : 'Search'}</span>
+                </button>
+              )}
+            </div>
+
+            {/* Mobile: Search Icon Button */}
+            <div className="block sm:hidden">
+              <button
+                type="button"
+                id={`${id}-search-btn-mobile`}
+                onClick={() => {
+                  setIsSearchOpen((prev) => {
+                    const next = !prev;
+                    if (next) {
+                      setTimeout(() => searchInputRef.current?.focus(), 100);
+                    }
+                    return next;
+                  });
+                }}
+                className={`w-9 h-9 rounded-xl border flex items-center justify-center transition-all cursor-pointer shadow-2xs active:scale-95 ${
+                  currentSearch || isSearchOpen
+                    ? isCourse
+                      ? 'bg-indigo-600 text-white border-indigo-600 ring-2 ring-indigo-500/20'
+                      : isService
+                      ? 'bg-blue-600 text-white border-blue-600 ring-2 ring-blue-500/20'
+                      : 'bg-orange-600 text-white border-orange-600 ring-2 ring-orange-500/20'
+                    : isCourse
+                    ? 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-200'
+                    : isService
+                    ? 'bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200'
+                    : 'bg-orange-50 hover:bg-orange-100 text-orange-700 border-orange-200'
+                }`}
+                title={isCourse ? 'Search courses' : isService ? 'Search services' : 'Search products'}
+                aria-label="Search"
+              >
+                <Search className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
         </div>
 
-        {extraHeaderAction && (
-          <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
-            {extraHeaderAction}
+        {/* Mobile: Expanded Search Input Bar (when Search Icon on right is active) */}
+        {isSearchOpen && (
+          <div className="block sm:hidden pt-1 animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="relative flex items-center">
+              <Search className="w-4 h-4 text-gray-400 absolute left-3 pointer-events-none" />
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={currentSearch}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                placeholder={
+                  searchPlaceholder ||
+                  (isCourse ? 'Search courses...' : isService ? 'Search services...' : 'Search products...')
+                }
+                className={`w-full pl-9 pr-14 py-2 text-xs rounded-xl border bg-white text-slate-900 focus:outline-none shadow-2xs ${
+                  isCourse
+                    ? 'border-indigo-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20'
+                    : isService
+                    ? 'border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20'
+                    : 'border-orange-300 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20'
+                }`}
+              />
+              <div className="absolute right-2 flex items-center gap-1">
+                {currentSearch && (
+                  <button
+                    type="button"
+                    onClick={() => handleSearchChange('')}
+                    className="p-1 text-gray-400 hover:text-gray-600 rounded-md cursor-pointer"
+                    title="Clear search"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleSearchChange('');
+                    setIsSearchOpen(false);
+                  }}
+                  className="p-1 text-gray-400 hover:text-red-500 rounded-md cursor-pointer"
+                  title="Close search"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>
