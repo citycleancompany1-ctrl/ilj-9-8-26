@@ -51,6 +51,8 @@ export interface ShopInquiry {
   shopId: string;
   customerName: string;
   customerPhone: string;
+  customerAddress?: string;
+  subject?: string;
   customerEmail?: string;
   serviceOrProductRequested?: string;
   message: string;
