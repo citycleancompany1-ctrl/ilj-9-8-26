@@ -88,7 +88,6 @@ import {
   AboutPageView,
   GalleryPageView,
   ContactPageView,
-  MobileBottomNavBar,
 } from './StorePagesView';
 
 export type ShopWebsitePage = 'home' | 'products' | 'services' | 'courses' | 'about' | 'gallery' | 'contact';
@@ -2064,15 +2063,6 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
         currentLanguage={currentLanguage}
         onSelectLanguage={handleSelectLanguage}
         hasBottomCartBar={Boolean(totalCartCount > 0 && !isCartOpen)}
-      />
-
-      {/* 17. FIXED MOBILE BOTTOM NAVIGATION BAR FOR MULTI-PAGE STORE */}
-      <MobileBottomNavBar
-        activePage={activePage}
-        onNavigate={navigateToPage}
-        cartCount={totalCartCount}
-        onOpenCart={() => setIsCartOpen(true)}
-        hasServices={catalogServices.length > 0}
       />
 
     </div>

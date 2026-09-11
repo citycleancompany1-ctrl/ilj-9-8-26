@@ -1717,7 +1717,9 @@ export const WebsiteVisibilityView: React.FC<VendorSubViewProps> = ({
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <a
-              href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`Namaste! Check out our official store online: ${storeUrl}`)}`}
+              href={`https://api.whatsapp.com/send?text=${encodeURIComponent(
+                `*${shop.businessName}*\n_${shop.tagline || shop.bannerTitle || 'Official Digital Store'}_\n\n📍 *Address:* ${[shop.address, shop.city, shop.state, shop.pincode].filter(Boolean).join(', ') || shop.address || 'Local Store'}\n📞 *Phone Number:* ${shop.phone || shop.whatsapp || ''}\n🌐 *Website Link:* ${storeUrl}\n🖼️ *Logo:* ${shop.logoUrl || ''}\n\n👇 *Click above link to browse products & order directly on WhatsApp!*\n_Powered by IndianLalaJi.com_`
+              )}`}
               target="_blank"
               rel="noopener noreferrer"
               className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 transition-colors"

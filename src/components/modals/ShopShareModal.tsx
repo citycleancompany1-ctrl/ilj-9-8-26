@@ -11,7 +11,10 @@ import {
   Send, 
   QrCode, 
   Sparkles,
-  Smartphone
+  Smartphone,
+  Phone,
+  MapPin,
+  Image as ImageIcon
 } from 'lucide-react';
 import { Shop } from '../../types';
 import { getShopCanonicalUrl, getShopDescription, getShopOgImage } from '../../utils/seo';
@@ -38,9 +41,20 @@ export const ShopShareModal: React.FC<ShopShareModalProps> = ({
   const title = shop.tagline || shop.bannerTitle || 'Official Digital Store';
   const description = getShopDescription(shop);
   const logoUrl = getShopOgImage(shop);
+  const fullAddress = [shop.address, shop.city, shop.state, shop.pincode].filter(Boolean).join(', ') || shop.address || 'Local Store';
+  const contactNumber = shop.phone || shop.whatsapp || 'Contact on Website';
 
-  // Formatted WhatsApp caption with Shop Name, Title, and Link
-  const fullShareText = `🏪 *${shop.businessName}*\n✨ *${title}*\n🏷️ ${description}\n\n📍 Address: ${shop.address || 'Local Store'}\n📞 Contact: ${shop.phone || shop.whatsapp || ''}\n\n👇 *Click here to view our catalogue & order directly:*\n${shopUrl}\n\n_Powered by IndianLalaJi.com — Verified Direct Store_`;
+  // Professional Formatted WhatsApp caption with Logo, Site Name, Address, Phone Number, and Website Link
+  const fullShareText = `*${shop.businessName}*
+_${title}_
+
+📍 *Address:* ${fullAddress}
+📞 *Phone Number:* ${contactNumber}
+🌐 *Website Link:* ${shopUrl}
+🖼️ *Logo / Media:* ${logoUrl}
+
+${description ? `ℹ️ *About:* ${description}\n\n` : ''}👇 *Click above link to browse products/services & order directly on WhatsApp!*
+_Verified Direct Store • Powered by IndianLalaJi.com_`;
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(shopUrl);
@@ -185,25 +199,37 @@ export const ShopShareModal: React.FC<ShopShareModalProps> = ({
                 <p className="text-xs text-gray-600 line-clamp-2 leading-relaxed">
                   {description}
                 </p>
+
+                {/* Direct Store Contact Details in Card */}
+                <div className="pt-1.5 space-y-1 border-t border-gray-100 text-xs text-slate-700">
+                  <div className="flex items-start gap-1.5">
+                    <MapPin className="w-3.5 h-3.5 text-orange-600 shrink-0 mt-0.5" />
+                    <span className="line-clamp-1">{fullAddress}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 font-medium">
+                    <Phone className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    <span>{contactNumber}</span>
+                  </div>
+                </div>
                 
-                <div className="pt-1 text-[11px] text-gray-400 truncate flex items-center gap-1">
-                  <Globe className="w-3 h-3 text-gray-400 shrink-0" />
+                <div className="pt-1 text-[11px] text-gray-500 font-mono truncate flex items-center gap-1">
+                  <Globe className="w-3 h-3 text-orange-600 shrink-0" />
                   <span className="truncate">{shopUrl}</span>
                 </div>
               </div>
             </div>
 
-            {/* OpenGraph Live Meta Tags Verification Inspector */}
+            {/* OpenGraph & Structured Data Verification Inspector */}
             <div className="mt-2.5 p-3 bg-slate-50 rounded-xl border border-gray-200 text-[11px] font-mono space-y-1 text-slate-700">
               <div className="text-[10px] font-sans font-bold uppercase tracking-wider text-slate-500 mb-1 flex items-center justify-between">
-                <span>Active OG Meta Tags</span>
-                <span className="text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 text-[9px] font-bold">Live</span>
+                <span>WhatsApp / SEO Meta Snapshot</span>
+                <span className="text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 text-[9px] font-bold">Active</span>
               </div>
-              <div className="truncate"><strong className="text-orange-700">og:title:</strong> {shop.businessName}</div>
-              <div className="truncate"><strong className="text-orange-700">og:description:</strong> {description}</div>
-              <div className="truncate"><strong className="text-orange-700">og:image:</strong> {logoUrl}</div>
-              <div className="truncate"><strong className="text-orange-700">og:url:</strong> {shopUrl}</div>
-              <div className="truncate"><strong className="text-orange-700">og:type:</strong> website</div>
+              <div className="truncate"><strong className="text-orange-700">Site Name:</strong> {shop.businessName}</div>
+              <div className="truncate"><strong className="text-orange-700">Logo URL:</strong> {logoUrl}</div>
+              <div className="truncate"><strong className="text-orange-700">Address:</strong> {fullAddress}</div>
+              <div className="truncate"><strong className="text-orange-700">Phone:</strong> {contactNumber}</div>
+              <div className="truncate"><strong className="text-orange-700">Link:</strong> {shopUrl}</div>
             </div>
           </div>
 

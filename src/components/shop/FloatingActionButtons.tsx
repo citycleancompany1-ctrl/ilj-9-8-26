@@ -67,7 +67,7 @@ export const FloatingActionButtons: React.FC<FloatingActionButtonsProps> = ({
       {/* FLOATING CIRCLE BUTTONS STACK (BOTTOM RIGHT) */}
       <div 
         id="vendor-floating-actions-container"
-        className={`fixed ${hasBottomCartBar ? 'bottom-24 sm:bottom-22' : 'bottom-18 sm:bottom-4'} right-3 sm:right-4 z-40 flex flex-col items-end gap-1.5 pointer-events-auto transition-all duration-300`}
+        className={`fixed ${hasBottomCartBar ? 'bottom-20 sm:bottom-22' : 'bottom-4'} right-3 sm:right-4 z-40 flex flex-col items-end gap-1.5 pointer-events-auto transition-all duration-300`}
       >
         {/* BUTTONS STACK (WHEN NOT COLLAPSED) */}
         {!isCollapsed && (
