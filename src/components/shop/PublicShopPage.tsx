@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { 
   PhoneCall, 
   Store, 
@@ -40,6 +40,11 @@ import {
   Smartphone,
   Palette,
   Globe,
+  Home,
+  Package,
+  Info,
+  SlidersHorizontal,
+  ArrowLeft,
 } from 'lucide-react';
 import { Shop, ProductItem, CartItem, AdvertisementPopup, ShopInquiry } from '../../types';
 import { formatINR, getWhatsAppCartMessageUrl, getWhatsAppDirectUrl, getYouTubeEmbedUrl } from '../../utils/mediaUpload';
@@ -69,8 +74,21 @@ import {
   GallerySectionRenderer,
   VideoSectionRenderer,
 } from './PublicStoreSections';
-import { StoreItemsCarouselSection } from './StoreItemsCarouselSection';
+import { StoreItemsCarouselSection, SharedItemCard } from './StoreItemsCarouselSection';
+import { StoreCategoryBar } from './StoreCategoryBar';
+import { extractStoreCategories } from '../../utils/categoryUtils';
 import { ProductDetailModal } from './ProductDetailModal';
+import {
+  ProductsPageView,
+  ServicesPageView,
+  CoursesPageView,
+  AboutPageView,
+  GalleryPageView,
+  ContactPageView,
+  MobileBottomNavBar,
+} from './StorePagesView';
+
+export type ShopWebsitePage = 'home' | 'products' | 'services' | 'courses' | 'about' | 'gallery' | 'contact';
 
 interface PublicShopPageProps {
   shop?: Shop;
@@ -145,6 +163,61 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
   const [showIosPwaGuide, setShowIosPwaGuide] = useState(false);
   const [isAppInstalled, setIsAppInstalled] = useState(false);
   const [pwaInstalledToast, setPwaInstalledToast] = useState(false);
+
+  // Multi-page vendor website active page state
+  const getInitialPage = (): ShopWebsitePage => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const p = params.get('page')?.toLowerCase();
+      if (p && ['home', 'products', 'services', 'courses', 'about', 'gallery', 'contact'].includes(p)) {
+        return p as ShopWebsitePage;
+      }
+      const hash = window.location.hash.replace('#', '').toLowerCase();
+      if (hash && ['home', 'products', 'services', 'courses', 'about', 'gallery', 'contact'].includes(hash)) {
+        return hash as ShopWebsitePage;
+      }
+    } catch {
+      // fallback
+    }
+    return 'home';
+  };
+
+  const [activePage, setActivePage] = useState<ShopWebsitePage>(getInitialPage);
+
+  const navigateToPage = (newPage: ShopWebsitePage) => {
+    setActivePage(newPage);
+    setMobileNavOpen(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.set('page', newPage);
+      window.history.pushState({ page: newPage }, '', url.toString());
+    } catch {
+      // fallback
+    }
+  };
+
+  useEffect(() => {
+    const onPopState = () => {
+      setActivePage(getInitialPage());
+    };
+    window.addEventListener('popstate', onPopState);
+    window.addEventListener('hashchange', onPopState);
+    return () => {
+      window.removeEventListener('popstate', onPopState);
+      window.removeEventListener('hashchange', onPopState);
+    };
+  }, []);
+
+  // Products Page Filter States
+  const [productsPageCategory, setProductsPageCategory] = useState('ALL');
+  const [productsPageSearch, setProductsPageSearch] = useState('');
+  const [productsPageSort, setProductsPageSort] = useState<'featured' | 'price_asc' | 'price_desc' | 'name_asc'>('featured');
+  const [productsPageInStockOnly, setProductsPageInStockOnly] = useState(false);
+
+  // Services Page Filter States
+  const [servicesPageCategory, setServicesPageCategory] = useState('ALL');
+  const [servicesPageSearch, setServicesPageSearch] = useState('');
 
   // Filter & Search State
   const [searchQuery, setSearchQuery] = useState('');
@@ -555,7 +628,11 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between gap-4">
           
           {/* Shop Logo & Title */}
-          <a href="#hero" className="flex items-center gap-3 min-w-0 group">
+          <button 
+            type="button"
+            onClick={() => navigateToPage('home')} 
+            className="flex items-center gap-3 min-w-0 group text-left cursor-pointer"
+          >
             <div className="relative shrink-0">
               <img
                 src={shop.logoUrl}
@@ -585,33 +662,93 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
                 )}
               </div>
             </div>
-          </a>
+          </button>
 
           {/* Desktop Navigation Links */}
-          <nav className="hidden lg:flex items-center gap-6 text-xs font-bold uppercase tracking-wider text-slate-700">
-            <a href="#hero" className="hover:text-orange-600 transition-colors py-1">
+          <nav className="hidden lg:flex items-center gap-1.5 xl:gap-2 text-xs font-bold uppercase tracking-wider text-slate-700">
+            <button
+              type="button"
+              onClick={() => navigateToPage('home')}
+              className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
+                activePage === 'home'
+                  ? 'bg-orange-600 text-white shadow-xs font-black'
+                  : 'text-slate-700 hover:text-orange-600 hover:bg-orange-50'
+              }`}
+            >
               {getTranslation('nav.home', currentLanguage, 'Home')}
-            </a>
-            <a href="#about" className="hover:text-orange-600 transition-colors py-1">
-              {getTranslation('nav.about', currentLanguage, 'About Us')}
-            </a>
-            <a href="#products" className="hover:text-orange-600 transition-colors py-1">
+            </button>
+            <button
+              type="button"
+              onClick={() => navigateToPage('products')}
+              className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
+                activePage === 'products'
+                  ? 'bg-orange-600 text-white shadow-xs font-black'
+                  : 'text-slate-700 hover:text-orange-600 hover:bg-orange-50'
+              }`}
+            >
               {getTranslation('nav.products', currentLanguage, 'Products')}
-            </a>
-            <a href="#services" className="hover:text-orange-600 transition-colors py-1">
-              {getTranslation('nav.services', currentLanguage, 'Services')}
-            </a>
+            </button>
+            {catalogServices.length > 0 && (
+              <button
+                type="button"
+                onClick={() => navigateToPage('services')}
+                className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
+                  activePage === 'services'
+                    ? 'bg-orange-600 text-white shadow-xs font-black'
+                    : 'text-slate-700 hover:text-orange-600 hover:bg-orange-50'
+                }`}
+              >
+                {getTranslation('nav.services', currentLanguage, 'Services')}
+              </button>
+            )}
             {catalogCourses.length > 0 && (
-              <a href="#courses" className="hover:text-orange-600 transition-colors py-1">
+              <button
+                type="button"
+                onClick={() => navigateToPage('courses')}
+                className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
+                  activePage === 'courses'
+                    ? 'bg-orange-600 text-white shadow-xs font-black'
+                    : 'text-slate-700 hover:text-orange-600 hover:bg-orange-50'
+                }`}
+              >
                 Courses
-              </a>
+              </button>
             )}
-            {shop.videos && shop.videos.length > 0 && (
-              <a href="#videos" className="hover:text-orange-600 transition-colors py-1">Videos</a>
+            <button
+              type="button"
+              onClick={() => navigateToPage('about')}
+              className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
+                activePage === 'about'
+                  ? 'bg-orange-600 text-white shadow-xs font-black'
+                  : 'text-slate-700 hover:text-orange-600 hover:bg-orange-50'
+              }`}
+            >
+              {getTranslation('nav.about', currentLanguage, 'About Us')}
+            </button>
+            {((shop.videos && shop.videos.length > 0) || (sectionsConfig?.gallery && sectionsConfig.gallery.enabled)) && (
+              <button
+                type="button"
+                onClick={() => navigateToPage('gallery')}
+                className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
+                  activePage === 'gallery'
+                    ? 'bg-orange-600 text-white shadow-xs font-black'
+                    : 'text-slate-700 hover:text-orange-600 hover:bg-orange-50'
+                }`}
+              >
+                Gallery
+              </button>
             )}
-            <a href="#contact-inquiry" className="hover:text-orange-600 transition-colors py-1">
+            <button
+              type="button"
+              onClick={() => navigateToPage('contact')}
+              className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
+                activePage === 'contact'
+                  ? 'bg-orange-600 text-white shadow-xs font-black'
+                  : 'text-slate-700 hover:text-orange-600 hover:bg-orange-50'
+              }`}
+            >
               {getTranslation('nav.contact', currentLanguage, 'Contact')}
-            </a>
+            </button>
           </nav>
 
           {/* Actions: UPI Pay, Cart, Call, WhatsApp, Language, Share */}
@@ -688,50 +825,102 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
         {mobileNavOpen && (
           <div className="lg:hidden bg-white border-t border-gray-200 px-4 py-4 space-y-3 shadow-lg animate-in slide-in-from-top-2">
             <div className="grid grid-cols-2 gap-2 text-xs font-bold uppercase tracking-wider">
-              <a 
-                href="#hero" 
-                onClick={() => setMobileNavOpen(false)}
-                className="p-2.5 bg-gray-50 rounded-lg hover:bg-orange-50 text-slate-800 hover:text-orange-700"
+              <button 
+                type="button"
+                onClick={() => navigateToPage('home')}
+                className={`p-2.5 rounded-xl text-left transition-all cursor-pointer flex items-center gap-2 ${
+                  activePage === 'home'
+                    ? 'bg-orange-600 text-white font-black shadow-xs'
+                    : 'bg-gray-50 text-slate-800 hover:bg-orange-50 hover:text-orange-700'
+                }`}
               >
-                {getTranslation('nav.home', currentLanguage, 'Home')}
-              </a>
-              <a 
-                href="#about" 
-                onClick={() => setMobileNavOpen(false)}
-                className="p-2.5 bg-gray-50 rounded-lg hover:bg-orange-50 text-slate-800 hover:text-orange-700"
+                <Home className="w-3.5 h-3.5 shrink-0" />
+                <span>{getTranslation('nav.home', currentLanguage, 'Home')}</span>
+              </button>
+
+              <button 
+                type="button"
+                onClick={() => navigateToPage('products')}
+                className={`p-2.5 rounded-xl text-left transition-all cursor-pointer flex items-center gap-2 ${
+                  activePage === 'products'
+                    ? 'bg-orange-600 text-white font-black shadow-xs'
+                    : 'bg-gray-50 text-slate-800 hover:bg-orange-50 hover:text-orange-700'
+                }`}
               >
-                {getTranslation('nav.about', currentLanguage, 'About Us')}
-              </a>
-              <a 
-                href="#products" 
-                onClick={() => setMobileNavOpen(false)}
-                className="p-2.5 bg-gray-50 rounded-lg hover:bg-orange-50 text-slate-800 hover:text-orange-700"
-              >
-                {getTranslation('nav.products', currentLanguage, 'Products')}
-              </a>
-              <a 
-                href="#services" 
-                onClick={() => setMobileNavOpen(false)}
-                className="p-2.5 bg-gray-50 rounded-lg hover:bg-orange-50 text-slate-800 hover:text-orange-700"
-              >
-                {getTranslation('nav.services', currentLanguage, 'Services')}
-              </a>
-              {catalogCourses.length > 0 && (
-                <a 
-                  href="#courses" 
-                  onClick={() => setMobileNavOpen(false)}
-                  className="p-2.5 bg-gray-50 rounded-lg hover:bg-orange-50 text-slate-800 hover:text-orange-700"
+                <ShoppingBag className="w-3.5 h-3.5 shrink-0" />
+                <span>{getTranslation('nav.products', currentLanguage, 'Products')}</span>
+              </button>
+
+              {catalogServices.length > 0 && (
+                <button 
+                  type="button"
+                  onClick={() => navigateToPage('services')}
+                  className={`p-2.5 rounded-xl text-left transition-all cursor-pointer flex items-center gap-2 ${
+                    activePage === 'services'
+                      ? 'bg-orange-600 text-white font-black shadow-xs'
+                      : 'bg-gray-50 text-slate-800 hover:bg-orange-50 hover:text-orange-700'
+                  }`}
                 >
-                  Courses
-                </a>
+                  <Sparkles className="w-3.5 h-3.5 shrink-0" />
+                  <span>{getTranslation('nav.services', currentLanguage, 'Services')}</span>
+                </button>
               )}
-              <a 
-                href="#contact-inquiry" 
-                onClick={() => setMobileNavOpen(false)}
-                className={`${catalogCourses.length > 0 ? '' : 'col-span-2'} p-2.5 bg-gray-50 rounded-lg hover:bg-orange-50 text-slate-800 hover:text-orange-700`}
+
+              {catalogCourses.length > 0 && (
+                <button 
+                  type="button"
+                  onClick={() => navigateToPage('courses')}
+                  className={`p-2.5 rounded-xl text-left transition-all cursor-pointer flex items-center gap-2 ${
+                    activePage === 'courses'
+                      ? 'bg-orange-600 text-white font-black shadow-xs'
+                      : 'bg-gray-50 text-slate-800 hover:bg-orange-50 hover:text-orange-700'
+                  }`}
+                >
+                  <FileText className="w-3.5 h-3.5 shrink-0" />
+                  <span>Courses</span>
+                </button>
+              )}
+
+              <button 
+                type="button"
+                onClick={() => navigateToPage('about')}
+                className={`p-2.5 rounded-xl text-left transition-all cursor-pointer flex items-center gap-2 ${
+                  activePage === 'about'
+                    ? 'bg-orange-600 text-white font-black shadow-xs'
+                    : 'bg-gray-50 text-slate-800 hover:bg-orange-50 hover:text-orange-700'
+                }`}
               >
-                {getTranslation('nav.contact', currentLanguage, 'Contact & Inquiry')}
-              </a>
+                <Info className="w-3.5 h-3.5 shrink-0" />
+                <span>{getTranslation('nav.about', currentLanguage, 'About Us')}</span>
+              </button>
+
+              {((shop.videos && shop.videos.length > 0) || (sectionsConfig?.gallery && sectionsConfig.gallery.enabled)) && (
+                <button 
+                  type="button"
+                  onClick={() => navigateToPage('gallery')}
+                  className={`p-2.5 rounded-xl text-left transition-all cursor-pointer flex items-center gap-2 ${
+                    activePage === 'gallery'
+                      ? 'bg-orange-600 text-white font-black shadow-xs'
+                      : 'bg-gray-50 text-slate-800 hover:bg-orange-50 hover:text-orange-700'
+                  }`}
+                >
+                  <Play className="w-3.5 h-3.5 shrink-0" />
+                  <span>Gallery</span>
+                </button>
+              )}
+
+              <button 
+                type="button"
+                onClick={() => navigateToPage('contact')}
+                className={`p-2.5 rounded-xl text-left transition-all cursor-pointer flex items-center gap-2 ${
+                  activePage === 'contact'
+                    ? 'bg-orange-600 text-white font-black shadow-xs'
+                    : 'bg-gray-50 text-slate-800 hover:bg-orange-50 hover:text-orange-700'
+                }`}
+              >
+                <Phone className="w-3.5 h-3.5 shrink-0" />
+                <span>{getTranslation('nav.contact', currentLanguage, 'Contact')}</span>
+              </button>
             </div>
 
             <div className="pt-2 border-t border-gray-100 flex items-center justify-between">
@@ -758,26 +947,28 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
         </div>
       )}
 
-      {/* 0. HERO BANNER SLIDER (ON/OFF & Custom Builder Config) */}
-      {sectionsConfig && (sectionsConfig.heroBanner ? sectionsConfig.heroBanner.enabled !== false : shop.heroBannerEnabled !== false) && (
-        <HeroBannerRenderer
-          config={sectionsConfig?.heroBanner}
-          shop={shop}
-        />
-      )}
+      {/* =========================================================================
+          1. MULTI-PAGE VIEW: HOME SHOWCASE PAGE
+          ========================================================================= */}
+      {activePage === 'home' && (
+        <>
+          {/* 0. HERO BANNER SLIDER (ON/OFF & Custom Builder Config) */}
+          {sectionsConfig && (sectionsConfig.heroBanner ? sectionsConfig.heroBanner.enabled !== false : shop.heroBannerEnabled !== false) && (
+            <HeroBannerRenderer
+              config={sectionsConfig?.heroBanner}
+              shop={shop}
+            />
+          )}
 
-      {/* 1. HERO SECTION (ON/OFF & Custom Builder Config) */}
-      {sectionsConfig && sectionsConfig.hero.enabled && (
-        <HeroSectionRenderer
-          config={sectionsConfig.hero}
-          shop={shop}
-          renderBannerSeparately={true}
-          onCtaClick={() => {
-            const el = document.getElementById('products');
-            if (el) el.scrollIntoView({ behavior: 'smooth' });
-          }}
-        />
-      )}
+          {/* 1. HERO SECTION (ON/OFF & Custom Builder Config) */}
+          {sectionsConfig && sectionsConfig.hero.enabled && (
+            <HeroSectionRenderer
+              config={sectionsConfig.hero}
+              shop={shop}
+              renderBannerSeparately={true}
+              onCtaClick={() => navigateToPage('products')}
+            />
+          )}
 
       {/* 2. ABOUT US SECTION */}
       {sectionsConfig && sectionsConfig.about.enabled && (
@@ -826,6 +1017,8 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
           onRemoveFromCart={removeFromCart}
           onSelectItem={(prod) => setSelectedProduct(prod)}
           searchPlaceholder={getTranslation('search.placeholder', currentLanguage, 'Search products...')}
+          onViewAllClick={() => navigateToPage('products')}
+          viewAllLabel="Explore All Products"
         />
       )}
 
@@ -1079,14 +1272,110 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
       </section>
       )}
 
-      {/* 15. SOCIAL MEDIA SECTION */}
-      {(!sectionsConfig?.socialMedia || sectionsConfig.socialMedia.enabled) && (
-        <SocialMediaSectionRenderer config={sectionsConfig?.socialMedia} shop={shop} />
+          {/* 15. SOCIAL MEDIA SECTION */}
+          {(!sectionsConfig?.socialMedia || sectionsConfig.socialMedia.enabled) && (
+            <SocialMediaSectionRenderer config={sectionsConfig?.socialMedia} shop={shop} />
+          )}
+
+          {/* 16. BLOG / ARTICLES SECTION (ON/OFF & Custom Builder Config) */}
+          {sectionsConfig && sectionsConfig.blog.enabled && (
+            <BlogSectionRenderer config={sectionsConfig.blog} shop={shop} />
+          )}
+        </>
       )}
 
-      {/* 16. BLOG / ARTICLES SECTION (ON/OFF & Custom Builder Config) */}
-      {sectionsConfig && sectionsConfig.blog.enabled && (
-        <BlogSectionRenderer config={sectionsConfig.blog} shop={shop} />
+      {/* =========================================================================
+          2. DEDICATED PRODUCTS CATALOGUE PAGE VIEW
+          ========================================================================= */}
+      {activePage === 'products' && (
+        <ProductsPageView
+          shop={shop}
+          products={catalogProducts}
+          cart={cart}
+          onAddToCart={addToCart}
+          onRemoveFromCart={removeFromCart}
+          onSelectItem={(prod) => setSelectedProduct(prod)}
+          onNavigateHome={() => navigateToPage('home')}
+        />
+      )}
+
+      {/* =========================================================================
+          3. DEDICATED SERVICES & APPOINTMENTS PAGE VIEW
+          ========================================================================= */}
+      {activePage === 'services' && (
+        <ServicesPageView
+          shop={shop}
+          services={catalogServices}
+          cart={cart}
+          onAddToCart={addToCart}
+          onRemoveFromCart={removeFromCart}
+          onSelectItem={(prod) => setSelectedProduct(prod)}
+          onNavigateHome={() => navigateToPage('home')}
+          onBookService={(serviceName) => {
+            setCustService(serviceName);
+            navigateToPage('contact');
+          }}
+        />
+      )}
+
+      {/* =========================================================================
+          4. DEDICATED COURSES & TRAINING PAGE VIEW
+          ========================================================================= */}
+      {activePage === 'courses' && (
+        <CoursesPageView
+          shop={shop}
+          courses={catalogCourses}
+          cart={cart}
+          onAddToCart={addToCart}
+          onRemoveFromCart={removeFromCart}
+          onSelectItem={(prod) => setSelectedProduct(prod)}
+          onNavigateHome={() => navigateToPage('home')}
+        />
+      )}
+
+      {/* =========================================================================
+          5. DEDICATED ABOUT US & CREDENTIALS PAGE VIEW
+          ========================================================================= */}
+      {activePage === 'about' && (
+        <AboutPageView
+          shop={shop}
+          sectionsConfig={sectionsConfig}
+          onNavigateHome={() => navigateToPage('home')}
+        />
+      )}
+
+      {/* =========================================================================
+          6. DEDICATED MEDIA GALLERY & VIDEOS PAGE VIEW
+          ========================================================================= */}
+      {activePage === 'gallery' && (
+        <GalleryPageView
+          shop={shop}
+          sectionsConfig={sectionsConfig}
+          onNavigateHome={() => navigateToPage('home')}
+        />
+      )}
+
+      {/* =========================================================================
+          7. DEDICATED CONTACT US & INQUIRY PAGE VIEW
+          ========================================================================= */}
+      {activePage === 'contact' && (
+        <ContactPageView
+          shop={shop}
+          sectionsConfig={sectionsConfig}
+          onNavigateHome={() => navigateToPage('home')}
+          custName={custName}
+          setCustName={setCustName}
+          custPhone={custPhone}
+          setCustPhone={setCustPhone}
+          custService={custService}
+          setCustService={setCustService}
+          custMsg={custMsg}
+          setCustMsg={setCustMsg}
+          inquirySubmitted={inquirySubmitted}
+          onHandleInquirySubmit={handleInquirySubmit}
+          onCopyUpi={handleCopyUpi}
+          copiedUpi={copiedUpi}
+        />
       )}
 
       {/* 17. STORE FOOTER WITH VENDOR PAYMENT QR (LIGHT THEME) */}
@@ -1123,12 +1412,42 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
           <div className="space-y-3">
             <h5 className="font-black uppercase tracking-wider text-slate-900 text-xs">Quick Navigation</h5>
             <ul className="space-y-2.5 text-slate-600">
-              <li><a href="#hero" className="hover:text-orange-600 transition-colors">Home Showcase</a></li>
-              <li><a href="#about" className="hover:text-orange-600 transition-colors">About Proprietor</a></li>
-              <li><a href="#products" className="hover:text-orange-600 transition-colors">Products & Catalogue</a></li>
-              <li><a href="#contact-inquiry" className="hover:text-orange-600 transition-colors">Direct Inquiry Form</a></li>
               <li>
-                <button onClick={() => setShowQrModal(true)} className="hover:text-orange-600 transition-colors cursor-pointer text-left">
+                <button type="button" onClick={() => navigateToPage('home')} className="hover:text-orange-600 transition-colors cursor-pointer text-left">
+                  Home Showcase
+                </button>
+              </li>
+              <li>
+                <button type="button" onClick={() => navigateToPage('products')} className="hover:text-orange-600 transition-colors cursor-pointer text-left">
+                  Products Catalogue
+                </button>
+              </li>
+              {catalogServices.length > 0 && (
+                <li>
+                  <button type="button" onClick={() => navigateToPage('services')} className="hover:text-orange-600 transition-colors cursor-pointer text-left">
+                    Services & Booking
+                  </button>
+                </li>
+              )}
+              {catalogCourses.length > 0 && (
+                <li>
+                  <button type="button" onClick={() => navigateToPage('courses')} className="hover:text-orange-600 transition-colors cursor-pointer text-left">
+                    Courses & Training
+                  </button>
+                </li>
+              )}
+              <li>
+                <button type="button" onClick={() => navigateToPage('about')} className="hover:text-orange-600 transition-colors cursor-pointer text-left">
+                  About Proprietor
+                </button>
+              </li>
+              <li>
+                <button type="button" onClick={() => navigateToPage('contact')} className="hover:text-orange-600 transition-colors cursor-pointer text-left">
+                  Direct Inquiry & Coordinates
+                </button>
+              </li>
+              <li>
+                <button type="button" onClick={() => setShowQrModal(true)} className="hover:text-orange-600 transition-colors cursor-pointer text-left">
                   0% Direct UPI QR Modal
                 </button>
               </li>
@@ -1693,6 +2012,15 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
         currentLanguage={currentLanguage}
         onSelectLanguage={handleSelectLanguage}
         hasBottomCartBar={Boolean(shop.ecommerceEnabled && totalCartCount > 0 && !isCartOpen)}
+      />
+
+      {/* 17. FIXED MOBILE BOTTOM NAVIGATION BAR FOR MULTI-PAGE STORE */}
+      <MobileBottomNavBar
+        activePage={activePage}
+        onNavigate={navigateToPage}
+        cartCount={totalCartCount}
+        onOpenCart={() => setIsCartOpen(true)}
+        hasServices={catalogServices.length > 0}
       />
 
     </div>

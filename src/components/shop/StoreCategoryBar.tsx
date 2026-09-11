@@ -28,7 +28,7 @@ export const StoreCategoryBar: React.FC<StoreCategoryBarProps> = ({
 
   // Rule:
   // Desktop: 10 per line. If > 10, carousel starts.
-  // Mobile: 5 per line. If > 5, carousel starts.
+  // Mobile: 5 items full visible + 6th item 20% peek. If > 5, carousel starts.
   useEffect(() => {
     const handleResize = () => {
       setIsDesktop(window.innerWidth >= 1024);
@@ -90,10 +90,10 @@ export const StoreCategoryBar: React.FC<StoreCategoryBarProps> = ({
   if (categories.length === 0) return null;
 
   return (
-    <div className="w-full bg-white rounded-2xl border border-gray-200/90 p-3 sm:p-4 shadow-2xs">
+    <div className="w-full bg-white rounded-2xl border border-gray-200/90 p-2.5 sm:p-4 shadow-2xs">
       {/* Category Container:
           - Desktop: 10 per line. If > 10, carousel with arrows.
-          - Mobile: 5 per line. If > 5, carousel.
+          - Mobile: 5 items full visible + 6th item 20% peek if > 5 categories.
       */}
       <div className="relative group/catbar">
         {/* Left Arrow for Desktop Carousel */}
@@ -108,13 +108,16 @@ export const StoreCategoryBar: React.FC<StoreCategoryBarProps> = ({
           </button>
         )}
 
-        {/* Categories List: Only categories (Image + Name) */}
+        {/* Categories List:
+            When > 5 items on mobile:
+            w-[calc((100%-40px)/5.22)] min-w-[calc((100%-40px)/5.22)] guarantees 5 items full + 6th item ~20% visible!
+        */}
         <div
           ref={scrollRef}
           onScroll={checkScroll}
           className={
             isCarousel
-              ? 'flex items-start gap-2.5 sm:gap-4 overflow-x-auto scroll-smooth scrollbar-none py-1.5 px-0.5 snap-x'
+              ? 'flex items-start gap-2 sm:gap-3 lg:gap-4 overflow-x-auto scroll-smooth scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] py-1 px-0.5 snap-x'
               : 'grid grid-cols-5 sm:grid-cols-8 lg:grid-cols-10 gap-2 sm:gap-3 py-1'
           }
         >
@@ -128,13 +131,15 @@ export const StoreCategoryBar: React.FC<StoreCategoryBarProps> = ({
                 type="button"
                 onClick={() => onSelectCategory(isSelected ? 'ALL' : item.name)}
                 className={`flex flex-col items-center justify-start group cursor-pointer text-center select-none transition-all active:scale-95 ${
-                  isCarousel ? 'shrink-0 snap-start w-[64px] sm:w-[76px] lg:w-[84px]' : 'w-full'
+                  isCarousel
+                    ? 'shrink-0 snap-start w-[calc((100%-40px)/5.22)] min-w-[calc((100%-40px)/5.22)] sm:w-[76px] sm:min-w-[76px] lg:w-[84px] lg:min-w-[84px]'
+                    : 'w-full'
                 }`}
                 title={item.name}
               >
                 {/* Category Image Circle */}
                 <div
-                  className={`relative w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-full p-0.5 transition-all duration-200 ${
+                  className={`relative w-11 h-11 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-full p-0.5 transition-all duration-200 ${
                     isSelected
                       ? `${colorStyles.activeRing} shadow-sm scale-105`
                       : `border-2 border-gray-200/90 ${colorStyles.hoverBorder} hover:scale-105 bg-white`
@@ -154,7 +159,7 @@ export const StoreCategoryBar: React.FC<StoreCategoryBarProps> = ({
 
                 {/* Category Name */}
                 <span
-                  className={`text-[10px] sm:text-xs leading-tight line-clamp-2 text-center mt-1.5 px-0.5 transition-colors font-['Outfit',sans-serif] ${
+                  className={`text-[9.5px] sm:text-xs leading-tight line-clamp-2 text-center mt-1 sm:mt-1.5 px-0.5 transition-colors font-['Outfit',sans-serif] ${
                     isSelected
                       ? `${colorStyles.activeText} font-black`
                       : 'text-slate-700 font-bold group-hover:text-slate-950'

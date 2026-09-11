@@ -43,6 +43,57 @@ export interface StoreItemsCarouselSectionProps {
   onSelectCategory?: (category: string) => void;
   extraHeaderAction?: React.ReactNode;
   filterToolbar?: React.ReactNode;
+  onViewAllClick?: () => void;
+  viewAllLabel?: string;
+}
+
+export interface TwoRowColumn {
+  top?: ProductItem;
+  bottom?: ProductItem;
+}
+
+/**
+ * Mobile display logic helper:
+ * - 5 Items: Top row 2 items full; Bottom row 2 items full + 3rd item (item 5) has 20% preview.
+ * - 6 Items: Top row 2 items full + 3rd item 20% preview; Bottom row 2 items full + 3rd item 20% preview.
+ * - 7–10 Items: Top 2 full, bottom 2 full, 3rd column peeks 20%, horizontal scroll continues.
+ * - 11+ Items: 2-row carousel initial view + "View All" button appears.
+ */
+export function buildTwoRowColumns(items: ProductItem[]): TwoRowColumn[] {
+  const n = items.length;
+  if (n === 0) return [];
+
+  if (n === 5) {
+    return [
+      { top: items[0], bottom: items[2] },
+      { top: items[1], bottom: items[3] },
+      { top: undefined, bottom: items[4] },
+    ];
+  }
+
+  if (n === 6) {
+    return [
+      { top: items[0], bottom: items[3] },
+      { top: items[1], bottom: items[4] },
+      { top: items[2], bottom: items[5] },
+    ];
+  }
+
+  // 7+ items: distribute between top and bottom so first 2 cols are full,
+  // 3rd col peeks 20%, and remaining cols scroll horizontally
+  const half = Math.floor(n / 2);
+  const topItems = items.slice(0, half);
+  const bottomItems = items.slice(half);
+
+  const colsCount = Math.max(topItems.length, bottomItems.length);
+  const cols: TwoRowColumn[] = [];
+  for (let i = 0; i < colsCount; i++) {
+    cols.push({
+      top: topItems[i],
+      bottom: bottomItems[i],
+    });
+  }
+  return cols;
 }
 
 interface SharedItemCardProps {
@@ -308,6 +359,8 @@ export const StoreItemsCarouselSection: React.FC<StoreItemsCarouselSectionProps>
   onSelectCategory: controlledOnSelectCategory,
   extraHeaderAction,
   filterToolbar,
+  onViewAllClick,
+  viewAllLabel,
 }) => {
   const [isViewAllExpanded, setIsViewAllExpanded] = useState(false);
   const [activeDot, setActiveDot] = useState(0);
@@ -381,38 +434,24 @@ export const StoreItemsCarouselSection: React.FC<StoreItemsCarouselSectionProps>
     return list;
   }, [items, activeCategory, currentSearch, isCourse, isService]);
 
-  // Content threshold: View All button only appears when items quantity exceeds initial visible design capacity
-  // (2-row carousel: 4 items on mobile [2 cols], 8 items on desktop [4 cols])
-  const [hasMoreContent, setHasMoreContent] = useState(false);
-
-  useEffect(() => {
-    const checkCapacity = () => {
-      const isDesktop = window.innerWidth >= 1024;
-      const threshold = isDesktop ? 8 : 4;
-      setHasMoreContent(filteredItems.length > threshold);
-    };
-
-    checkCapacity();
-    window.addEventListener('resize', checkCapacity);
-    return () => window.removeEventListener('resize', checkCapacity);
-  }, [filteredItems.length]);
-
-  // Group items into columns of 2 rows each
-  const itemPairs = useMemo(() => {
-    const pairs: ProductItem[][] = [];
-    for (let i = 0; i < filteredItems.length; i += 2) {
-      if (i + 1 < filteredItems.length) {
-        pairs.push([filteredItems[i], filteredItems[i + 1]]);
-      } else {
-        pairs.push([filteredItems[i]]);
-      }
-    }
-    return pairs;
+  // 2-row column pairs for 5+ items using buildTwoRowColumns
+  const twoRowCols = useMemo(() => {
+    if (filteredItems.length < 5) return [];
+    return buildTwoRowColumns(filteredItems);
   }, [filteredItems]);
 
-  // Update total dots based on number of columns and viewport width
+  // Update total dots based on layout and viewport width
   useEffect(() => {
     const updateDots = () => {
+      const count = filteredItems.length;
+      if (count <= 2 || count === 4) {
+        setTotalDots(1);
+        return;
+      }
+      if (count === 3) {
+        setTotalDots(2);
+        return;
+      }
       if (!scrollRef.current) return;
       const { scrollWidth, clientWidth } = scrollRef.current;
       const maxScroll = scrollWidth - clientWidth;
@@ -420,17 +459,21 @@ export const StoreItemsCarouselSection: React.FC<StoreItemsCarouselSectionProps>
         setTotalDots(1);
         return;
       }
-      // Calculate pages: on mobile ~2 columns per view, on desktop ~4 columns per view
       const isDesktop = window.innerWidth >= 1024;
       const colsPerView = isDesktop ? 4 : 2;
-      const computedDots = Math.max(2, Math.ceil(itemPairs.length / colsPerView));
-      setTotalDots(Math.min(computedDots, 8)); // limit to max 8 dots for clean aesthetics
+      const computedDots = Math.max(2, Math.ceil(twoRowCols.length / colsPerView));
+      setTotalDots(Math.min(computedDots, 8)); // limit to max 8 dots
     };
 
     updateDots();
     window.addEventListener('resize', updateDots);
     return () => window.removeEventListener('resize', updateDots);
-  }, [itemPairs.length]);
+  }, [filteredItems.length, twoRowCols.length]);
+
+  // View All visibility condition:
+  // "11 ya usse zyada items: 'View All' button show ho."
+  // "7–10 items: Horizontal-scroll + partial preview pattern continue rahe (no view all button needed)."
+  const showViewAllButton = filteredItems.length >= 11;
 
   // Handle scroll to update active dot
   const handleScroll = () => {
@@ -757,8 +800,130 @@ export const StoreItemsCarouselSection: React.FC<StoreItemsCarouselSectionProps>
             </button>
           </div>
         </div>
+      ) : filteredItems.length === 1 ? (
+        /* 1 Item: Single centered card */
+        <div className="w-full max-w-sm mx-auto h-[230px] sm:h-[255px]">
+          <SharedItemCard
+            item={filteredItems[0]}
+            isService={isService}
+            isCourse={isCourse}
+            itemType={itemType}
+            shop={shop}
+            cart={cart}
+            onAddToCart={onAddToCart}
+            onRemoveFromCart={onRemoveFromCart}
+            onSelectItem={onSelectItem}
+          />
+        </div>
+      ) : filteredItems.length === 2 ? (
+        /* 2 Items: 2-column layout (Left + Right), both full visible, no horizontal scroll */
+        <div className="grid grid-cols-2 gap-2.5 sm:gap-4 w-full">
+          <div className="h-[230px] sm:h-[255px]">
+            <SharedItemCard
+              item={filteredItems[0]}
+              isService={isService}
+              isCourse={isCourse}
+              itemType={itemType}
+              shop={shop}
+              cart={cart}
+              onAddToCart={onAddToCart}
+              onRemoveFromCart={onRemoveFromCart}
+              onSelectItem={onSelectItem}
+            />
+          </div>
+          <div className="h-[230px] sm:h-[255px]">
+            <SharedItemCard
+              item={filteredItems[1]}
+              isService={isService}
+              isCourse={isCourse}
+              itemType={itemType}
+              shop={shop}
+              cart={cart}
+              onAddToCart={onAddToCart}
+              onRemoveFromCart={onRemoveFromCart}
+              onSelectItem={onSelectItem}
+            />
+          </div>
+        </div>
+      ) : filteredItems.length === 3 ? (
+        /* 3 Items: Horizontal scroll — first 2 items full visible, 3rd item approx. 20% portion visible */
+        <div className="relative group/carousel space-y-3">
+          <div
+            ref={scrollRef}
+            onScroll={handleScroll}
+            className="flex gap-2.5 sm:gap-3.5 lg:gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-2 pt-1 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none]"
+          >
+            {filteredItems.map((item) => (
+              <div
+                key={item.id}
+                className="shrink-0 snap-start
+                           w-[calc((100%-20px)/2.2)] min-w-[calc((100%-20px)/2.2)]
+                           sm:w-[calc((100%-36px)/3.22)] sm:min-w-[calc((100%-36px)/3.22)]
+                           lg:w-[calc((100%-60px)/4.22)] lg:min-w-[calc((100%-60px)/4.22)]
+                           h-[230px] sm:h-[255px]"
+              >
+                <SharedItemCard
+                  item={item}
+                  isService={isService}
+                  isCourse={isCourse}
+                  itemType={itemType}
+                  shop={shop}
+                  cart={cart}
+                  onAddToCart={onAddToCart}
+                  onRemoveFromCart={onRemoveFromCart}
+                  onSelectItem={onSelectItem}
+                />
+              </div>
+            ))}
+          </div>
+
+          {/* Dots navigation for 3 items */}
+          <div className="flex items-center justify-center gap-1.5 sm:gap-2 pt-1 pb-1">
+            {[0, 1].map((idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => handleDotClick(idx)}
+                className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
+                  activeDot === idx
+                    ? isCourse
+                      ? 'w-5 sm:w-6 bg-indigo-600'
+                      : isService
+                      ? 'w-5 sm:w-6 bg-blue-600'
+                      : 'w-5 sm:w-6 bg-orange-600'
+                    : 'w-2 bg-gray-300 hover:bg-gray-400'
+                }`}
+                aria-label={`Go to slide ${idx + 1}`}
+              />
+            ))}
+          </div>
+        </div>
+      ) : filteredItems.length === 4 ? (
+        /* 4 Items: 2 × 2 Grid — upar 2 items, niche 2 items. Sabhi full visible */
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4 w-full">
+          {filteredItems.map((item) => (
+            <div key={item.id} className="h-[230px] sm:h-[255px]">
+              <SharedItemCard
+                item={item}
+                isService={isService}
+                isCourse={isCourse}
+                itemType={itemType}
+                shop={shop}
+                cart={cart}
+                onAddToCart={onAddToCart}
+                onRemoveFromCart={onRemoveFromCart}
+                onSelectItem={onSelectItem}
+              />
+            </div>
+          ))}
+        </div>
       ) : (
-        /* Horizontal Carousel (Mobile: 2 full + 20% peek of 3rd, Desktop: 4 full + 20% peek of 5th, 2 rows) */
+        /* 5+ Items:
+           - 5 items: Top 2 full; Bottom 2 full + 3rd item 20% peek
+           - 6 items: Top 2 full + 3rd item 20% peek; Bottom 2 full + 3rd item 20% peek
+           - 7–10 items: Top 2 full, bottom 2 full, 3rd col 20% peek, horizontal-scroll continues
+           - 11+ items: Initial 2-row carousel + "View All" button automatically appears
+        */
         <div className="relative group/carousel space-y-3">
           {/* Optional Left / Right Arrow buttons on Desktop */}
           {totalDots > 1 && (
@@ -788,19 +953,19 @@ export const StoreItemsCarouselSection: React.FC<StoreItemsCarouselSectionProps>
             onScroll={handleScroll}
             className="flex gap-2.5 sm:gap-3.5 lg:gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-2 pt-1 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none]"
           >
-            {itemPairs.map((pair, colIdx) => (
+            {twoRowCols.map((col, colIdx) => (
               <div
-                key={`pair-${colIdx}`}
+                key={`col-${colIdx}`}
                 className="flex flex-col gap-2.5 sm:gap-3.5 lg:gap-4 shrink-0 snap-start
-                           w-[calc((100%-20px)/2.22)] min-w-[calc((100%-20px)/2.22)]
+                           w-[calc((100%-20px)/2.2)] min-w-[calc((100%-20px)/2.2)]
                            sm:w-[calc((100%-36px)/3.22)] sm:min-w-[calc((100%-36px)/3.22)]
                            lg:w-[calc((100%-60px)/4.22)] lg:min-w-[calc((100%-60px)/4.22)]"
               >
-                {/* Row 1 Item */}
-                {pair[0] && (
+                {/* Row 1 Top Item */}
+                {col.top ? (
                   <div className="h-[230px] sm:h-[255px]">
                     <SharedItemCard
-                      item={pair[0]}
+                      item={col.top}
                       isService={isService}
                       isCourse={isCourse}
                       itemType={itemType}
@@ -811,13 +976,15 @@ export const StoreItemsCarouselSection: React.FC<StoreItemsCarouselSectionProps>
                       onSelectItem={onSelectItem}
                     />
                   </div>
+                ) : (
+                  <div className="h-[230px] sm:h-[255px] invisible" />
                 )}
 
-                {/* Row 2 Item (if pair has 2 items) */}
-                {pair[1] && (
+                {/* Row 2 Bottom Item */}
+                {col.bottom ? (
                   <div className="h-[230px] sm:h-[255px]">
                     <SharedItemCard
-                      item={pair[1]}
+                      item={col.bottom}
                       isService={isService}
                       isCourse={isCourse}
                       itemType={itemType}
@@ -828,12 +995,14 @@ export const StoreItemsCarouselSection: React.FC<StoreItemsCarouselSectionProps>
                       onSelectItem={onSelectItem}
                     />
                   </div>
+                ) : (
+                  <div className="h-[230px] sm:h-[255px] invisible" />
                 )}
               </div>
             ))}
           </div>
 
-          {/* 3. Rows ke niche dots */}
+          {/* Rows ke niche dots */}
           {totalDots > 1 && (
             <div className="flex items-center justify-center gap-1.5 sm:gap-2 pt-1 pb-1">
               {Array.from({ length: totalDots }).map((_, idx) => (
@@ -843,7 +1012,11 @@ export const StoreItemsCarouselSection: React.FC<StoreItemsCarouselSectionProps>
                   onClick={() => handleDotClick(idx)}
                   className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
                     activeDot === idx
-                      ? 'w-5 sm:w-6 bg-orange-600'
+                      ? isCourse
+                        ? 'w-5 sm:w-6 bg-indigo-600'
+                        : isService
+                        ? 'w-5 sm:w-6 bg-blue-600'
+                        : 'w-5 sm:w-6 bg-orange-600'
                       : 'w-2 bg-gray-300 hover:bg-gray-400'
                   }`}
                   aria-label={`Go to slide group ${idx + 1}`}
@@ -852,12 +1025,17 @@ export const StoreItemsCarouselSection: React.FC<StoreItemsCarouselSectionProps>
             </div>
           )}
 
-          {/* 4. View All Button BELOW CAROUSEL - Only shown when content exceeds design capacity (4 on mobile, 8 on desktop) */}
-          {(hasMoreContent || isViewAllExpanded) && filteredItems.length > 0 && (
+          {/* 11+ Items: "View All" button automatically appears */}
+          {showViewAllButton && (
             <div className="flex justify-center pt-3 pb-1">
               <button
                 type="button"
-                onClick={() => setIsViewAllExpanded((prev) => !prev)}
+                onClick={() => {
+                  setIsViewAllExpanded(true);
+                  if (onViewAllClick) {
+                    onViewAllClick();
+                  }
+                }}
                 className={`px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl font-black text-xs sm:text-sm uppercase tracking-wider text-white transition-all shadow-xs hover:shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-95 ${
                   isCourse
                     ? 'bg-indigo-600 hover:bg-indigo-700'
@@ -865,14 +1043,10 @@ export const StoreItemsCarouselSection: React.FC<StoreItemsCarouselSectionProps>
                     ? 'bg-blue-600 hover:bg-blue-700'
                     : 'bg-orange-600 hover:bg-orange-700'
                 }`}
-                title={isViewAllExpanded ? 'Show 2-Row Carousel' : `View All ${title}`}
+                title={`View All ${title}`}
               >
-                <span>{isViewAllExpanded ? 'Show Less (Carousel View)' : `View All (${filteredItems.length})`}</span>
-                {isViewAllExpanded ? (
-                  <ChevronUp className="w-4 h-4 shrink-0" />
-                ) : (
-                  <ArrowRight className="w-4 h-4 shrink-0" />
-                )}
+                <span>{viewAllLabel || `View All (${filteredItems.length})`}</span>
+                <ArrowRight className="w-4 h-4 shrink-0" />
               </button>
             </div>
           )}
