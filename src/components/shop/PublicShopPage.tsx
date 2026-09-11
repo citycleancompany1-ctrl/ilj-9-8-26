@@ -50,6 +50,7 @@ import { Shop, ProductItem, CartItem, AdvertisementPopup, ShopInquiry } from '..
 import { formatINR, getWhatsAppCartMessageUrl, getWhatsAppDirectUrl, getYouTubeEmbedUrl } from '../../utils/mediaUpload';
 import { CheckoutInvoiceModal } from './CheckoutInvoiceModal';
 import { ShopShareModal } from '../modals/ShopShareModal';
+import { TermsAndConditionsModal } from '../modals/TermsAndConditionsModal';
 import { updateShopSeoMeta, resetPlatformSeoMeta } from '../../utils/seo';
 import { getThemeById } from '../../data/indianThemes';
 import { getDefaultSectionsConfig } from '../../utils/sectionDefaults';
@@ -119,6 +120,7 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showPwaInstallModal, setShowPwaInstallModal] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<ProductItem | null>(null);
   const [copiedUpi, setCopiedUpi] = useState(false);
   const [copiedUrl, setCopiedUrl] = useState(false);
@@ -777,7 +779,7 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
             </a>
 
             {/* Cart Icon with Counter */}
-            {shop.ecommerceEnabled && (
+            {(shop.ecommerceEnabled !== false || totalCartCount > 0 || (shop as any).websiteMode === 'CATALOG' || shop.isCatalogOnly) && (
               <button
                 id="header-cart-btn"
                 onClick={() => setIsCartOpen(true)}
@@ -1451,6 +1453,16 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
                   0% Direct UPI QR Modal
                 </button>
               </li>
+              <li>
+                <button
+                  type="button"
+                  onClick={() => setShowTermsModal(true)}
+                  className="hover:text-orange-600 transition-colors cursor-pointer text-left flex items-center gap-1.5"
+                >
+                  <ShieldCheck className="w-3.5 h-3.5 text-orange-600 shrink-0" />
+                  <span>Terms & Conditions (T&C)</span>
+                </button>
+              </li>
             </ul>
           </div>
 
@@ -1510,8 +1522,16 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
 
         </div>
 
-        <div className="text-center text-[11px] text-slate-500 pt-4 pb-1.5 sm:pb-2">
-          {sectionsConfig?.footer?.copyrightText || `© ${new Date().getFullYear()} ${shop.businessName}. All rights reserved. Verified direct store powered by IndianLalaJi.`}
+        <div className="flex flex-wrap items-center justify-center gap-2 text-[11px] text-slate-500 pt-4 pb-1.5 sm:pb-2">
+          <span>{sectionsConfig?.footer?.copyrightText || `© ${new Date().getFullYear()} ${shop.businessName}. All rights reserved. Verified direct store powered by IndianLalaJi.`}</span>
+          <span>•</span>
+          <button
+            type="button"
+            onClick={() => setShowTermsModal(true)}
+            className="text-orange-600 hover:text-orange-700 font-semibold underline underline-offset-2 cursor-pointer inline-flex items-center gap-1"
+          >
+            <span>Terms & Conditions (T&C)</span>
+          </button>
         </div>
       </footer>
       )}
@@ -1668,7 +1688,7 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
       )}
 
       {/* 12. COMPACT FLOATING CART CAPSULE (TOTAL AMOUNT + CHECK OUT) */}
-      {shop.ecommerceEnabled && totalCartCount > 0 && !isCartOpen && !showInvoiceModal && (
+      {totalCartCount > 0 && !isCartOpen && !showInvoiceModal && (
         <div 
           id="cart-bottom-capsule-container"
           className="fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-40 animate-in slide-in-from-bottom-4 duration-200 pointer-events-auto max-w-[calc(100vw-1.5rem)] sm:max-w-md w-auto"
@@ -1996,6 +2016,13 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
         onClose={() => setShowShareModal(false)}
       />
 
+      {/* TERMS & CONDITIONS (T&C) POPUP MODAL */}
+      <TermsAndConditionsModal
+        isOpen={showTermsModal}
+        onClose={() => setShowTermsModal(false)}
+        shop={shop}
+      />
+
       {/* LANGUAGE SWITCH CONFIRMATION TOAST */}
       {languageToast && (
         <div className="fixed top-20 sm:top-24 left-1/2 -translate-x-1/2 z-50 bg-slate-950/95 text-white text-xs font-bold px-4 py-2.5 rounded-full shadow-2xl flex items-center gap-2.5 border border-indigo-400/50 backdrop-blur-md animate-in fade-in slide-in-from-top-2">
@@ -2011,7 +2038,7 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
         shop={shop}
         currentLanguage={currentLanguage}
         onSelectLanguage={handleSelectLanguage}
-        hasBottomCartBar={Boolean(shop.ecommerceEnabled && totalCartCount > 0 && !isCartOpen)}
+        hasBottomCartBar={Boolean(totalCartCount > 0 && !isCartOpen)}
       />
 
       {/* 17. FIXED MOBILE BOTTOM NAVIGATION BAR FOR MULTI-PAGE STORE */}

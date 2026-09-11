@@ -157,6 +157,10 @@ export interface Shop {
   // Isolated Website Backups (Snapshots)
   backups?: VendorWebsiteBackup[];
 
+  // Custom Store Terms & Conditions written by Vendor
+  termsAndConditions?: string;
+  termsUpdatedAt?: string;
+
   // Versioning & Future-Update Safety (Strict Immortality & Immunity)
   shopVersion?: string; // e.g. 'v1.0' | 'v1.1' | 'v2.0'
   versionLock?: boolean; // When true, platform updates/new features NEVER automatically modify this shop's schema/design

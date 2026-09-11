@@ -869,18 +869,7 @@ export const ThemedProductCatalogue: React.FC<ThemedProductCatalogueProps> = ({
                     </div>
                   )}
 
-                  {isPriceHidden ? (
-                    <a
-                      href={whatsappInquiryUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold font-serif flex items-center gap-1.5 shadow-sm transition-all hover:scale-105 active:scale-95 cursor-pointer whitespace-nowrap"
-                      title="Ask price on WhatsApp"
-                    >
-                      <MessageSquare className="w-3.5 h-3.5" />
-                      <span>कीमत पूछें</span>
-                    </a>
-                  ) : inCart ? (
+                  {inCart ? (
                     <div className="flex items-center gap-1.5 bg-amber-100 border border-amber-300 rounded-xl p-1">
                       <button
                         onClick={() => onRemoveFromCart(prod.id)}
@@ -897,14 +886,28 @@ export const ThemedProductCatalogue: React.FC<ThemedProductCatalogueProps> = ({
                       </button>
                     </div>
                   ) : (
-                    <button
-                      onClick={() => onAddToCart(prod)}
-                      aria-label="Add to cart"
-                      title="Add to cart"
-                      className="w-8 h-8 rounded-xl bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-700 hover:to-yellow-700 text-white font-bold flex items-center justify-center shadow-sm cursor-pointer transition-transform hover:scale-105 active:scale-95"
-                    >
-                      <Plus className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center gap-1.5">
+                      {isPriceHidden && (
+                        <a
+                          href={whatsappInquiryUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="px-2.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold font-serif flex items-center gap-1.5 shadow-sm transition-all hover:scale-105 active:scale-95 cursor-pointer whitespace-nowrap"
+                          title="Ask price on WhatsApp"
+                        >
+                          <MessageSquare className="w-3.5 h-3.5" />
+                          <span>कीमत पूछें</span>
+                        </a>
+                      )}
+                      <button
+                        onClick={() => onAddToCart(prod)}
+                        aria-label="Add to cart"
+                        title="Add to cart"
+                        className="w-8 h-8 rounded-xl bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-700 hover:to-yellow-700 text-white font-bold flex items-center justify-center shadow-sm cursor-pointer transition-transform hover:scale-105 active:scale-95"
+                      >
+                        <Plus className="w-4 h-4" />
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>
@@ -975,18 +978,7 @@ export const ThemedProductCatalogue: React.FC<ThemedProductCatalogueProps> = ({
                     </div>
                   )}
 
-                  {isPriceHidden ? (
-                    <a
-                      href={whatsappInquiryUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-serif font-bold flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95 whitespace-nowrap"
-                      title="Ask price on WhatsApp"
-                    >
-                      <MessageSquare className="w-3.5 h-3.5" />
-                      <span>कीमत पूछें</span>
-                    </a>
-                  ) : inCart ? (
+                  {inCart ? (
                     <div className="flex items-center gap-1 bg-orange-100 rounded-lg p-1 border border-orange-300">
                       <button
                         onClick={() => onRemoveFromCart(prod.id)}
@@ -1003,14 +995,28 @@ export const ThemedProductCatalogue: React.FC<ThemedProductCatalogueProps> = ({
                       </button>
                     </div>
                   ) : (
-                    <button
-                      onClick={() => onAddToCart(prod)}
-                      aria-label="बही में जोड़ें"
-                      title="बही में जोड़ें"
-                      className="w-8 h-8 rounded-lg bg-orange-600 hover:bg-orange-700 text-white font-bold flex items-center justify-center shadow-xs cursor-pointer active:scale-95"
-                    >
-                      <Plus className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center gap-1.5">
+                      {isPriceHidden && (
+                        <a
+                          href={whatsappInquiryUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-serif font-bold flex items-center gap-1 shadow-xs cursor-pointer active:scale-95 whitespace-nowrap"
+                          title="Ask price on WhatsApp"
+                        >
+                          <MessageSquare className="w-3.5 h-3.5" />
+                          <span>कीमत पूछें</span>
+                        </a>
+                      )}
+                      <button
+                        onClick={() => onAddToCart(prod)}
+                        aria-label="बही में जोड़ें"
+                        title="बही में जोड़ें"
+                        className="w-8 h-8 rounded-lg bg-orange-600 hover:bg-orange-700 text-white font-bold flex items-center justify-center shadow-xs cursor-pointer active:scale-95"
+                      >
+                        <Plus className="w-4 h-4" />
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>
@@ -1077,18 +1083,7 @@ export const ThemedProductCatalogue: React.FC<ThemedProductCatalogueProps> = ({
                     </div>
                   )}
 
-                  {isPriceHidden ? (
-                    <a
-                      href={whatsappInquiryUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="px-2.5 py-1 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold flex items-center gap-1 shadow-xs cursor-pointer active:scale-95 whitespace-nowrap"
-                      title="Ask price on WhatsApp"
-                    >
-                      <MessageSquare className="w-3 h-3" />
-                      <span>कीमत पूछें</span>
-                    </a>
-                  ) : inCart ? (
+                  {inCart ? (
                     <div className="flex items-center justify-between bg-rose-50 border border-rose-200 rounded-full p-0.5">
                       <button
                         onClick={() => onRemoveFromCart(prod.id)}
@@ -1105,14 +1100,28 @@ export const ThemedProductCatalogue: React.FC<ThemedProductCatalogueProps> = ({
                       </button>
                     </div>
                   ) : (
-                    <button
-                      onClick={() => onAddToCart(prod)}
-                      aria-label="Add to cart"
-                      title="Add to cart"
-                      className="w-8 h-8 rounded-full bg-rose-600 hover:bg-rose-700 text-white font-bold flex items-center justify-center transition-all cursor-pointer shadow-xs active:scale-95"
-                    >
-                      <Plus className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center gap-1">
+                      {isPriceHidden && (
+                        <a
+                          href={whatsappInquiryUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="px-2 py-1 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold flex items-center gap-1 shadow-xs cursor-pointer active:scale-95 whitespace-nowrap"
+                          title="Ask price on WhatsApp"
+                        >
+                          <MessageSquare className="w-3 h-3" />
+                          <span>पूछें</span>
+                        </a>
+                      )}
+                      <button
+                        onClick={() => onAddToCart(prod)}
+                        aria-label="Add to cart"
+                        title="Add to cart"
+                        className="w-8 h-8 rounded-full bg-rose-600 hover:bg-rose-700 text-white font-bold flex items-center justify-center transition-all cursor-pointer shadow-xs active:scale-95"
+                      >
+                        <Plus className="w-4 h-4" />
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>
@@ -1175,18 +1184,7 @@ export const ThemedProductCatalogue: React.FC<ThemedProductCatalogueProps> = ({
                   </div>
                 )}
 
-                {isPriceHidden ? (
-                  <a
-                    href={whatsappInquiryUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95 whitespace-nowrap"
-                    title="Ask price on WhatsApp"
-                  >
-                    <MessageSquare className="w-3.5 h-3.5" />
-                    <span>कीमत पूछें</span>
-                  </a>
-                ) : inCart ? (
+                {inCart ? (
                   <div className="flex items-center gap-1.5 bg-teal-50 border border-teal-200 rounded-lg p-1">
                     <button
                       onClick={() => onRemoveFromCart(prod.id)}
@@ -1203,14 +1201,28 @@ export const ThemedProductCatalogue: React.FC<ThemedProductCatalogueProps> = ({
                     </button>
                   </div>
                 ) : (
-                  <button
-                    onClick={() => onAddToCart(prod)}
-                    aria-label="Add to cart"
-                    title="Add to cart"
-                    className="w-8 h-8 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-bold flex items-center justify-center shadow-xs cursor-pointer active:scale-95"
-                  >
-                    <Plus className="w-4 h-4" />
-                  </button>
+                  <div className="flex items-center gap-1.5">
+                    {isPriceHidden && (
+                      <a
+                        href={whatsappInquiryUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95 whitespace-nowrap"
+                        title="Ask price on WhatsApp"
+                      >
+                        <MessageSquare className="w-3.5 h-3.5" />
+                        <span>कीमत पूछें</span>
+                      </a>
+                    )}
+                    <button
+                      onClick={() => onAddToCart(prod)}
+                      aria-label="Add to cart"
+                      title="Add to cart"
+                      className="w-8 h-8 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-bold flex items-center justify-center shadow-xs cursor-pointer active:scale-95"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  </div>
                 )}
               </div>
             </div>
@@ -1272,18 +1284,7 @@ export const ThemedProductCatalogue: React.FC<ThemedProductCatalogueProps> = ({
                   </div>
                 )}
 
-                {isPriceHidden ? (
-                  <a
-                    href={whatsappInquiryUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="px-2.5 py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1 cursor-pointer active:scale-95 whitespace-nowrap"
-                    title="Ask price on WhatsApp"
-                  >
-                    <MessageSquare className="w-3.5 h-3.5" />
-                    <span>INQUIRE</span>
-                  </a>
-                ) : inCart ? (
+                {inCart ? (
                   <div className="flex items-center gap-1 bg-slate-800 rounded p-1 border border-amber-500/40">
                     <button
                       onClick={() => onRemoveFromCart(prod.id)}
@@ -1300,14 +1301,28 @@ export const ThemedProductCatalogue: React.FC<ThemedProductCatalogueProps> = ({
                     </button>
                   </div>
                 ) : (
-                  <button
-                    onClick={() => onAddToCart(prod)}
-                    aria-label="Add to cart"
-                    title="Add to cart"
-                    className="w-8 h-8 rounded bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold flex items-center justify-center cursor-pointer active:scale-95"
-                  >
-                    <Plus className="w-4 h-4" />
-                  </button>
+                  <div className="flex items-center gap-1.5">
+                    {isPriceHidden && (
+                      <a
+                        href={whatsappInquiryUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="px-2.5 py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1 cursor-pointer active:scale-95 whitespace-nowrap"
+                        title="Ask price on WhatsApp"
+                      >
+                        <MessageSquare className="w-3.5 h-3.5" />
+                        <span>INQUIRE</span>
+                      </a>
+                    )}
+                    <button
+                      onClick={() => onAddToCart(prod)}
+                      aria-label="Add to cart"
+                      title="Add to cart"
+                      className="w-8 h-8 rounded bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold flex items-center justify-center cursor-pointer active:scale-95"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  </div>
                 )}
               </div>
             </div>
@@ -1372,18 +1387,7 @@ export const ThemedProductCatalogue: React.FC<ThemedProductCatalogueProps> = ({
                   </div>
                 )}
 
-                {isPriceHidden ? (
-                  <a
-                    href={whatsappInquiryUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-serif text-xs font-bold flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95 whitespace-nowrap"
-                    title="Ask price on WhatsApp"
-                  >
-                    <MessageSquare className="w-3.5 h-3.5" />
-                    <span>कीमत पूछें</span>
-                  </a>
-                ) : inCart ? (
+                {inCart ? (
                   <div className="flex items-center gap-1 bg-amber-200/80 rounded-xl p-1 border border-amber-400">
                     <button
                       onClick={() => onRemoveFromCart(prod.id)}
@@ -1400,14 +1404,28 @@ export const ThemedProductCatalogue: React.FC<ThemedProductCatalogueProps> = ({
                     </button>
                   </div>
                 ) : (
-                  <button
-                    onClick={() => onAddToCart(prod)}
-                    aria-label="प्रसाद लें"
-                    title="प्रसाद लें"
-                    className="w-8 h-8 rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 hover:opacity-95 text-white font-bold flex items-center justify-center shadow-sm cursor-pointer active:scale-95"
-                  >
-                    <Plus className="w-4 h-4" />
-                  </button>
+                  <div className="flex items-center gap-1.5">
+                    {isPriceHidden && (
+                      <a
+                        href={whatsappInquiryUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="px-2.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-serif text-xs font-bold flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95 whitespace-nowrap"
+                        title="Ask price on WhatsApp"
+                      >
+                        <MessageSquare className="w-3.5 h-3.5" />
+                        <span>कीमत पूछें</span>
+                      </a>
+                    )}
+                    <button
+                      onClick={() => onAddToCart(prod)}
+                      aria-label="प्रसाद लें"
+                      title="प्रसाद लें"
+                      className="w-8 h-8 rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 hover:opacity-95 text-white font-bold flex items-center justify-center shadow-sm cursor-pointer active:scale-95"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  </div>
                 )}
               </div>
             </div>

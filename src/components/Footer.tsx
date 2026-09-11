@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Store, 
   PhoneCall, 
@@ -8,8 +8,10 @@ import {
   CheckCircle2, 
   Sparkles,
   ArrowRight,
-  ShieldAlert
+  ShieldAlert,
+  FileText
 } from 'lucide-react';
+import { TermsAndConditionsModal } from './modals/TermsAndConditionsModal';
 
 interface FooterProps {
   onNavigate: (view: string) => void;
@@ -17,6 +19,8 @@ interface FooterProps {
 }
 
 export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenAuth }) => {
+  const [showTermsModal, setShowTermsModal] = useState(false);
+
   return (
     <footer className="bg-slate-900 text-gray-400 border-t border-slate-800 pt-16 pb-3 sm:pb-4">
       <div className="max-w-7xl mx-auto px-4 sm:px-8">
@@ -115,6 +119,17 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenAuth }) => {
               </li>
               <li>
                 <button 
+                  id="footer-terms-link-btn"
+                  type="button"
+                  onClick={() => setShowTermsModal(true)} 
+                  className="hover:text-orange-400 transition-colors flex items-center gap-1.5 text-left cursor-pointer"
+                >
+                  <ShieldCheck className="w-3.5 h-3.5 text-orange-400 shrink-0" />
+                  <span>Terms & Conditions (T&C)</span>
+                </button>
+              </li>
+              <li>
+                <button 
                   id="footer-disclaimer-link-btn"
                   onClick={() => onNavigate('disclaimer')} 
                   className="text-amber-400 hover:text-amber-300 transition-colors font-semibold flex items-center gap-1.5 text-left"
@@ -180,6 +195,15 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenAuth }) => {
             <span>&copy; {new Date().getFullYear()} IndianLalaJi.com — Digital Catalogue.</span>
             <span>•</span>
             <button
+              id="footer-bottom-terms-btn"
+              type="button"
+              onClick={() => setShowTermsModal(true)}
+              className="text-gray-400 hover:text-orange-400 transition-colors font-medium underline decoration-slate-700 underline-offset-2 cursor-pointer"
+            >
+              Terms & Conditions (T&C)
+            </button>
+            <span>•</span>
+            <button
               id="footer-bottom-disclaimer-btn"
               onClick={() => onNavigate('disclaimer')}
               className="text-amber-400/90 hover:text-amber-300 transition-colors font-medium underline decoration-slate-700 underline-offset-2"
@@ -215,6 +239,12 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenAuth }) => {
         </div>
 
       </div>
+
+      {/* Terms & Conditions Modal */}
+      <TermsAndConditionsModal
+        isOpen={showTermsModal}
+        onClose={() => setShowTermsModal(false)}
+      />
     </footer>
   );
 };

@@ -263,73 +263,62 @@ export const SharedItemCard: React.FC<SharedItemCardProps> = ({
 
           {/* Action button */}
           <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
-            {isPriceHidden ? (
-              <a
-                href={whatsappInquiryUrl}
-                onClick={(e) => e.stopPropagation()}
-                target="_blank"
-                rel="noreferrer"
-                className="h-7 sm:h-8 px-2 sm:px-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] sm:text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1 shadow-xs transition-all active:scale-95"
-                title="Inquire on WhatsApp"
-              >
-                <MessageSquare className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                <span className="hidden sm:inline">Ask</span>
-              </a>
-            ) : shop.ecommerceEnabled !== false ? (
-              inCart ? (
-                <div className="flex items-center gap-0.5 bg-orange-50 border border-orange-200 rounded-lg p-0.5">
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onRemoveFromCart(item.id);
-                    }}
-                    className="w-5 h-5 sm:w-6 sm:h-6 rounded bg-white text-orange-700 font-bold flex items-center justify-center hover:bg-orange-100 cursor-pointer shadow-xs"
-                    title="Decrease quantity"
-                  >
-                    <Minus className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-                  </button>
-                  <span className="font-black text-[11px] sm:text-xs px-1 text-orange-950 font-mono">
-                    {inCart.quantity}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onAddToCart(item);
-                    }}
-                    className="w-5 h-5 sm:w-6 sm:h-6 rounded bg-orange-600 text-white font-bold flex items-center justify-center hover:bg-orange-700 cursor-pointer shadow-xs"
-                    title="Increase quantity"
-                  >
-                    <Plus className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-                  </button>
-                </div>
-              ) : (
+            {inCart ? (
+              <div className="flex items-center gap-0.5 bg-orange-50 border border-orange-200 rounded-lg p-0.5">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRemoveFromCart(item.id);
+                  }}
+                  className="w-5 h-5 sm:w-6 sm:h-6 rounded bg-white text-orange-700 font-bold flex items-center justify-center hover:bg-orange-100 cursor-pointer shadow-xs"
+                  title="Decrease quantity"
+                >
+                  <Minus className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                </button>
+                <span className="font-black text-[11px] sm:text-xs px-1 text-orange-950 font-mono">
+                  {inCart.quantity}
+                </span>
                 <button
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     onAddToCart(item);
                   }}
-                  className="h-7 sm:h-8 px-2 sm:px-2.5 rounded-lg bg-slate-900 hover:bg-orange-600 text-white text-[10px] sm:text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1 shadow-xs transition-colors cursor-pointer"
-                  title="Add to cart"
+                  className="w-5 h-5 sm:w-6 sm:h-6 rounded bg-orange-600 text-white font-bold flex items-center justify-center hover:bg-orange-700 cursor-pointer shadow-xs"
+                  title="Increase quantity"
+                >
+                  <Plus className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1">
+                {isPriceHidden && (
+                  <a
+                    href={whatsappInquiryUrl}
+                    onClick={(e) => e.stopPropagation()}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="h-7 sm:h-8 px-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] sm:text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1 shadow-xs transition-all active:scale-95"
+                    title="Inquire on WhatsApp"
+                  >
+                    <MessageSquare className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                    <span className="hidden sm:inline">Ask</span>
+                  </a>
+                )}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onAddToCart(item);
+                  }}
+                  className="h-7 sm:h-8 px-2 sm:px-2.5 rounded-lg bg-orange-600 hover:bg-orange-700 text-white text-[10px] sm:text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1 shadow-xs transition-colors cursor-pointer"
+                  title="Add to cart / inquiry"
                 >
                   <Plus className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                  <span className="hidden sm:inline">Add</span>
+                  <span>Add</span>
                 </button>
-              )
-            ) : (
-              <a
-                href={whatsappInquiryUrl}
-                onClick={(e) => e.stopPropagation()}
-                target="_blank"
-                rel="noreferrer"
-                className="h-7 sm:h-8 px-2 sm:px-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] sm:text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1 shadow-xs transition-all active:scale-95"
-                title="Order on WhatsApp"
-              >
-                <MessageSquare className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                <span className="hidden sm:inline">Order</span>
-              </a>
+              </div>
             )}
           </div>
         </div>

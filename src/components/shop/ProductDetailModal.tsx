@@ -251,105 +251,75 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
         {/* Sticky Action Footer */}
         <div className="p-3 sm:p-4 bg-gray-50 border-t border-gray-100 flex flex-col gap-2 shrink-0">
-          {/* If price is hidden, customer inquires price directly on WhatsApp */}
-          {isPriceHidden ? (
-            <div className="flex items-center gap-2">
-              <a
-                href={getWhatsAppDirectUrl(
-                  shop.whatsapp || shop.phone,
-                  isCourse
-                    ? `Hello ${shop.businessName}! I am interested in the course "${product.name}". Please share details regarding syllabus, schedule, and fees.`
-                    : isService
-                    ? `Hello ${shop.businessName}! I would like to inquire about your "${product.name}" service details and pricing.`
-                    : `Hello ${shop.businessName}! I am inquiring about "${product.name}". Please share pricing and availability.`
-                )}
-                target="_blank"
-                rel="noreferrer"
-                className="flex-1 py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold uppercase tracking-wider text-xs sm:text-sm flex items-center justify-center gap-2 shadow-xs transition-all cursor-pointer"
-              >
-                <MessageSquare className="w-4 h-4" />
-                <span>Ask Price on WhatsApp</span>
-              </a>
-              <button
-                onClick={onClose}
-                className="py-3 px-5 sm:px-6 rounded-xl bg-gray-200 hover:bg-gray-300 text-slate-800 font-bold uppercase tracking-wider text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-95 shrink-0"
-              >
-                <span>Close</span>
-              </button>
-            </div>
-          ) : shop.ecommerceEnabled !== false ? (
-            <div className="flex items-center gap-2">
-              {inCart ? (
-                <div className="flex-1 flex items-center justify-between bg-white border-2 border-orange-500 rounded-xl p-1 shadow-xs">
-                  <button
-                    onClick={() => onRemoveFromCart(product.id)}
-                    className="w-9 h-9 rounded-lg bg-orange-100 text-orange-700 font-black flex items-center justify-center hover:bg-orange-200 transition-colors cursor-pointer"
-                    title="Decrease quantity"
-                  >
-                    <Minus className="w-4 h-4" />
-                  </button>
-                  <div className="text-center px-2">
-                    <span className="block text-[10px] text-gray-400 font-bold uppercase">In Cart</span>
-                    <span className="font-black text-sm text-slate-900">{inCart.quantity} {inCart.quantity === 1 ? 'Item' : 'Items'}</span>
-                  </div>
-                  <button
-                    onClick={() => onAddToCart(product)}
-                    className="w-9 h-9 rounded-lg bg-orange-600 text-white font-black flex items-center justify-center hover:bg-orange-700 transition-colors cursor-pointer shadow-xs"
-                    title="Increase quantity"
-                  >
-                    <Plus className="w-4 h-4" />
-                  </button>
+          <div className="flex items-center gap-2">
+            {inCart ? (
+              <div className="flex-1 flex items-center justify-between bg-white border-2 border-orange-500 rounded-xl p-1 shadow-xs">
+                <button
+                  onClick={() => onRemoveFromCart(product.id)}
+                  className="w-9 h-9 rounded-lg bg-orange-100 text-orange-700 font-black flex items-center justify-center hover:bg-orange-200 transition-colors cursor-pointer"
+                  title="Decrease quantity"
+                >
+                  <Minus className="w-4 h-4" />
+                </button>
+                <div className="text-center px-2">
+                  <span className="block text-[10px] text-gray-400 font-bold uppercase">In Cart</span>
+                  <span className="font-black text-sm text-slate-900">{inCart.quantity} {inCart.quantity === 1 ? 'Item' : 'Items'}</span>
                 </div>
-              ) : (
+                <button
+                  onClick={() => onAddToCart(product)}
+                  className="w-9 h-9 rounded-lg bg-orange-600 text-white font-black flex items-center justify-center hover:bg-orange-700 transition-colors cursor-pointer shadow-xs"
+                  title="Increase quantity"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <div className="flex-1 flex items-center gap-2">
+                {isPriceHidden && (
+                  <a
+                    href={getWhatsAppDirectUrl(
+                      shop.whatsapp || shop.phone,
+                      isCourse
+                        ? `Hello ${shop.businessName}! I am interested in the course "${product.name}". Please share details regarding syllabus, schedule, and fees.`
+                        : isService
+                        ? `Hello ${shop.businessName}! I would like to inquire about your "${product.name}" service details and pricing.`
+                        : `Hello ${shop.businessName}! I am inquiring about "${product.name}". Please share pricing and availability.`
+                    )}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="py-3 px-3 sm:px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold uppercase tracking-wider text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-xs transition-all cursor-pointer whitespace-nowrap shrink-0"
+                  >
+                    <MessageSquare className="w-4 h-4" />
+                    <span className="hidden sm:inline">Ask Price</span>
+                  </a>
+                )}
                 <button
                   onClick={() => onAddToCart(product)}
                   disabled={!product.inStock}
-                  className={`flex-1 py-3 px-4 rounded-xl font-bold uppercase tracking-wider text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs ${
+                  className={`flex-1 py-3 px-3 sm:px-4 rounded-xl font-bold uppercase tracking-wider text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs ${
                     product.inStock
                       ? 'bg-orange-600 hover:bg-orange-700 text-white active:scale-98'
                       : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                   }`}
                 >
                   <ShoppingBag className="w-4 h-4" />
-                  <span>Add to Cart ({formatINR(product.price)})</span>
+                  <span>
+                    Add to Cart {isPriceHidden ? '' : `(${formatINR(product.price)})`}
+                  </span>
                 </button>
-              )}
+              </div>
+            )}
 
-              {/* OK Tick Button */}
-              <button
-                onClick={onClose}
-                className="py-3 px-5 sm:px-6 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold uppercase tracking-wider text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-95 shrink-0"
-                title="OK"
-              >
-                <Check className="w-4 h-4" />
-                <span>OK</span>
-              </button>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2">
-              {isService && onBookService ? (
-                <button
-                  onClick={() => {
-                    onClose();
-                    onBookService(product.name);
-                  }}
-                  className="flex-1 py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold uppercase tracking-wider text-xs sm:text-sm flex items-center justify-center gap-2 shadow-xs transition-all cursor-pointer"
-                >
-                  <Calendar className="w-4 h-4" />
-                  <span>Book Service Now</span>
-                </button>
-              ) : null}
-
-              <button
-                onClick={onClose}
-                className="flex-1 py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold uppercase tracking-wider text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-xs text-center cursor-pointer active:scale-98"
-                title="OK"
-              >
-                <Check className="w-5 h-5" />
-                <span>OK</span>
-              </button>
-            </div>
-          )}
+            {/* OK Tick Button */}
+            <button
+              onClick={onClose}
+              className="py-3 px-5 sm:px-6 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold uppercase tracking-wider text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-95 shrink-0"
+              title="OK / Done"
+            >
+              <Check className="w-4 h-4" />
+              <span>OK</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

@@ -72,6 +72,8 @@ import { VendorCategoryManager } from './VendorCategoryManager';
 import { SubscriptionInvoiceModal } from '../modals/SubscriptionInvoiceModal';
 import { DukaanQrStandeeModal } from '../modals/DukaanQrStandeeModal';
 import { ShopShareModal } from '../modals/ShopShareModal';
+import { TermsAndConditionsModal } from '../modals/TermsAndConditionsModal';
+import { VendorTermsManager } from './VendorTermsManager';
 import { WebsiteSectionsManager } from './WebsiteSectionsManager';
 import { VendorCustomDomainManager } from './VendorCustomDomainManager';
 import { WebsiteThemesManager } from './WebsiteThemesManager';
@@ -134,6 +136,7 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
   const [saveToast, setSaveToast] = useState<string | null>(null);
   const [showAdminQrModal, setShowAdminQrModal] = useState<boolean>(false);
   const [showInvoiceModal, setShowInvoiceModal] = useState<boolean>(false);
+  const [showTermsModal, setShowTermsModal] = useState<boolean>(false);
   const [copiedUpi, setCopiedUpi] = useState<boolean>(false);
 
   // Local editing state for shop
@@ -289,6 +292,8 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
       case 'profile':
       case 'profile_business':
         return { title: 'Business Profile & Shop Details', category: 'MY PROFILE', desc: 'Business name, owner, contact, address, logo & timings' };
+      case 'profile_terms':
+        return { title: 'Terms & Conditions (T&C)', category: 'MY PROFILE', desc: 'Store terms of service, customer guarantees, return & cancellation policies' };
       case 'profile_validity':
         return { title: '1-Year Store Validity & Annual Subscription', category: 'MY PROFILE', desc: 'Subscription validity, renewal status, benefits & tax invoices' };
       case 'profile_visibility':
@@ -428,7 +433,10 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
       setActiveMainTab('OVERVIEW');
     } else {
       setActiveMainTab('SETTINGS');
-      if (navKey === 'profile') setOpenSection('BASIC_DETAILS');
+      if (navKey === 'profile' || navKey === 'profile_business') setOpenSection('BASIC_DETAILS');
+      if (navKey === 'profile_terms') {
+        setOpenSection('BASIC_DETAILS');
+      }
       if (navKey === 'gallery') setOpenSection('MEDIA_BANNERS');
       if (navKey === 'orders') setOpenSection('INQUIRIES');
       if (navKey === 'settings' || navKey === 'settings_theme') setOpenSection('THEME_CUSTOM');
@@ -3150,6 +3158,49 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
                   <span>Save Website Details</span>
                 </button>
               </div>
+
+              {/* Terms & Conditions (T&C) Card in My Profile */}
+              <div className="mt-4 pt-4 border-t border-gray-100">
+                <div className="p-4 rounded-xl bg-gradient-to-r from-amber-50/90 via-orange-50/40 to-amber-50/90 border border-amber-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+                  <div className="flex items-start gap-3">
+                    <div className="w-9 h-9 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center font-bold shrink-0 mt-0.5">
+                      <FileText className="w-4 h-4 text-amber-700" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="text-xs font-black uppercase tracking-wider text-slate-900">
+                          Terms & Conditions (T&C)
+                        </h4>
+                        <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.2 rounded-full border border-emerald-200">
+                          Active & Published
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-600 mt-0.5 max-w-xl">
+                        Aapke store ke customer guidelines, order fulfilment, direct support aur return policies readable popup modal me uplabdh hain. Page par lamba paragraph show karne ke bajaye click karne par complete T&C popup open hota hai.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={() => handleSelectNav('profile_terms')}
+                      className="px-3.5 py-2 rounded-lg bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-2xs transition-all cursor-pointer hover:scale-102 active:scale-98"
+                    >
+                      <FileText className="w-3.5 h-3.5" />
+                      <span>Write / Edit T&C</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowTermsModal(true)}
+                      className="px-3.5 py-2 rounded-lg bg-white hover:bg-amber-100 text-amber-900 border border-amber-300 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-2xs transition-all cursor-pointer hover:scale-102 active:scale-98"
+                    >
+                      <Eye className="w-3.5 h-3.5 text-amber-700" />
+                      <span>View T&C</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </div>
@@ -5361,6 +5412,21 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
         />
       )}
 
+      {/* 18. TERMS & CONDITIONS DEDICATED VIEW (VENDOR WRITES & EDITS STORE T&C) */}
+      {activeNav === 'profile_terms' && (
+        <VendorTermsManager
+          shop={currentShop}
+          onUpdateShop={(updated) => {
+            setCurrentShop(updated);
+            setHasUnsavedChanges(true);
+            onUpdateShop(updated);
+          }}
+          onMarkDirty={() => setHasUnsavedChanges(true)}
+          showToast={showToast}
+          onOpenPreviewModal={() => setShowTermsModal(true)}
+        />
+      )}
+
       {/* COMPACT FLOATING SAVE BUTTON (BIKUL CHOTA SA BUTTON) */}
       <div
         id="global-sticky-save-bar"
@@ -6128,6 +6194,13 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
           </div>
         </div>
       )}
+
+      {/* Terms and Conditions Modal */}
+      <TermsAndConditionsModal
+        isOpen={showTermsModal}
+        onClose={() => setShowTermsModal(false)}
+        shop={currentShop}
+      />
 
     </div>
   );

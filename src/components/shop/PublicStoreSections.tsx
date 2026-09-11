@@ -78,6 +78,7 @@ import {
 } from '../../types';
 import { getWhatsAppDirectUrl, formatINR, getYouTubeEmbedUrl } from '../../utils/mediaUpload';
 import { StoreItemsCarouselSection } from './StoreItemsCarouselSection';
+import { CardDetailModal, CardDetailModalData } from '../modals/CardDetailModal';
 
 // ==========================================
 // 0. HERO BANNER SLIDER (STANDALONE SECTION)
@@ -669,39 +670,73 @@ export const FeaturesSectionRenderer: React.FC<{
   if (!config.enabled || !config.items || config.items.length === 0) return null;
 
   const [isExpanded, setIsExpanded] = useState(false);
-  const [activeSlide, setActiveSlide] = useState(0);
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const totalItems = config.items.length;
-  const displayedDesktopItems = isExpanded ? config.items : config.items.slice(0, 4);
+  const [activeMobileSlide, setActiveMobileSlide] = useState(0);
+  const [activeDesktopSlide, setActiveDesktopSlide] = useState(0);
+  const [cardModalData, setCardModalData] = useState<CardDetailModalData | null>(null);
 
-  const handleScroll = () => {
-    if (!scrollRef.current) return;
-    const { scrollLeft, clientWidth } = scrollRef.current;
-    // 2 items visible + 10% peek of 3rd item + 10px gap
+  const mobileScrollRef = useRef<HTMLDivElement>(null);
+  const desktopScrollRef = useRef<HTMLDivElement>(null);
+  const totalItems = config.items.length;
+
+  // Mobile scroll handler: 2 items visible + 10% peek of 3rd item
+  const handleMobileScroll = () => {
+    if (!mobileScrollRef.current) return;
+    const { scrollLeft, clientWidth } = mobileScrollRef.current;
     const slideWidth = (clientWidth - 20) / 2.15 + 10;
     if (slideWidth > 0) {
       const index = Math.round(scrollLeft / slideWidth);
-      setActiveSlide(Math.min(Math.max(0, index), totalItems - 1));
+      setActiveMobileSlide(Math.min(Math.max(0, index), totalItems - 1));
     }
   };
 
-  const scrollToSlide = (idx: number) => {
-    if (!scrollRef.current) return;
-    const { clientWidth } = scrollRef.current;
+  const scrollMobileToSlide = (idx: number) => {
+    if (!mobileScrollRef.current) return;
+    const { clientWidth } = mobileScrollRef.current;
     const slideWidth = (clientWidth - 20) / 2.15 + 10;
-    scrollRef.current.scrollTo({
+    mobileScrollRef.current.scrollTo({
       left: idx * slideWidth,
       behavior: 'smooth',
     });
-    setActiveSlide(idx);
+    setActiveMobileSlide(idx);
   };
 
-  const slidePrev = () => {
-    scrollToSlide(Math.max(0, activeSlide - 1));
+  const mobileSlidePrev = () => {
+    scrollMobileToSlide(Math.max(0, activeMobileSlide - 1));
   };
 
-  const slideNext = () => {
-    scrollToSlide(Math.min(totalItems - 1, activeSlide + 1));
+  const mobileSlideNext = () => {
+    scrollMobileToSlide(Math.min(totalItems - 1, activeMobileSlide + 1));
+  };
+
+  // Desktop scroll handler: 4 items visible + 10% peek of 5th item
+  const handleDesktopScroll = () => {
+    if (!desktopScrollRef.current) return;
+    const { scrollLeft, clientWidth } = desktopScrollRef.current;
+    // 4 items visible + 10% peek of 5th card with 16px gap
+    const slideWidth = (clientWidth - 48) / 4.15 + 16;
+    if (slideWidth > 0) {
+      const index = Math.round(scrollLeft / slideWidth);
+      setActiveDesktopSlide(Math.min(Math.max(0, index), totalItems - 1));
+    }
+  };
+
+  const scrollDesktopToSlide = (idx: number) => {
+    if (!desktopScrollRef.current) return;
+    const { clientWidth } = desktopScrollRef.current;
+    const slideWidth = (clientWidth - 48) / 4.15 + 16;
+    desktopScrollRef.current.scrollTo({
+      left: idx * slideWidth,
+      behavior: 'smooth',
+    });
+    setActiveDesktopSlide(idx);
+  };
+
+  const desktopSlidePrev = () => {
+    scrollDesktopToSlide(Math.max(0, activeDesktopSlide - 1));
+  };
+
+  const desktopSlideNext = () => {
+    scrollDesktopToSlide(Math.min(totalItems - 1, activeDesktopSlide + 1));
   };
 
   return (
@@ -718,24 +753,152 @@ export const FeaturesSectionRenderer: React.FC<{
         )}
       </div>
 
-      {/* Desktop Grid Layout (sm and up) */}
-      <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        {displayedDesktopItems.map((item, idx) => (
-          <div
-            key={item.id || idx}
-            className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-6 shadow-xs hover:shadow-md hover:border-orange-300 transition-all group space-y-3"
-          >
-            <div className="w-10 h-10 rounded-xl bg-orange-50 text-orange-600 border border-orange-100 flex items-center justify-center font-bold group-hover:scale-110 transition-transform">
-              <Sparkles className="w-5 h-5" />
-            </div>
-            <h3 className="text-sm sm:text-base font-black uppercase tracking-tight text-slate-900 font-['Outfit',sans-serif]">
-              {item.title}
-            </h3>
-            <p className="text-xs text-gray-600 leading-relaxed">
-              {item.description}
-            </p>
+      {/* Desktop View (sm and up) */}
+      <div className="hidden sm:block">
+        {totalItems <= 4 || isExpanded ? (
+          /* Grid View: when items are 4 or less, or when user expanded */
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 animate-in fade-in duration-300">
+            {config.items.map((item, idx) => (
+              <div
+                key={item.id || idx}
+                onClick={() =>
+                  setCardModalData({
+                    title: item.title,
+                    description: item.description,
+                    sectionName: config.title || 'Why Choose Us',
+                    badge: `#0${idx + 1}`,
+                    icon: <Sparkles className="w-5 h-5 text-orange-600" />,
+                  })
+                }
+                className="bg-white rounded-2xl border border-gray-200 p-5 lg:p-6 shadow-xs hover:shadow-md hover:border-orange-300 transition-all group space-y-3 cursor-pointer flex flex-col justify-between"
+                title="Click to view full details"
+              >
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="w-10 h-10 rounded-xl bg-orange-50 text-orange-600 border border-orange-100 flex items-center justify-center font-bold group-hover:scale-110 transition-transform">
+                      <Sparkles className="w-5 h-5" />
+                    </div>
+                    <span className="text-[10px] font-bold text-gray-400 font-mono">
+                      0{idx + 1}
+                    </span>
+                  </div>
+                  <h3 className="text-sm sm:text-base font-black uppercase tracking-tight text-slate-900 font-['Outfit',sans-serif] line-clamp-2">
+                    {item.title}
+                  </h3>
+                  <p className="text-xs text-gray-600 leading-relaxed line-clamp-3">
+                    {item.description}
+                  </p>
+                </div>
+                <div className="pt-2 flex items-center gap-1 text-[11px] font-bold text-orange-600 uppercase tracking-wider">
+                  <span>View Details</span>
+                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
+        ) : (
+          /* Desktop Carousel View (>= 5 items): 4 cards visible + ~10% peek of 5th card */
+          <div className="relative">
+            <div
+              ref={desktopScrollRef}
+              onScroll={handleDesktopScroll}
+              className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-3 pt-1 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] touch-pan-x [&::-webkit-scrollbar]:hidden"
+            >
+              {config.items.map((item, idx) => (
+                <div
+                  key={item.id || idx}
+                  onClick={() =>
+                    setCardModalData({
+                      title: item.title,
+                      description: item.description,
+                      sectionName: config.title || 'Why Choose Us',
+                      badge: `#0${idx + 1}`,
+                      icon: <Sparkles className="w-5 h-5 text-orange-600" />,
+                    })
+                  }
+                  className="w-[calc((100%-48px)/4.15)] min-w-[calc((100%-48px)/4.15)] max-w-[calc((100%-48px)/4.15)] snap-start shrink-0 flex-none bg-white rounded-2xl border border-gray-200 p-5 shadow-xs hover:shadow-md hover:border-orange-300 transition-all group space-y-3 cursor-pointer flex flex-col justify-between"
+                  title="Click to view full details"
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="w-10 h-10 rounded-xl bg-orange-50 text-orange-600 border border-orange-100 flex items-center justify-center font-bold group-hover:scale-110 transition-transform">
+                        <Sparkles className="w-5 h-5" />
+                      </div>
+                      <span className="text-[10px] font-bold text-gray-400 font-mono">
+                        0{idx + 1}
+                      </span>
+                    </div>
+                    <h3 className="text-sm sm:text-base font-black uppercase tracking-tight text-slate-900 font-['Outfit',sans-serif] line-clamp-2">
+                      {item.title}
+                    </h3>
+                    <p className="text-xs text-gray-600 leading-relaxed line-clamp-3">
+                      {item.description}
+                    </p>
+                  </div>
+                  <div className="pt-2 flex items-center gap-1 text-[11px] font-bold text-orange-600 uppercase tracking-wider">
+                    <span>View Details</span>
+                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop Navigation Arrows & Dots */}
+            <div className="flex items-center justify-between mt-4 px-1">
+              <div className="flex items-center gap-1.5">
+                {config.items.map((_, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => scrollDesktopToSlide(idx)}
+                    className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
+                      activeDesktopSlide === idx
+                        ? 'w-6 bg-orange-600'
+                        : 'w-2 bg-gray-300 hover:bg-gray-400'
+                    }`}
+                    aria-label={`Slide ${idx + 1}`}
+                  />
+                ))}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={desktopSlidePrev}
+                  disabled={activeDesktopSlide === 0}
+                  className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center text-slate-700 disabled:opacity-30 disabled:pointer-events-none shadow-2xs hover:bg-gray-50 active:scale-95 transition-all cursor-pointer"
+                  aria-label="Previous features"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={desktopSlideNext}
+                  disabled={activeDesktopSlide >= totalItems - 4}
+                  className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center text-slate-700 disabled:opacity-30 disabled:pointer-events-none shadow-2xs hover:bg-gray-50 active:scale-95 transition-all cursor-pointer"
+                  aria-label="Next features"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Desktop View All Button - Only shown when total items > 7 */}
+        {totalItems > 7 && (
+          <div className="flex justify-center pt-6 sm:pt-8">
+            <button
+              type="button"
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-white hover:bg-orange-50 text-slate-800 hover:text-orange-700 text-xs font-bold uppercase tracking-wider rounded-xl border border-gray-200 shadow-2xs transition-all active:scale-[0.99] cursor-pointer"
+            >
+              <Sparkles className="w-4 h-4 text-orange-600" />
+              <span>{isExpanded ? 'Collapse to Slider' : `View All Features (${totalItems})`}</span>
+              {isExpanded ? <ChevronUp className="w-4 h-4 text-orange-600" /> : <ChevronDown className="w-4 h-4 text-orange-600" />}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Mobile View (sm:hidden) - Slider / Expand Logic */}
@@ -746,7 +909,16 @@ export const FeaturesSectionRenderer: React.FC<{
             {config.items.map((item, idx) => (
               <div
                 key={item.id || idx}
-                className="bg-white rounded-xl border border-gray-200 p-3 shadow-xs space-y-2 flex flex-col justify-between"
+                onClick={() =>
+                  setCardModalData({
+                    title: item.title,
+                    description: item.description,
+                    sectionName: config.title || 'Why Choose Us',
+                    badge: `#0${idx + 1}`,
+                    icon: <Sparkles className="w-5 h-5 text-orange-600" />,
+                  })
+                }
+                className="bg-white rounded-xl border border-gray-200 p-3 shadow-xs space-y-2 flex flex-col justify-between cursor-pointer hover:border-orange-300 transition-colors"
               >
                 <div className="flex items-center justify-between">
                   <div className="w-8 h-8 rounded-lg bg-orange-50 text-orange-600 border border-orange-100 flex items-center justify-center font-bold">
@@ -764,6 +936,9 @@ export const FeaturesSectionRenderer: React.FC<{
                     {item.description}
                   </p>
                 </div>
+                <span className="text-[9px] text-orange-600 font-bold uppercase tracking-wider block pt-1">
+                  Tap to read full →
+                </span>
               </div>
             ))}
           </div>
@@ -771,14 +946,23 @@ export const FeaturesSectionRenderer: React.FC<{
           /* Mobile Slider View: 2 items visible + ~10% peek of next card */
           <div>
             <div
-              ref={scrollRef}
-              onScroll={handleScroll}
+              ref={mobileScrollRef}
+              onScroll={handleMobileScroll}
               className="flex gap-2.5 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-2 pt-1 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] touch-pan-x [&::-webkit-scrollbar]:hidden"
             >
               {config.items.map((item, idx) => (
                 <div
                   key={item.id || idx}
-                  className={`bg-white rounded-xl border border-gray-200 p-3 shadow-xs space-y-2 snap-start shrink-0 flex-none transition-all flex flex-col justify-between ${
+                  onClick={() =>
+                    setCardModalData({
+                      title: item.title,
+                      description: item.description,
+                      sectionName: config.title || 'Why Choose Us',
+                      badge: `#0${idx + 1}`,
+                      icon: <Sparkles className="w-5 h-5 text-orange-600" />,
+                    })
+                  }
+                  className={`bg-white rounded-xl border border-gray-200 p-3 shadow-xs space-y-2 snap-start shrink-0 flex-none transition-all flex flex-col justify-between cursor-pointer hover:border-orange-300 ${
                     totalItems >= 3
                       ? 'w-[calc((100%-20px)/2.15)] min-w-[calc((100%-20px)/2.15)] max-w-[calc((100%-20px)/2.15)]'
                       : totalItems === 2
@@ -802,6 +986,9 @@ export const FeaturesSectionRenderer: React.FC<{
                       {item.description}
                     </p>
                   </div>
+                  <span className="text-[9px] text-orange-600 font-bold uppercase tracking-wider block pt-0.5">
+                    Tap to read full →
+                  </span>
                 </div>
               ))}
             </div>
@@ -814,9 +1001,9 @@ export const FeaturesSectionRenderer: React.FC<{
                     <button
                       key={idx}
                       type="button"
-                      onClick={() => scrollToSlide(idx)}
+                      onClick={() => scrollMobileToSlide(idx)}
                       className={`h-1.5 rounded-full transition-all duration-300 ${
-                        activeSlide === idx
+                        activeMobileSlide === idx
                           ? 'w-5 bg-orange-600'
                           : 'w-1.5 bg-gray-300 hover:bg-gray-400'
                       }`}
@@ -828,8 +1015,8 @@ export const FeaturesSectionRenderer: React.FC<{
                 <div className="flex items-center gap-1.5">
                   <button
                     type="button"
-                    onClick={slidePrev}
-                    disabled={activeSlide === 0}
+                    onClick={mobileSlidePrev}
+                    disabled={activeMobileSlide === 0}
                     className="w-7 h-7 rounded-full bg-white border border-gray-200 flex items-center justify-center text-slate-700 disabled:opacity-30 disabled:pointer-events-none shadow-2xs hover:bg-gray-50 active:scale-95 transition-all cursor-pointer"
                     aria-label="Previous feature"
                   >
@@ -837,8 +1024,8 @@ export const FeaturesSectionRenderer: React.FC<{
                   </button>
                   <button
                     type="button"
-                    onClick={slideNext}
-                    disabled={activeSlide === totalItems - 1}
+                    onClick={mobileSlideNext}
+                    disabled={activeMobileSlide === totalItems - 1}
                     className="w-7 h-7 rounded-full bg-white border border-gray-200 flex items-center justify-center text-slate-700 disabled:opacity-30 disabled:pointer-events-none shadow-2xs hover:bg-gray-50 active:scale-95 transition-all cursor-pointer"
                     aria-label="Next feature"
                   >
@@ -850,8 +1037,8 @@ export const FeaturesSectionRenderer: React.FC<{
           </div>
         )}
 
-        {/* View All Button: Only shown when total features exceed design capacity (> 4) */}
-        {totalItems > 4 && (
+        {/* View All Button: Only shown when total features >= 4 on mobile */}
+        {totalItems >= 4 && (
           <div className="mt-4 flex justify-center">
             <button
               type="button"
@@ -869,20 +1056,12 @@ export const FeaturesSectionRenderer: React.FC<{
         )}
       </div>
 
-      {/* Desktop View All Button - Only shown when total features exceed design capacity (> 4) */}
-      {totalItems > 4 && (
-        <div className="hidden sm:flex justify-center pt-6 sm:pt-8">
-          <button
-            type="button"
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-white hover:bg-orange-50 text-slate-800 hover:text-orange-700 text-xs font-bold uppercase tracking-wider rounded-xl border border-gray-200 shadow-2xs transition-all active:scale-[0.99] cursor-pointer"
-          >
-            <Sparkles className="w-4 h-4 text-orange-600" />
-            <span>{isExpanded ? 'Show Less Features' : `View All Features (${totalItems})`}</span>
-            {isExpanded ? <ChevronUp className="w-4 h-4 text-orange-600" /> : <ChevronDown className="w-4 h-4 text-orange-600" />}
-          </button>
-        </div>
-      )}
+      {/* Card Content Modal Popup */}
+      <CardDetailModal
+        isOpen={Boolean(cardModalData)}
+        onClose={() => setCardModalData(null)}
+        data={cardModalData}
+      />
     </section>
   );
 };
@@ -1061,6 +1240,7 @@ export const BenefitsSectionRenderer: React.FC<{
 
   const [isExpanded, setIsExpanded] = useState(false);
   const [activeSlide, setActiveSlide] = useState(0);
+  const [cardModalData, setCardModalData] = useState<CardDetailModalData | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const totalItems = config.items.length;
   const displayedDesktopItems = isExpanded ? config.items : config.items.slice(0, 4);
@@ -1114,26 +1294,43 @@ export const BenefitsSectionRenderer: React.FC<{
         {displayedDesktopItems.map((b, idx) => (
           <div
             key={b.id || idx}
-            className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-6 shadow-xs hover:shadow-md hover:border-yellow-400 transition-all space-y-3"
+            onClick={() =>
+              setCardModalData({
+                title: b.title,
+                description: b.description,
+                sectionName: config.title || 'Customer Value & Perks',
+                stat: b.stat,
+                badge: `Perk #${idx + 1}`,
+                icon: <ShieldCheck className="w-5 h-5 text-yellow-600" />,
+              })
+            }
+            className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-6 shadow-xs hover:shadow-md hover:border-yellow-400 transition-all space-y-3 cursor-pointer flex flex-col justify-between"
+            title="Click to view full details"
           >
-            <div className="flex items-center justify-between">
-              <div className="w-10 h-10 rounded-xl bg-yellow-50 text-yellow-700 border border-yellow-100 flex items-center justify-center font-bold">
-                <ShieldCheck className="w-5 h-5" />
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="w-10 h-10 rounded-xl bg-yellow-50 text-yellow-700 border border-yellow-100 flex items-center justify-center font-bold">
+                  <ShieldCheck className="w-5 h-5" />
+                </div>
+                {b.stat && (
+                  <span className="text-[10px] font-black text-orange-700 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded">
+                    {b.stat}
+                  </span>
+                )}
               </div>
-              {b.stat && (
-                <span className="text-[10px] font-black text-orange-700 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded">
-                  {b.stat}
-                </span>
-              )}
+
+              <h3 className="text-sm sm:text-base font-black uppercase tracking-tight text-slate-900 font-['Outfit',sans-serif]">
+                {b.title}
+              </h3>
+
+              <p className="text-xs text-gray-600 leading-relaxed line-clamp-3">
+                {b.description}
+              </p>
             </div>
-
-            <h3 className="text-sm sm:text-base font-black uppercase tracking-tight text-slate-900 font-['Outfit',sans-serif]">
-              {b.title}
-            </h3>
-
-            <p className="text-xs text-gray-600 leading-relaxed">
-              {b.description}
-            </p>
+            <div className="pt-2 flex items-center gap-1 text-[11px] font-bold text-yellow-700 uppercase tracking-wider">
+              <span>View Details</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </div>
           </div>
         ))}
       </div>
@@ -1146,7 +1343,17 @@ export const BenefitsSectionRenderer: React.FC<{
             {config.items.map((b, idx) => (
               <div
                 key={b.id || idx}
-                className="bg-white rounded-xl border border-gray-200 p-3 shadow-xs space-y-2 flex flex-col justify-between"
+                onClick={() =>
+                  setCardModalData({
+                    title: b.title,
+                    description: b.description,
+                    sectionName: config.title || 'Customer Value & Perks',
+                    stat: b.stat,
+                    badge: `Perk #${idx + 1}`,
+                    icon: <ShieldCheck className="w-5 h-5 text-yellow-600" />,
+                  })
+                }
+                className="bg-white rounded-xl border border-gray-200 p-3 shadow-xs space-y-2 flex flex-col justify-between cursor-pointer hover:border-yellow-300"
               >
                 <div className="flex items-center justify-between">
                   <div className="w-8 h-8 rounded-lg bg-yellow-50 text-yellow-700 border border-yellow-100 flex items-center justify-center font-bold">
@@ -1171,6 +1378,9 @@ export const BenefitsSectionRenderer: React.FC<{
                     {b.description}
                   </p>
                 </div>
+                <span className="text-[9px] text-yellow-700 font-bold uppercase tracking-wider block pt-1">
+                  Tap to read full →
+                </span>
               </div>
             ))}
           </div>
@@ -1185,7 +1395,17 @@ export const BenefitsSectionRenderer: React.FC<{
               {config.items.map((b, idx) => (
                 <div
                   key={b.id || idx}
-                  className={`bg-white rounded-xl border border-gray-200 p-3 shadow-xs space-y-2 snap-start shrink-0 flex-none transition-all flex flex-col justify-between ${
+                  onClick={() =>
+                    setCardModalData({
+                      title: b.title,
+                      description: b.description,
+                      sectionName: config.title || 'Customer Value & Perks',
+                      stat: b.stat,
+                      badge: `Perk #${idx + 1}`,
+                      icon: <ShieldCheck className="w-5 h-5 text-yellow-600" />,
+                    })
+                  }
+                  className={`bg-white rounded-xl border border-gray-200 p-3 shadow-xs space-y-2 snap-start shrink-0 flex-none transition-all flex flex-col justify-between cursor-pointer hover:border-yellow-300 ${
                     totalItems >= 3
                       ? 'w-[calc((100%-20px)/2.15)] min-w-[calc((100%-20px)/2.15)] max-w-[calc((100%-20px)/2.15)]'
                       : totalItems === 2
@@ -1216,6 +1436,9 @@ export const BenefitsSectionRenderer: React.FC<{
                       {b.description}
                     </p>
                   </div>
+                  <span className="text-[9px] text-yellow-700 font-bold uppercase tracking-wider block pt-0.5">
+                    Tap to read full →
+                  </span>
                 </div>
               ))}
             </div>
@@ -1297,6 +1520,13 @@ export const BenefitsSectionRenderer: React.FC<{
           </button>
         </div>
       )}
+
+      {/* Card Content Modal Popup */}
+      <CardDetailModal
+        isOpen={Boolean(cardModalData)}
+        onClose={() => setCardModalData(null)}
+        data={cardModalData}
+      />
     </section>
   );
 };

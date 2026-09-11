@@ -113,6 +113,7 @@ export const VendorSidebar: React.FC<VendorSidebarProps> = ({
         icon: User,
         subItems: [
           { id: 'profile_business', label: 'Business Profile', icon: Store },
+          { id: 'profile_terms', label: 'Terms & Conditions (T&C)', icon: FileText },
           { id: 'profile_validity', label: '1-Year Store Validity & Annual Subscription', icon: ShieldCheck },
           {
             id: 'profile_inquiries',
