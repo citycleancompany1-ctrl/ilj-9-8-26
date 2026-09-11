@@ -1,4 +1,5 @@
 import { Shop, ShopSectionsConfig, FloatingButtonsConfig } from '../types';
+import { getShopTerminology } from './categoryTerminology';
 
 /**
  * Default configuration for bottom-right floating action buttons
@@ -16,7 +17,7 @@ export function getDefaultFloatingButtons(existing?: Partial<FloatingButtonsConf
 
 /**
  * Generates smart, high-quality, category-aware default configuration
- * for all 16 website builder sections for a given shop.
+ * for all 19 website builder sections for a given shop.
  */
 export function getDefaultSectionsConfig(shop: Partial<Shop> = {}): ShopSectionsConfig {
   const name = shop.businessName || 'Our Digital Store';
@@ -29,11 +30,13 @@ export function getDefaultSectionsConfig(shop: Partial<Shop> = {}): ShopSections
   const bannerImage = shop.banners?.[0] || 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=1200';
   const aboutImage = shop.aboutPhotoUrl || shop.logoUrl || 'https://images.unsplash.com/photo-1556742049-0a67c5574f73?w=800';
 
+  const term = getShopTerminology(shop as Shop);
+
   return {
     // 0. Hero Banner Section (Carousel Slider)
     heroBanner: {
       enabled: shop.heroBannerEnabled !== false,
-      title: 'Hero Banner Slider',
+      title: term.sections.heroBanner.name,
       subtitle: 'Desktop & Mobile carousel banners',
       useDesktopBannerOnMobile: Boolean(shop.useDesktopBannerOnMobile),
     },
@@ -45,8 +48,8 @@ export function getDefaultSectionsConfig(shop: Partial<Shop> = {}): ShopSections
       subheading:
         shop.bannerSubtitle ||
         shop.tagline ||
-        `Welcome to ${name}. Order authentic ${category} items directly with instant WhatsApp confirmation & fastest doorstep service.`,
-      ctaText: 'Explore Products & Order',
+        `Welcome to ${name}. ${term.sections.hero.defaultSubtitle}`,
+      ctaText: term.ctaButtonText,
       ctaLink: '#products',
       secondaryCtaText: 'WhatsApp Direct Chat',
       secondaryCtaLink: 'whatsapp',
@@ -57,8 +60,8 @@ export function getDefaultSectionsConfig(shop: Partial<Shop> = {}): ShopSections
     // 2. About Section
     about: {
       enabled: true,
-      title: `About ${name}`,
-      subtitle: 'Our Heritage & Story of Trust',
+      title: term.sections.about.defaultHeading.replace('{businessName}', name),
+      subtitle: term.sections.about.defaultSubtitle,
       description:
         shop.aboutStory ||
         `${name} delivers the finest and most authentic goods in ${city}. Our mission is to provide every customer with complete honesty, premium quality, and genuine prices, serving you directly without any third-party intermediaries.`,
@@ -76,8 +79,8 @@ export function getDefaultSectionsConfig(shop: Partial<Shop> = {}): ShopSections
     // 3. Why Choose Us Section
     features: {
       enabled: true,
-      title: 'Why Choose Us',
-      subtitle: 'Key Highlights That Set Us Apart',
+      title: term.sections.features.defaultHeading,
+      subtitle: term.sections.features.defaultSubtitle,
       items: [
         {
           id: 'feat_1',
@@ -106,28 +109,35 @@ export function getDefaultSectionsConfig(shop: Partial<Shop> = {}): ShopSections
       ],
     },
 
-    // 4. Services Section (Managed via Store Services Catalogue)
+    // 4. Category Showcase Section
+    category: {
+      enabled: true,
+      title: term.sections.category.defaultHeading,
+      subtitle: term.sections.category.defaultSubtitle,
+    },
+
+    // 5. Services Section (Managed via Store Services Catalogue)
     services: {
       enabled: true,
-      title: 'Our Dedicated Services',
-      subtitle: 'Specialized Offerings & Solutions Tailored for You',
+      title: term.sections.services.defaultHeading,
+      subtitle: term.sections.services.defaultSubtitle,
       items: [],
     },
 
-    // Courses Section (Managed via Store Courses Catalogue)
-    courses: {
-      enabled: true,
-      title: 'Our Featured Courses & Training',
-      subtitle: 'Skill up with our structured curriculum and practical training sessions',
-      badge: 'Certified Courses & Training 🎓',
-    },
-
-    // 5. Products Section
+    // 6. Products Section
     products: {
       enabled: true,
-      title: 'Our Products & Offerings',
-      subtitle: 'Browse our exclusive catalog and order directly on WhatsApp',
+      title: term.sections.products.defaultHeading,
+      subtitle: term.sections.products.defaultSubtitle,
       showCategories: true,
+    },
+
+    // 7. Courses Section (Managed via Store Courses Catalogue)
+    courses: {
+      enabled: true,
+      title: term.sections.courses.defaultHeading,
+      subtitle: term.sections.courses.defaultSubtitle,
+      badge: `${term.sections.courses.name} 🎓`,
     },
 
     // 6. How It Works (Disabled per user request)
@@ -226,28 +236,28 @@ export function getDefaultSectionsConfig(shop: Partial<Shop> = {}): ShopSections
     // 9. Our Offers & Deals Section (1 or 2 Promotional Banners)
     offers: {
       enabled: true,
-      title: 'Special Offers & Deals',
-      subtitle: 'Exclusive discounts and seasonal promotions for our direct customers',
+      title: term.sections.offers.defaultHeading,
+      subtitle: term.sections.offers.defaultSubtitle,
       banners: [
         {
           id: 'offer_1',
           imageUrl: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=1200',
-          title: 'Special Festival Deal - Flat 20% OFF',
-          subtitle: 'Use code WELCOME20 on WhatsApp order to claim instant discount!',
-          badge: 'FESTIVAL SPECIAL',
+          title: `${term.sections.offers.name} - Special Opportunity`,
+          subtitle: 'Reach out directly on WhatsApp to claim exclusive updates and benefits!',
+          badge: 'SPECIAL',
           couponCode: 'WELCOME20',
-          validUntil: 'Limited Period Deal',
-          buttonText: 'Claim Offer on WhatsApp',
+          validUntil: 'Limited Period',
+          buttonText: 'Inquire on WhatsApp',
         },
         {
           id: 'offer_2',
           imageUrl: 'https://images.unsplash.com/photo-1607083206869-4c7672e72a8a?w=1200',
-          title: 'Free Express Doorstep Delivery',
-          subtitle: 'Orders above ₹499 get free lightning-fast delivery across the city.',
-          badge: 'FREE DELIVERY',
-          couponCode: 'FREESHIP',
+          title: 'Direct Assistance & Dedicated Support',
+          subtitle: 'Reach out directly for personalized guidance and prompt service.',
+          badge: 'VERIFIED',
+          couponCode: 'DIRECT',
           validUntil: 'All 7 Days',
-          buttonText: 'Order Now on WhatsApp',
+          buttonText: 'Connect on WhatsApp',
         },
       ],
     },
@@ -255,50 +265,50 @@ export function getDefaultSectionsConfig(shop: Partial<Shop> = {}): ShopSections
     // 9. Store Videos & Reels Showcase
     videos: {
       enabled: true,
-      title: 'Store Videos & Product Demos',
-      subtitle: 'Watch our products in action, store tour & customer experiences',
+      title: term.sections.videos.defaultHeading,
+      subtitle: term.sections.videos.defaultSubtitle,
     },
 
     // 10. Photo Gallery (Masonry Style Showcase)
     gallery: {
       enabled: true,
-      title: 'Store Photo Gallery',
-      subtitle: 'Our storefront, fresh stock, and verified photo showcase',
+      title: term.sections.gallery.defaultHeading,
+      subtitle: term.sections.gallery.defaultSubtitle,
     },
 
     // 11. Portfolio / Projects
     portfolio: {
       enabled: true,
-      title: 'Our Portfolio & Store Gallery',
-      subtitle: 'Our Storefront, Craftsmanship, and Order Deliveries',
+      title: term.sections.portfolio.defaultHeading,
+      subtitle: term.sections.portfolio.defaultSubtitle,
       items: [
         {
           id: 'port_1',
-          title: 'Store Front & Display',
-          category: 'Retail Showcase',
+          title: `${term.entityName} Highlights`,
+          category: 'Showcase',
           imageUrl: 'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=800',
-          description: 'A view of our modern organized retail shelves and fresh arrivals.',
+          description: `A view of our premium facilities and dedication to quality.`,
         },
         {
           id: 'port_2',
-          title: 'Quality Packing & Dispatch',
-          category: 'Order Dispatch',
+          title: 'Organized Operations',
+          category: 'Standards',
           imageUrl: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800',
-          description: 'Hygienic multi-layer packaging to ensure goods arrive in pristine shape.',
+          description: 'Hygienic and organized workflows to ensure top-notch standards.',
         },
         {
           id: 'port_3',
-          title: 'Customer Satisfaction',
-          category: 'Deliveries',
+          title: 'Community Trust & Satisfaction',
+          category: 'Testimonials',
           imageUrl: 'https://images.unsplash.com/photo-1556740749-887f6717d7e4?w=800',
-          description: 'Serving smiling local families with prompt doorstep satisfaction.',
+          description: 'Proudly serving smiling local families and individuals with prompt care.',
         },
         {
           id: 'port_4',
-          title: 'Festive & Premium Bundles',
-          category: 'Special Collections',
+          title: 'Key Milestones',
+          category: 'Milestones',
           imageUrl: 'https://images.unsplash.com/photo-1513151233558-d860c5398176?w=800',
-          description: 'Customized gift packs and wholesale bundles curated for every celebration.',
+          description: 'Curated achievements and dedicated excellence.',
         },
       ],
     },
@@ -306,29 +316,29 @@ export function getDefaultSectionsConfig(shop: Partial<Shop> = {}): ShopSections
     // 11. Team Section
     team: {
       enabled: true,
-      title: 'Meet Our Dedicated Team',
-      subtitle: 'The Dedicated People Behind Every Order',
+      title: term.sections.team.defaultHeading,
+      subtitle: term.sections.team.defaultSubtitle,
       members: [
         {
           id: 'team_1',
           name: owner,
-          position: 'Founder & Managing Director',
+          position: term.subCategory.includes('School') || term.subCategory.includes('College') ? 'Principal / Director' : (term.subCategory.includes('Clinic') || term.subCategory.includes('Doctor') ? 'Chief Specialist / Doctor' : 'Founder & Managing Director'),
           imageUrl: aboutImage,
-          bio: `Dedicated to bringing high-quality ${category} solutions directly to the community since day one.`,
+          bio: `Dedicated to bringing high-quality ${term.entityName.toLowerCase()} solutions directly to the community.`,
         },
         {
           id: 'team_2',
           name: 'Sunil Kumar',
-          position: 'Operations & Quality Lead',
+          position: 'Operations & Standards Lead',
           imageUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400',
-          bio: 'Supervises stock inspections, packaging protocols, and fast order dispatches.',
+          bio: 'Supervises service standards, customer assistance, and smooth daily operations.',
         },
         {
           id: 'team_3',
           name: 'Priya Sharma',
-          position: 'Customer Relations & WhatsApp Help',
+          position: 'Customer Help & Coordination',
           imageUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400',
-          bio: 'Always available to assist with product inquiries, delivery coordinates, and feedback.',
+          bio: 'Always available to assist with inquiries and friendly guidance.',
         },
       ],
     },
@@ -336,28 +346,28 @@ export function getDefaultSectionsConfig(shop: Partial<Shop> = {}): ShopSections
     // 12. FAQ Section
     faq: {
       enabled: true,
-      title: 'Frequently Asked Questions (FAQ)',
-      subtitle: 'Clear Answers to Your Common Questions',
+      title: term.sections.faq.defaultHeading,
+      subtitle: term.sections.faq.defaultSubtitle,
       items: [
         {
           id: 'faq_1',
-          question: 'What is the typical delivery timeframe?',
-          answer: 'Local orders are typically delivered within 1 to 3 hours. For expedited or scheduled deliveries, please inform us on WhatsApp.',
+          question: `How can I connect with ${name}?`,
+          answer: 'You can connect directly via WhatsApp, phone call, or the online inquiry form for fast responses.',
         },
         {
           id: 'faq_2',
           question: 'What payment options are accepted?',
-          answer: 'We accept Cash on Delivery (COD) as well as all major UPI apps (Google Pay, PhonePe, Paytm, BHIM) via direct QR transfer.',
+          answer: 'We accept Cash as well as all major UPI apps (Google Pay, PhonePe, Paytm, BHIM) via direct QR transfer.',
         },
         {
           id: 'faq_3',
-          question: 'What if an item is damaged or does not meet expectations?',
-          answer: 'We provide a 100% satisfaction guarantee. You can inspect your items on delivery and request an immediate exchange or refund.',
+          question: 'What are your working hours?',
+          answer: `${shop.workingHours || '9:00 AM - 9:00 PM (All days)'}. We are happy to assist you during business hours.`,
         },
         {
           id: 'faq_4',
-          question: 'Do you offer bulk or wholesale pricing?',
-          answer: 'Yes! We offer attractive wholesale rates for weddings, festive occasions, and bulk merchant purchases. Reach out via WhatsApp or our inquiry form.',
+          question: 'Do you offer customized packages or specific requirements?',
+          answer: 'Yes! We offer tailored solutions according to your specific needs. Reach out via WhatsApp or our inquiry form.',
         },
       ],
     },
@@ -365,18 +375,18 @@ export function getDefaultSectionsConfig(shop: Partial<Shop> = {}): ShopSections
     // 13. Call To Action (CTA) Section
     cta: {
       enabled: true,
-      title: `Special Local Customer Discount at ${name}!`,
-      description: `Order today via WhatsApp or phone call to enjoy personalized customer care, prompt doorstep fulfillment and zero middleman fee.`,
-      buttonText: 'Order on WhatsApp Now',
+      title: term.sections.cta.defaultHeading,
+      description: term.sections.cta.defaultSubtitle,
+      buttonText: term.ctaButtonText,
       buttonLink: 'whatsapp',
-      badge: '★ LIMITED TIME OFFER ★',
+      badge: '★ CONNECT DIRECTLY ★',
     },
 
     // 14. Contact Section
     contact: {
       enabled: true,
-      title: 'Contact Us & Send Inquiry',
-      subtitle: 'Get in Touch (Always Here to Help)',
+      title: term.sections.contact.defaultHeading,
+      subtitle: term.sections.contact.defaultSubtitle,
       showForm: true,
       phone: phone,
       email: email,
@@ -387,8 +397,8 @@ export function getDefaultSectionsConfig(shop: Partial<Shop> = {}): ShopSections
     // 15. Social Media Section
     socialMedia: {
       enabled: true,
-      title: 'Connect With Us on Social Media',
-      subtitle: 'Follow our official social channels for announcements and offers',
+      title: term.sections.socialMedia.defaultHeading,
+      subtitle: term.sections.socialMedia.defaultSubtitle,
       instagram: shop.socialLinks?.instagram || 'https://instagram.com',
       facebook: shop.socialLinks?.facebook || 'https://facebook.com',
       youtube: shop.socialLinks?.youtube || 'https://youtube.com',
@@ -401,61 +411,19 @@ export function getDefaultSectionsConfig(shop: Partial<Shop> = {}): ShopSections
     // 16. Blog / Articles Section
     blog: {
       enabled: true,
-      title: 'Latest News, Tips & Articles',
-      subtitle: 'Useful Guides and Updates from Our Store',
+      title: term.sections.blog.defaultHeading,
+      subtitle: term.sections.blog.defaultSubtitle,
       posts: [
         {
           id: 'post_1',
-          title: `How to Choose the Best ${category} in ${city}`,
-          snippet: 'Key factors to look for when selecting genuine products, checking batch dates and verifying authenticity.',
-          content: `When purchasing ${category} in ${city}, selecting genuine and fresh products is essential. Here are key recommendations from our team:
-
-1. Batch & Expiry Verification: Always verify manufacturing dates, batch numbers, and shelf life before purchase.
-2. Direct Merchant Authenticity: Sourcing from an authentic local merchant ensures genuine warranties and direct customer support.
-3. Fast WhatsApp Inquiries: For questions regarding product details or availability, you can consult directly with the store owner.
-
-Every item in our catalogue passes thorough quality checks prior to dispatch to ensure an exceptional customer experience.`,
+          title: `Welcome to ${name} — Quality & Excellence in ${city}`,
+          snippet: `Key highlights and updates provided by ${name} for our valued community.`,
+          content: `${name} is proud to serve ${city} with dedicated standards, verified solutions, and personalized assistance.`,
           date: 'August 2026',
           readTime: '3 min read',
           imageUrl: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=600',
           author: owner,
-          category: 'Shopping Guide',
-        },
-        {
-          id: 'post_2',
-          title: 'Top 5 Tips for Safe Online Ordering via WhatsApp',
-          snippet: 'Why ordering directly from local merchants is safer, cheaper, and helps Indian businesses flourish.',
-          content: `Ordering via WhatsApp has become the fastest and most convenient shopping channel for local commerce.
-
-Key advantages include:
-• Direct Human Interaction: Communicate directly with the business owner rather than automated response bots.
-• Direct Store Pricing: No inflated markups, ensuring the most competitive prices.
-• Direct UPI: Transfer seamlessly via PhonePe, Google Pay, or Paytm directly to verified store QR codes.
-• Live Photo Verification: Request actual product photos prior to dispatch for complete peace of mind.
-
-Our storefront consistently prioritizes customer trust, safety, and rapid service.`,
-          date: 'July 2026',
-          readTime: '4 min read',
-          imageUrl: 'https://images.unsplash.com/photo-1556742049-0a67c5574f73?w=600',
-          author: 'Team LalaJi',
-          category: 'Tips & Tricks',
-        },
-        {
-          id: 'post_3',
-          title: 'Proper Storage & Care Guide for Long-Lasting Freshness',
-          snippet: 'Simple home hacks to keep your everyday supplies fresh, preserved, and performing at their best.',
-          content: `Follow these practical storage recommendations to preserve product freshness:
-
-1. Dry & Cool Storage: Keep goods shielded from direct sunlight, moisture, and extreme temperatures.
-2. Airtight Containers: Use sealed containers to maintain peak aroma and crispness.
-3. Timely Re-Ordering: Reorder 1-2 days before running out to guarantee uninterrupted doorstep supply.
-
-Should you need personalized product care advice, reach out to our team at any time via WhatsApp or phone call.`,
-          date: 'June 2026',
-          readTime: '2 min read',
-          imageUrl: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=600',
-          author: owner,
-          category: 'Maintenance',
+          category: 'Announcements',
         },
       ],
     },
@@ -463,23 +431,22 @@ Should you need personalized product care advice, reach out to our team at any t
     // 17. Footer Section
     footer: {
       enabled: true,
-      aboutText: `${name} is a proud verified merchant powered by the IndianLalaJi Platform Network. Providing genuine quality and authentic local commerce across ${city}.`,
+      aboutText: `${name} is a proud verified establishment powered by the IndianLalaJi Platform Network. Providing genuine quality and authentic commerce across ${city}.`,
       quickLinks: [
         { label: 'Hero Home', url: '#hero' },
-        { label: 'About Us', url: '#about' },
-        { label: 'Why Choose Us', url: '#why-choose-us' },
-        { label: 'Services', url: '#services' },
-        { label: 'Products', url: '#products' },
-        { label: 'Courses', url: '#courses' },
-        { label: 'Videos', url: '#videos' },
-        { label: 'Special Offers', url: '#offers' },
-        { label: 'Photo Gallery', url: '#gallery' },
-        { label: 'Portfolio', url: '#portfolio' },
-        { label: 'Our Team', url: '#team' },
-        { label: 'FAQ', url: '#faq' },
-        { label: 'Contact Us', url: '#contact-inquiry' },
-        { label: 'Social Media', url: '#social-media' },
-        { label: 'Blog', url: '#blog' },
+        { label: term.sections.about.name, url: '#about' },
+        { label: term.sections.features.name, url: '#why-choose-us' },
+        { label: term.sections.category.name, url: '#categories' },
+        { label: term.sections.services.name, url: '#services' },
+        { label: term.sections.products.name, url: '#products' },
+        { label: term.sections.courses.name, url: '#courses' },
+        { label: term.sections.videos.name, url: '#videos' },
+        { label: term.sections.offers.name, url: '#offers' },
+        { label: term.sections.gallery.name, url: '#gallery' },
+        { label: term.sections.portfolio.name, url: '#portfolio' },
+        { label: term.sections.team.name, url: '#team' },
+        { label: term.sections.faq.name, url: '#faq' },
+        { label: term.sections.contact.name, url: '#contact-inquiry' },
       ],
       socialLinks: {
         instagram: shop.socialLinks?.instagram || 'https://instagram.com',

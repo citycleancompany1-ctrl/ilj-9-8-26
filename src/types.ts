@@ -69,6 +69,8 @@ export interface Shop {
   businessName: string;
   tagline: string;
   category: string;
+  mainCategory?: string; // One of 27 Main Categories (e.g. Education, Healthcare, Food & Dining)
+  subCategory?: string; // Sub Category (e.g. School, College, Clinic, Restaurant, Gym)
   state: string;
   city: string;
   address: string;
@@ -542,11 +544,18 @@ export interface FooterSectionConfig {
   copyrightText: string;
 }
 
+export interface CategorySectionConfig {
+  enabled: boolean;
+  title: string;
+  subtitle: string;
+}
+
 export interface ShopSectionsConfig {
   heroBanner?: HeroBannerSectionConfig;
   hero: HeroSectionConfig;
   about: AboutSectionConfig;
   features: FeaturesSectionConfig; // Why Choose Us
+  category?: CategorySectionConfig; // Category showcase
   services: ServicesSectionConfig;
   products: ProductsSectionConfig;
   courses?: CoursesSectionConfig;
