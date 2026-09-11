@@ -13,6 +13,7 @@ export interface CardDetailModalData {
   actionText?: string;
   actionUrl?: string;
   onAction?: () => void;
+  extraContent?: React.ReactNode;
 }
 
 interface CardDetailModalProps {
@@ -122,11 +123,20 @@ export const CardDetailModal: React.FC<CardDetailModalProps> = ({
           </h2>
 
           {/* Full Description (untruncated, formatted) */}
-          <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-2xs">
-            <p className="text-xs sm:text-sm text-slate-700 leading-relaxed whitespace-pre-line">
-              {data.description}
-            </p>
-          </div>
+          {data.description && (
+            <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-2xs">
+              <p className="text-xs sm:text-sm text-slate-700 leading-relaxed whitespace-pre-line break-words">
+                {data.description}
+              </p>
+            </div>
+          )}
+
+          {/* Optional Extra Content (Coupon, Ratings, Actions, etc.) */}
+          {data.extraContent && (
+            <div className="w-full">
+              {data.extraContent}
+            </div>
+          )}
         </div>
 
         {/* Modal Footer Actions */}

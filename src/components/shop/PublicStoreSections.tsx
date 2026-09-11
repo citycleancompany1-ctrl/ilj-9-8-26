@@ -571,7 +571,40 @@ export const AboutSectionRenderer: React.FC<{
   config: AboutSectionConfig;
   shop: Shop;
 }> = ({ config, shop }) => {
+  const [cardModalData, setCardModalData] = useState<CardDetailModalData | null>(null);
+
   if (!config.enabled) return null;
+
+  const isLongDescription = config.description && config.description.length > 180;
+
+  const openAboutModal = () => {
+    setCardModalData({
+      title: config.storyHeading || config.title,
+      subtitle: config.subtitle || `About ${shop.businessName}`,
+      description: config.description,
+      sectionName: 'About Store & Proprietor',
+      badge: config.yearsOfExperience || 'Store Trust',
+      imageUrl: config.imageUrl || shop.aboutPhotoUrl || shop.banners?.[0] || 'https://images.unsplash.com/photo-1556742049-0a67c5574f73?w=800',
+      icon: <Award className="w-5 h-5 text-orange-600" />,
+      actionText: 'Chat on WhatsApp',
+      actionUrl: getWhatsAppDirectUrl(shop.whatsapp || shop.phone, `Namaste! I would like to inquire about ${shop.businessName}.`),
+      extraContent: config.highlights && config.highlights.length > 0 ? (
+        <div className="bg-orange-50/70 border border-orange-200/80 rounded-xl p-3.5 space-y-2">
+          <div className="text-[11px] font-black uppercase tracking-wider text-orange-900 flex items-center gap-1.5">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600" /> Key Highlights & Assurance
+          </div>
+          <div className="grid grid-cols-1 gap-2 pt-1">
+            {config.highlights.map((h, i) => (
+              <div key={i} className="flex items-start gap-2 text-xs text-slate-800 font-medium">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                <span>{h}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null,
+    });
+  };
 
   return (
     <section id="about" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16">
@@ -580,7 +613,11 @@ export const AboutSectionRenderer: React.FC<{
           
           {/* Left: About Image with Badges */}
           <div className="lg:col-span-5 relative">
-            <div className="aspect-4/3 sm:aspect-square rounded-2xl overflow-hidden shadow-md border border-gray-200 bg-gray-100 relative group">
+            <div 
+              onClick={openAboutModal}
+              className="aspect-4/3 sm:aspect-square rounded-2xl overflow-hidden shadow-md border border-gray-200 bg-gray-100 relative group cursor-pointer"
+              title="Click to view details"
+            >
               <img
                 src={config.imageUrl || shop.aboutPhotoUrl || shop.banners?.[0] || 'https://images.unsplash.com/photo-1556742049-0a67c5574f73?w=800'}
                 alt={config.title}
@@ -595,6 +632,10 @@ export const AboutSectionRenderer: React.FC<{
                   <div className="text-sm sm:text-base font-black font-['Outfit',sans-serif]">{config.yearsOfExperience}</div>
                 </div>
               )}
+
+              <div className="absolute top-3 right-3 bg-black/60 text-white text-[9px] font-bold px-2 py-1 rounded-full sm:hidden flex items-center gap-1">
+                <span>Tap for details</span>
+              </div>
             </div>
           </div>
 
@@ -620,9 +661,27 @@ export const AboutSectionRenderer: React.FC<{
               </h3>
             )}
 
-            <p className="text-xs sm:text-sm text-gray-600 leading-relaxed whitespace-pre-line">
+            {/* Desktop: Full Description */}
+            <p className="hidden sm:block text-xs sm:text-sm text-gray-600 leading-relaxed whitespace-pre-line">
               {config.description}
             </p>
+
+            {/* Mobile: Snippet with popup trigger if long */}
+            <div className="block sm:hidden">
+              <p className={`text-xs text-gray-600 leading-relaxed whitespace-pre-line ${isLongDescription ? 'line-clamp-3' : ''}`}>
+                {config.description}
+              </p>
+              {isLongDescription && (
+                <button
+                  type="button"
+                  onClick={openAboutModal}
+                  className="mt-1 text-[11px] font-black text-orange-600 hover:text-orange-700 uppercase tracking-wider flex items-center gap-1 cursor-pointer pt-0.5 active:scale-95"
+                >
+                  <span>Read Full Story (पूरा विवरण पढ़ें)</span>
+                  <ArrowRight className="w-3 h-3" />
+                </button>
+              )}
+            </div>
 
             {/* Highlights bullet list */}
             {config.highlights && config.highlights.length > 0 && (
@@ -660,6 +719,13 @@ export const AboutSectionRenderer: React.FC<{
 
         </div>
       </div>
+
+      {/* Card Content Modal Popup */}
+      <CardDetailModal
+        isOpen={Boolean(cardModalData)}
+        onClose={() => setCardModalData(null)}
+        data={cardModalData}
+      />
     </section>
   );
 };
@@ -1246,6 +1312,8 @@ export const CoursesSectionRenderer: React.FC<{
 export const HowItWorksSectionRenderer: React.FC<{
   config: HowItWorksSectionConfig;
 }> = ({ config }) => {
+  const [cardModalData, setCardModalData] = useState<CardDetailModalData | null>(null);
+
   if (!config.enabled || !config.steps || config.steps.length === 0) return null;
 
   return (
@@ -1268,25 +1336,48 @@ export const HowItWorksSectionRenderer: React.FC<{
           {config.steps.map((step, idx) => (
             <div
               key={step.id || idx}
-              className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-6 shadow-xs relative space-y-3 group hover:border-indigo-300 transition-all"
+              onClick={() =>
+                setCardModalData({
+                  title: step.title,
+                  description: step.description,
+                  sectionName: config.title || 'How It Works',
+                  badge: `Step #${step.stepNumber || idx + 1}`,
+                  icon: <Layers className="w-5 h-5 text-indigo-600" />,
+                })
+              }
+              className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-6 shadow-xs relative space-y-3 group hover:border-indigo-300 transition-all cursor-pointer flex flex-col justify-between"
+              title="Click to view details"
             >
-              {/* Step Number Circle */}
-              <div className="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center font-black text-sm shadow-md">
-                {step.stepNumber || idx + 1}
+              <div className="space-y-3">
+                {/* Step Number Circle */}
+                <div className="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center font-black text-sm shadow-md">
+                  {step.stepNumber || idx + 1}
+                </div>
+
+                <h3 className="text-base font-black uppercase tracking-tight text-slate-900 font-['Outfit',sans-serif]">
+                  {step.title}
+                </h3>
+
+                <p className="text-xs text-gray-600 leading-relaxed">
+                  {step.description}
+                </p>
               </div>
 
-              <h3 className="text-base font-black uppercase tracking-tight text-slate-900 font-['Outfit',sans-serif]">
-                {step.title}
-              </h3>
-
-              <p className="text-xs text-gray-600 leading-relaxed">
-                {step.description}
-              </p>
+              <span className="text-[10px] text-indigo-600 font-bold uppercase tracking-wider block pt-1 sm:hidden">
+                Tap to view step →
+              </span>
             </div>
           ))}
         </div>
 
       </div>
+
+      {/* Card Content Modal Popup */}
+      <CardDetailModal
+        isOpen={Boolean(cardModalData)}
+        onClose={() => setCardModalData(null)}
+        data={cardModalData}
+      />
     </section>
   );
 };
@@ -1602,10 +1693,38 @@ export const TestimonialsSectionRenderer: React.FC<{
   const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [cardModalData, setCardModalData] = useState<CardDetailModalData | null>(null);
 
   if (!config.enabled || !config.items || config.items.length === 0) return null;
 
   const totalReviews = config.items.length;
+
+  const openReviewModal = (review: typeof config.items[0]) => {
+    setCardModalData({
+      title: review.name,
+      subtitle: review.location ? `Customer from ${review.location}` : 'Verified Customer Review',
+      description: review.text,
+      sectionName: config.title || 'Customer Reviews & Ratings',
+      badge: 'Verified Buyer',
+      imageUrl: review.avatarUrl,
+      icon: <Star className="w-5 h-5 text-amber-500 fill-amber-400" />,
+      extraContent: (
+        <div className="flex items-center justify-between bg-amber-50/80 border border-amber-200/80 p-3 rounded-xl">
+          <div className="flex items-center gap-1 text-amber-400">
+            {[...Array(review.rating || 5)].map((_, i) => (
+              <Star key={i} className="w-4 h-4 fill-amber-400" />
+            ))}
+            <span className="text-xs font-black text-amber-900 ml-1.5 font-['Outfit',sans-serif]">
+              {review.rating || 5}.0 / 5.0
+            </span>
+          </div>
+          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-100/70 border border-emerald-200 px-2 py-0.5 rounded-full">
+            <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Verified Buyer
+          </span>
+        </div>
+      ),
+    });
+  };
 
   // Auto-slide carousel every 5 seconds (only when not expanded)
   useEffect(() => {
@@ -1685,7 +1804,9 @@ export const TestimonialsSectionRenderer: React.FC<{
           {config.items.map((review, idx) => (
             <div
               key={`expanded-rev-${review.id || idx}`}
-              className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-6 shadow-xs hover:shadow-md hover:border-rose-300 transition-all flex flex-col justify-between space-y-4"
+              onClick={() => openReviewModal(review)}
+              className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-6 shadow-xs hover:shadow-md hover:border-rose-300 transition-all flex flex-col justify-between space-y-4 cursor-pointer group"
+              title="Click to read full review"
             >
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
@@ -1702,6 +1823,10 @@ export const TestimonialsSectionRenderer: React.FC<{
                 <p className="text-xs sm:text-sm text-gray-700 italic leading-relaxed">
                   "{review.text}"
                 </p>
+
+                <span className="text-[10px] text-rose-600 font-bold uppercase tracking-wider block pt-1 group-hover:underline">
+                  Tap to read full review →
+                </span>
               </div>
 
               <div className="pt-3 border-t border-gray-100 flex items-center gap-3">
@@ -1744,7 +1869,9 @@ export const TestimonialsSectionRenderer: React.FC<{
               return (
                 <div
                   key={`carousel-rev-${review.id || idx}-${currentReviewIndex}`}
-                  className={`${visibilityClass} bg-white rounded-2xl border border-gray-200 p-4 sm:p-6 shadow-xs hover:shadow-md hover:border-rose-300 transition-all flex-col justify-between space-y-4 animate-in fade-in duration-300`}
+                  onClick={() => openReviewModal(review)}
+                  className={`${visibilityClass} bg-white rounded-2xl border border-gray-200 p-4 sm:p-6 shadow-xs hover:shadow-md hover:border-rose-300 transition-all flex-col justify-between space-y-4 animate-in fade-in duration-300 cursor-pointer group`}
+                  title="Click to read full review"
                 >
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
@@ -1761,6 +1888,10 @@ export const TestimonialsSectionRenderer: React.FC<{
                     <p className="text-xs sm:text-sm text-gray-700 italic leading-relaxed line-clamp-4">
                       "{review.text}"
                     </p>
+
+                    <span className="text-[10px] text-rose-600 font-bold uppercase tracking-wider block pt-1 group-hover:underline">
+                      Tap to read full review →
+                    </span>
                   </div>
 
                   <div className="pt-3 border-t border-gray-100 flex items-center gap-3">
@@ -1825,6 +1956,13 @@ export const TestimonialsSectionRenderer: React.FC<{
           </button>
         </div>
       )}
+
+      {/* Card Content Modal Popup */}
+      <CardDetailModal
+        isOpen={Boolean(cardModalData)}
+        onClose={() => setCardModalData(null)}
+        data={cardModalData}
+      />
     </section>
   );
 };
@@ -1839,6 +1977,7 @@ export const OffersSectionRenderer: React.FC<{
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const [mobileActiveOffer, setMobileActiveOffer] = useState(0);
+  const [cardModalData, setCardModalData] = useState<CardDetailModalData | null>(null);
   const mobileOffersScrollRef = useRef<HTMLDivElement>(null);
 
   if (!config || !config.enabled || !config.banners || config.banners.length === 0) return null;
@@ -1853,6 +1992,52 @@ export const OffersSectionRenderer: React.FC<{
     navigator.clipboard.writeText(code);
     setCopiedCode(code);
     setTimeout(() => setCopiedCode(null), 2000);
+  };
+
+  const openOfferModal = (banner: typeof validBanners[0]) => {
+    const whatsappMsg = `Namaste ${shop.businessName}! I want to claim your offer: "${banner.title || 'Special Offer'}"${banner.couponCode ? ` (Coupon: ${banner.couponCode})` : ''}.`;
+    const claimUrl = banner.buttonLink && banner.buttonLink !== 'whatsapp'
+      ? banner.buttonLink
+      : getWhatsAppDirectUrl(shop.whatsapp || shop.phone, whatsappMsg);
+
+    setCardModalData({
+      title: banner.title || 'Special Discount Offer',
+      subtitle: banner.validUntil ? `Valid Until: ${banner.validUntil}` : undefined,
+      description: banner.subtitle || `Special discount offer and exclusive deals at ${shop.businessName}. Tap below to claim on WhatsApp or visit our store.`,
+      sectionName: config?.title || 'Special Offers & Deals',
+      badge: banner.badge || 'Limited Deal',
+      imageUrl: banner.imageUrl,
+      icon: <Sparkles className="w-5 h-5 text-rose-600" />,
+      actionText: banner.buttonText || 'Claim Offer on WhatsApp',
+      actionUrl: claimUrl,
+      extraContent: banner.couponCode ? (
+        <div className="bg-orange-50 border border-dashed border-orange-300 rounded-xl p-3 flex items-center justify-between">
+          <div>
+            <span className="text-[10px] uppercase font-bold text-orange-700 block">Coupon Code</span>
+            <span className="font-mono font-black text-sm text-orange-950 tracking-wider">
+              {banner.couponCode}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => handleCopyCode(banner.couponCode!)}
+            className="px-3 py-1.5 bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs rounded-lg flex items-center gap-1 cursor-pointer transition-colors"
+          >
+            {copiedCode === banner.couponCode ? (
+              <>
+                <Check className="w-3.5 h-3.5 text-white" />
+                <span>Copied!</span>
+              </>
+            ) : (
+              <>
+                <Copy className="w-3.5 h-3.5" />
+                <span>Copy Code</span>
+              </>
+            )}
+          </button>
+        </div>
+      ) : null,
+    });
   };
 
   const handleMobileScroll = (e: React.UIEvent<HTMLDivElement>) => {
@@ -2007,38 +2192,49 @@ export const OffersSectionRenderer: React.FC<{
                         : 'w-full min-w-full'
                     }`}
                   >
-                    {banner.imageUrl && (
-                      <div className="relative aspect-16/10 bg-slate-100 overflow-hidden">
-                        <img
-                          src={banner.imageUrl}
-                          alt={banner.title || 'Special Offer'}
-                          className="w-full h-full object-cover"
-                        />
-                        {banner.badge && (
-                          <div className="absolute top-1.5 left-1.5 bg-red-600 text-white text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded shadow-xs">
-                            {banner.badge}
-                          </div>
-                        )}
-                        {banner.validUntil && (
-                          <div className="absolute top-1.5 right-1.5 bg-black/75 backdrop-blur-xs text-white text-[8px] font-semibold px-1.5 py-0.5 rounded shadow-xs">
-                            {banner.validUntil}
-                          </div>
-                        )}
-                      </div>
-                    )}
+                    {/* Card Content Area - Clickable */}
+                    <div 
+                      onClick={() => openOfferModal(banner)}
+                      className="cursor-pointer flex-1 flex flex-col justify-between"
+                    >
+                      {banner.imageUrl && (
+                        <div className="relative aspect-16/10 bg-slate-100 overflow-hidden">
+                          <img
+                            src={banner.imageUrl}
+                            alt={banner.title || 'Special Offer'}
+                            className="w-full h-full object-cover"
+                          />
+                          {banner.badge && (
+                            <div className="absolute top-1.5 left-1.5 bg-red-600 text-white text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded shadow-xs">
+                              {banner.badge}
+                            </div>
+                          )}
+                          {banner.validUntil && (
+                            <div className="absolute top-1.5 right-1.5 bg-black/75 backdrop-blur-xs text-white text-[8px] font-semibold px-1.5 py-0.5 rounded shadow-xs">
+                              {banner.validUntil}
+                            </div>
+                          )}
+                        </div>
+                      )}
 
-                    <div className="p-2.5 flex-1 flex flex-col justify-between space-y-2">
-                      <div className="space-y-0.5">
-                        <h3 className="text-xs font-black uppercase tracking-tight text-slate-900 font-['Outfit',sans-serif] line-clamp-1">
-                          {banner.title || 'Special Offer'}
-                        </h3>
-                        {banner.subtitle && (
-                          <p className="text-[10px] text-gray-500 line-clamp-1">
-                            {banner.subtitle}
-                          </p>
-                        )}
+                      <div className="p-2.5 flex-1 flex flex-col justify-between space-y-2">
+                        <div className="space-y-0.5">
+                          <h3 className="text-xs font-black uppercase tracking-tight text-slate-900 font-['Outfit',sans-serif] line-clamp-1">
+                            {banner.title || 'Special Offer'}
+                          </h3>
+                          {banner.subtitle && (
+                            <p className="text-[10px] text-gray-500 line-clamp-1">
+                              {banner.subtitle}
+                            </p>
+                          )}
+                          <span className="text-[9px] text-rose-600 font-bold uppercase tracking-wider block pt-0.5 hover:underline">
+                            Tap for details →
+                          </span>
+                        </div>
                       </div>
+                    </div>
 
+                    <div className="p-2.5 pt-0">
                       <div className="pt-2 border-t border-gray-100 flex flex-col gap-1.5">
                         {banner.couponCode && (
                           <div className="flex items-center justify-between bg-orange-50 border border-dashed border-orange-300 px-2 py-1 rounded-md">
@@ -2048,7 +2244,10 @@ export const OffersSectionRenderer: React.FC<{
                             </span>
                             <button
                               type="button"
-                              onClick={() => handleCopyCode(banner.couponCode!)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleCopyCode(banner.couponCode!);
+                              }}
                               className="text-orange-600 hover:text-orange-800 p-0.5 transition-colors cursor-pointer"
                               title="Copy Code"
                             >
@@ -2065,6 +2264,7 @@ export const OffersSectionRenderer: React.FC<{
                           href={claimUrl}
                           target="_blank"
                           rel="noreferrer"
+                          onClick={(e) => e.stopPropagation()}
                           className="w-full py-1.5 px-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold uppercase tracking-wider text-[10px] rounded-lg shadow-xs flex items-center justify-center gap-1 transition-colors active:scale-95"
                         >
                           <span>{banner.buttonText || 'Claim Offer'}</span>
@@ -2131,38 +2331,49 @@ export const OffersSectionRenderer: React.FC<{
                   key={`mob-grid-banner-${banner.id || idx}`}
                   className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-xs flex flex-col justify-between group relative"
                 >
-                  {banner.imageUrl && (
-                    <div className="relative aspect-16/10 bg-slate-100 overflow-hidden">
-                      <img
-                        src={banner.imageUrl}
-                        alt={banner.title || 'Special Offer'}
-                        className="w-full h-full object-cover"
-                      />
-                      {banner.badge && (
-                        <div className="absolute top-1.5 left-1.5 bg-red-600 text-white text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded shadow-xs">
-                          {banner.badge}
-                        </div>
-                      )}
-                      {banner.validUntil && (
-                        <div className="absolute top-1.5 right-1.5 bg-black/75 backdrop-blur-xs text-white text-[8px] font-semibold px-1.5 py-0.5 rounded shadow-xs">
-                          {banner.validUntil}
-                        </div>
-                      )}
-                    </div>
-                  )}
+                  {/* Clickable Card Body */}
+                  <div
+                    onClick={() => openOfferModal(banner)}
+                    className="cursor-pointer flex-1 flex flex-col justify-between"
+                  >
+                    {banner.imageUrl && (
+                      <div className="relative aspect-16/10 bg-slate-100 overflow-hidden">
+                        <img
+                          src={banner.imageUrl}
+                          alt={banner.title || 'Special Offer'}
+                          className="w-full h-full object-cover"
+                        />
+                        {banner.badge && (
+                          <div className="absolute top-1.5 left-1.5 bg-red-600 text-white text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded shadow-xs">
+                            {banner.badge}
+                          </div>
+                        )}
+                        {banner.validUntil && (
+                          <div className="absolute top-1.5 right-1.5 bg-black/75 backdrop-blur-xs text-white text-[8px] font-semibold px-1.5 py-0.5 rounded shadow-xs">
+                            {banner.validUntil}
+                          </div>
+                        )}
+                      </div>
+                    )}
 
-                  <div className="p-2.5 flex-1 flex flex-col justify-between space-y-2">
-                    <div className="space-y-0.5">
-                      <h3 className="text-xs font-black uppercase tracking-tight text-slate-900 font-['Outfit',sans-serif] line-clamp-1">
-                        {banner.title || 'Special Offer'}
-                      </h3>
-                      {banner.subtitle && (
-                        <p className="text-[10px] text-gray-500 line-clamp-1">
-                          {banner.subtitle}
-                        </p>
-                      )}
+                    <div className="p-2.5 flex-1 flex flex-col justify-between space-y-2">
+                      <div className="space-y-0.5">
+                        <h3 className="text-xs font-black uppercase tracking-tight text-slate-900 font-['Outfit',sans-serif] line-clamp-1">
+                          {banner.title || 'Special Offer'}
+                        </h3>
+                        {banner.subtitle && (
+                          <p className="text-[10px] text-gray-500 line-clamp-1">
+                            {banner.subtitle}
+                          </p>
+                        )}
+                        <span className="text-[9px] text-rose-600 font-bold uppercase tracking-wider block pt-0.5 hover:underline">
+                          Tap for details →
+                        </span>
+                      </div>
                     </div>
+                  </div>
 
+                  <div className="p-2.5 pt-0">
                     <div className="pt-2 border-t border-gray-100 flex flex-col gap-1.5">
                       {banner.couponCode && (
                         <div className="flex items-center justify-between bg-orange-50 border border-dashed border-orange-300 px-2 py-1 rounded-md">
@@ -2172,7 +2383,10 @@ export const OffersSectionRenderer: React.FC<{
                           </span>
                           <button
                             type="button"
-                            onClick={() => handleCopyCode(banner.couponCode!)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCopyCode(banner.couponCode!);
+                            }}
                             className="text-orange-600 hover:text-orange-800 p-0.5 transition-colors cursor-pointer"
                             title="Copy Code"
                           >
@@ -2189,6 +2403,7 @@ export const OffersSectionRenderer: React.FC<{
                         href={claimUrl}
                         target="_blank"
                         rel="noreferrer"
+                        onClick={(e) => e.stopPropagation()}
                         className="w-full py-1.5 px-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold uppercase tracking-wider text-[10px] rounded-lg shadow-xs flex items-center justify-center gap-1 transition-colors active:scale-95"
                       >
                         <span>{banner.buttonText || 'Claim Offer'}</span>
@@ -2235,6 +2450,13 @@ export const OffersSectionRenderer: React.FC<{
           </button>
         </div>
       )}
+
+      {/* Card Content Modal Popup */}
+      <CardDetailModal
+        isOpen={Boolean(cardModalData)}
+        onClose={() => setCardModalData(null)}
+        data={cardModalData}
+      />
     </section>
   );
 };
@@ -2336,12 +2558,27 @@ export const PortfolioSectionRenderer: React.FC<{
   const [activeImage, setActiveImage] = useState<string | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const [activeSlide, setActiveSlide] = useState(0);
+  const [cardModalData, setCardModalData] = useState<CardDetailModalData | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   if (!config.enabled || !config.items || config.items.length === 0) return null;
 
   const totalProjects = config.items.length;
   const displayedItems = isExpanded ? config.items : config.items.slice(0, 4);
+
+  const openProjectModal = (item: typeof config.items[0]) => {
+    setCardModalData({
+      title: item.title,
+      subtitle: item.category,
+      description: item.description || 'Showcasing our completed project and craftsmanship.',
+      sectionName: config.title || 'Work Showcase & Gallery',
+      badge: item.category || 'Featured Work',
+      imageUrl: item.imageUrl,
+      icon: <Award className="w-5 h-5 text-cyan-600" />,
+      actionText: 'View High-Res Photo',
+      actionUrl: item.imageUrl,
+    });
+  };
 
   const handleScroll = () => {
     if (!scrollRef.current) return;
@@ -2391,35 +2628,45 @@ export const PortfolioSectionRenderer: React.FC<{
         {displayedItems.map((item, idx) => (
           <div
             key={item.id || idx}
-            onClick={() => setActiveImage(item.imageUrl)}
-            className="group bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-xs hover:shadow-lg transition-all cursor-pointer relative"
+            onClick={() => openProjectModal(item)}
+            className="group bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-xs hover:shadow-lg transition-all cursor-pointer relative flex flex-col justify-between"
+            title="Click to view full project details"
           >
-            <div className="aspect-4/3 overflow-hidden bg-gray-100 relative">
-              <img
-                src={item.imageUrl}
-                alt={item.title}
-                className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-500"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
-                <span className="text-xs font-bold text-white flex items-center gap-1">
-                  <span>View Photo</span>
-                  <ArrowUpRight className="w-3.5 h-3.5" />
-                </span>
+            <div>
+              <div className="aspect-4/3 overflow-hidden bg-gray-100 relative">
+                <img
+                  src={item.imageUrl}
+                  alt={item.title}
+                  className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-500"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
+                  <span className="text-xs font-bold text-white flex items-center gap-1">
+                    <span>View Details</span>
+                    <ArrowUpRight className="w-3.5 h-3.5" />
+                  </span>
+                </div>
+              </div>
+
+              <div className="p-3.5 space-y-1">
+                {item.category && (
+                  <div className="text-[10px] font-bold text-cyan-700 uppercase tracking-wider">
+                    {item.category}
+                  </div>
+                )}
+                <h3 className="text-xs sm:text-sm font-black text-slate-900 truncate">
+                  {item.title}
+                </h3>
+                {item.description && (
+                  <p className="text-[11px] text-gray-500 line-clamp-2">{item.description}</p>
+                )}
               </div>
             </div>
 
-            <div className="p-3.5 space-y-1">
-              {item.category && (
-                <div className="text-[10px] font-bold text-cyan-700 uppercase tracking-wider">
-                  {item.category}
-                </div>
-              )}
-              <h3 className="text-xs sm:text-sm font-black text-slate-900 truncate">
-                {item.title}
-              </h3>
-              {item.description && (
-                <p className="text-[11px] text-gray-500 line-clamp-2">{item.description}</p>
-              )}
+            <div className="px-3.5 pb-3 pt-0">
+              <span className="text-[10px] font-bold text-cyan-700 uppercase tracking-wider flex items-center gap-1 group-hover:underline">
+                <span>View Details</span>
+                <ArrowRight className="w-3 h-3" />
+              </span>
             </div>
           </div>
         ))}
@@ -2438,7 +2685,7 @@ export const PortfolioSectionRenderer: React.FC<{
               {config.items.map((item, idx) => (
                 <div
                   key={`mob-slider-port-${item.id || idx}`}
-                  onClick={() => setActiveImage(item.imageUrl)}
+                  onClick={() => openProjectModal(item)}
                   className={`flex-none snap-start group bg-white rounded-xl border border-gray-200 overflow-hidden shadow-xs hover:shadow-md transition-all cursor-pointer relative flex flex-col justify-between ${
                     totalProjects >= 3
                       ? 'w-[calc((100%-20px)/2.15)] min-w-[calc((100%-20px)/2.15)] max-w-[calc((100%-20px)/2.15)]'
@@ -2455,7 +2702,7 @@ export const PortfolioSectionRenderer: React.FC<{
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
                       <span className="text-[9px] font-bold text-white flex items-center gap-0.5">
-                        <span>View</span>
+                        <span>Details</span>
                         <ArrowUpRight className="w-3 h-3" />
                       </span>
                     </div>
@@ -2473,6 +2720,9 @@ export const PortfolioSectionRenderer: React.FC<{
                     {item.description && (
                       <p className="text-[10px] text-gray-500 line-clamp-1">{item.description}</p>
                     )}
+                    <span className="text-[9px] text-cyan-700 font-bold uppercase tracking-wider block pt-0.5 hover:underline">
+                      Tap for details →
+                    </span>
                   </div>
                 </div>
               ))}
@@ -2526,7 +2776,7 @@ export const PortfolioSectionRenderer: React.FC<{
             {config.items.map((item, idx) => (
               <div
                 key={`mob-grid-port-${item.id || idx}`}
-                onClick={() => setActiveImage(item.imageUrl)}
+                onClick={() => openProjectModal(item)}
                 className="group bg-white rounded-xl border border-gray-200 overflow-hidden shadow-xs hover:shadow-md transition-all cursor-pointer relative flex flex-col justify-between"
               >
                 <div className="aspect-4/3 overflow-hidden bg-gray-100 relative">
@@ -2537,7 +2787,7 @@ export const PortfolioSectionRenderer: React.FC<{
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
                     <span className="text-[9px] font-bold text-white flex items-center gap-0.5">
-                      <span>View</span>
+                      <span>Details</span>
                       <ArrowUpRight className="w-3 h-3" />
                     </span>
                   </div>
@@ -2555,6 +2805,9 @@ export const PortfolioSectionRenderer: React.FC<{
                   {item.description && (
                     <p className="text-[10px] text-gray-500 line-clamp-1">{item.description}</p>
                   )}
+                  <span className="text-[9px] text-cyan-700 font-bold uppercase tracking-wider block pt-0.5 hover:underline">
+                    Tap for details →
+                  </span>
                 </div>
               </div>
             ))}
@@ -2612,6 +2865,13 @@ export const PortfolioSectionRenderer: React.FC<{
           </div>
         </div>
       )}
+
+      {/* Card Detail Popup Modal for Full Mobile/Desktop View */}
+      <CardDetailModal
+        isOpen={Boolean(cardModalData)}
+        onClose={() => setCardModalData(null)}
+        data={cardModalData}
+      />
     </section>
   );
 };
@@ -3660,12 +3920,25 @@ export const TeamSectionRenderer: React.FC<{
 }> = ({ config }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [activeSlide, setActiveSlide] = useState(0);
+  const [cardModalData, setCardModalData] = useState<CardDetailModalData | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   if (!config.enabled || !config.members || config.members.length === 0) return null;
 
   const totalMembers = config.members.length;
   const displayedDesktopMembers = isExpanded ? config.members : config.members.slice(0, 4);
+
+  const openMemberModal = (member: typeof config.members[0]) => {
+    setCardModalData({
+      title: member.name,
+      subtitle: member.position,
+      description: member.bio || `${member.name} serves as ${member.position} in our team, dedicated to quality and customer satisfaction.`,
+      sectionName: config.title || 'Our People & Team',
+      badge: member.position,
+      imageUrl: member.imageUrl,
+      icon: <Users className="w-5 h-5 text-fuchsia-600" />,
+    });
+  };
 
   const handleScroll = () => {
     if (!scrollRef.current) return;
@@ -3715,30 +3988,39 @@ export const TeamSectionRenderer: React.FC<{
         {displayedDesktopMembers.map((member, idx) => (
           <div
             key={member.id || idx}
-            className="bg-white rounded-2xl border border-gray-200 p-6 shadow-xs hover:shadow-md transition-all text-center space-y-3 group"
+            onClick={() => openMemberModal(member)}
+            className="bg-white rounded-2xl border border-gray-200 p-6 shadow-xs hover:shadow-md transition-all text-center space-y-3 group cursor-pointer flex flex-col justify-between"
+            title="Click to view full bio & details"
           >
-            <div className="w-24 h-24 sm:w-28 sm:h-28 mx-auto rounded-full overflow-hidden border-2 border-orange-500 p-1 group-hover:scale-105 transition-transform">
-              <img
-                src={member.imageUrl}
-                alt={member.name}
-                className="w-full h-full object-cover rounded-full"
-              />
+            <div className="space-y-3">
+              <div className="w-24 h-24 sm:w-28 sm:h-28 mx-auto rounded-full overflow-hidden border-2 border-orange-500 p-1 group-hover:scale-105 transition-transform">
+                <img
+                  src={member.imageUrl}
+                  alt={member.name}
+                  className="w-full h-full object-cover rounded-full"
+                />
+              </div>
+
+              <div>
+                <h3 className="text-base font-black uppercase tracking-tight text-slate-900 font-['Outfit',sans-serif]">
+                  {member.name}
+                </h3>
+                <p className="text-xs font-bold text-orange-600 uppercase tracking-wide mt-0.5">
+                  {member.position}
+                </p>
+              </div>
+
+              {member.bio && (
+                <p className="text-xs text-gray-600 leading-relaxed max-w-xs mx-auto line-clamp-3">
+                  {member.bio}
+                </p>
+              )}
             </div>
 
-            <div>
-              <h3 className="text-base font-black uppercase tracking-tight text-slate-900 font-['Outfit',sans-serif]">
-                {member.name}
-              </h3>
-              <p className="text-xs font-bold text-orange-600 uppercase tracking-wide mt-0.5">
-                {member.position}
-              </p>
+            <div className="pt-2 flex items-center justify-center gap-1 text-[11px] font-bold text-fuchsia-700 uppercase tracking-wider group-hover:underline">
+              <span>View Profile</span>
+              <ArrowRight className="w-3 h-3" />
             </div>
-
-            {member.bio && (
-              <p className="text-xs text-gray-600 leading-relaxed max-w-xs mx-auto">
-                {member.bio}
-              </p>
-            )}
           </div>
         ))}
       </div>
@@ -3756,7 +4038,8 @@ export const TeamSectionRenderer: React.FC<{
               {config.members.map((member, idx) => (
                 <div
                   key={`mob-slider-team-${member.id || idx}`}
-                  className={`flex-none snap-start bg-white rounded-xl border border-gray-200 p-3 shadow-xs text-center space-y-2 flex flex-col items-center justify-between group ${
+                  onClick={() => openMemberModal(member)}
+                  className={`flex-none snap-start bg-white rounded-xl border border-gray-200 p-3 shadow-xs text-center space-y-2 flex flex-col items-center justify-between group cursor-pointer ${
                     totalMembers >= 3
                       ? 'w-[calc((100%-20px)/2.15)] min-w-[calc((100%-20px)/2.15)] max-w-[calc((100%-20px)/2.15)]'
                       : totalMembers === 2
@@ -3786,6 +4069,10 @@ export const TeamSectionRenderer: React.FC<{
                       {member.bio}
                     </p>
                   )}
+
+                  <span className="text-[9px] text-fuchsia-700 font-bold uppercase tracking-wider block pt-0.5 hover:underline">
+                    Tap for bio →
+                  </span>
                 </div>
               ))}
             </div>
@@ -3838,7 +4125,8 @@ export const TeamSectionRenderer: React.FC<{
             {config.members.map((member, idx) => (
               <div
                 key={`mob-grid-team-${member.id || idx}`}
-                className="bg-white rounded-xl border border-gray-200 p-3 shadow-xs text-center space-y-2 flex flex-col items-center justify-between group"
+                onClick={() => openMemberModal(member)}
+                className="bg-white rounded-xl border border-gray-200 p-3 shadow-xs text-center space-y-2 flex flex-col items-center justify-between group cursor-pointer"
               >
                 <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-orange-500 p-0.5 group-hover:scale-105 transition-transform shrink-0">
                   <img
@@ -3862,6 +4150,10 @@ export const TeamSectionRenderer: React.FC<{
                     {member.bio}
                   </p>
                 )}
+
+                <span className="text-[9px] text-fuchsia-700 font-bold uppercase tracking-wider block pt-0.5 hover:underline">
+                  Tap for bio →
+                </span>
               </div>
             ))}
           </div>
@@ -3900,6 +4192,13 @@ export const TeamSectionRenderer: React.FC<{
           </button>
         </div>
       )}
+
+      {/* Card Detail Popup Modal for Full Mobile/Desktop View */}
+      <CardDetailModal
+        isOpen={Boolean(cardModalData)}
+        onClose={() => setCardModalData(null)}
+        data={cardModalData}
+      />
     </section>
   );
 };

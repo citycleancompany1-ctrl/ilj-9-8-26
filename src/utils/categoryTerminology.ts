@@ -57,6 +57,10 @@ export interface CategoryTerminology {
   sections: Record<SectionKey, SectionTerminology>;
 }
 
+export type CategoryTerminologyOverride = Partial<Omit<CategoryTerminology, 'sections'>> & {
+  sections?: Partial<Record<SectionKey, Partial<SectionTerminology>>>;
+};
+
 // 19 Standard Fixed Sections Base Template (Generic Retail / Service Fallback)
 const createGenericSections = (entityName: string = 'Store'): Record<SectionKey, SectionTerminology> => ({
   heroBanner: {
@@ -230,7 +234,7 @@ const createGenericSections = (entityName: string = 'Store'): Record<SectionKey,
 });
 
 // Built-in specialized profiles for major sub-categories
-export const SPECIALIZED_TERMINOLOGY_REGISTRY: Record<string, Partial<CategoryTerminology>> = {
+export const SPECIALIZED_TERMINOLOGY_REGISTRY: Record<string, CategoryTerminologyOverride> = {
   // 1. Education > School (Strict adherence to user prompt example)
   'school': {
     mainCategory: 'Education',
@@ -804,7 +808,7 @@ SPECIALIZED_TERMINOLOGY_REGISTRY['property dealer'] = SPECIALIZED_TERMINOLOGY_RE
 /**
  * Standard dynamic terminology profiles for all 27 platform Main Categories
  */
-export const MAIN_CATEGORY_TERMINOLOGY_MAP: Record<string, Partial<CategoryTerminology>> = {
+export const MAIN_CATEGORY_TERMINOLOGY_MAP: Record<string, CategoryTerminologyOverride> = {
   'education': {
     mainCategory: 'Education',
     entityName: 'Educational Institute',
@@ -1107,6 +1111,7 @@ export const resolveCategoryTerminology = (
 ): CategoryTerminology => {
   const cleanSub = (subCategoryName || '').toLowerCase().trim();
   const rawMain = (mainCategoryName || findMainCategoryBySubCategory(cleanSub)).trim();
+  const cleanMain = rawMain || 'Retail & Shopping';
   const cleanMainKey = rawMain.toLowerCase().replace(/[^a-z0-9]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
 
   // 1. Check exact subcategory match in registry
@@ -1131,7 +1136,7 @@ export const resolveCategoryTerminology = (
       sections: {
         ...base,
         ...reg.sections,
-      },
+      } as Record<SectionKey, SectionTerminology>,
     };
   }
 
@@ -1183,7 +1188,8 @@ export const resolveCategoryTerminology = (
       servicesTabName: 'School Facilities',
       coursesTabName: 'Academic Programs',
       sections: {
-        ...schoolReg.sections!,
+        ...createGenericSections('School'),
+        ...schoolReg.sections,
       } as Record<SectionKey, SectionTerminology>,
     };
   }
@@ -1209,7 +1215,7 @@ export const resolveCategoryTerminology = (
       sections: {
         ...createGenericSections(subCategoryName || 'Institute'),
         ...reg.sections,
-      },
+      } as Record<SectionKey, SectionTerminology>,
     };
   }
 
@@ -1234,7 +1240,7 @@ export const resolveCategoryTerminology = (
       sections: {
         ...createGenericSections(subCategoryName || 'Clinic'),
         ...reg.sections,
-      },
+      } as Record<SectionKey, SectionTerminology>,
     };
   }
 
@@ -1259,7 +1265,7 @@ export const resolveCategoryTerminology = (
       sections: {
         ...createGenericSections(subCategoryName || 'Restaurant'),
         ...reg.sections,
-      },
+      } as Record<SectionKey, SectionTerminology>,
     };
   }
 
@@ -1284,7 +1290,7 @@ export const resolveCategoryTerminology = (
       sections: {
         ...createGenericSections(subCategoryName || 'Salon'),
         ...reg.sections,
-      },
+      } as Record<SectionKey, SectionTerminology>,
     };
   }
 
@@ -1309,7 +1315,7 @@ export const resolveCategoryTerminology = (
       sections: {
         ...createGenericSections(subCategoryName || 'Gym'),
         ...reg.sections,
-      },
+      } as Record<SectionKey, SectionTerminology>,
     };
   }
 
@@ -1334,7 +1340,7 @@ export const resolveCategoryTerminology = (
       sections: {
         ...createGenericSections(subCategoryName || 'Service Centre'),
         ...reg.sections,
-      },
+      } as Record<SectionKey, SectionTerminology>,
     };
   }
 
