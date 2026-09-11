@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { Shop, PlatformState, SubscriptionInvoice } from '../../types';
 import { BUSINESS_CATEGORIES } from '../../data/initialData';
+import { getSubCategoriesForMain } from '../../data/categoryTaxonomy';
 import { generateShopId, getOneYearExpiryDate, getWhatsAppDirectUrl } from '../../utils/mediaUpload';
 import { generateSecurePassword, hashPassword } from '../../utils/security';
 import { saveShopToFirestore } from '../../services/firebase';
@@ -39,7 +40,8 @@ export const AddWebsiteModal: React.FC<AddWebsiteModalProps> = ({
   const [phone, setPhone] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
   const [vendorEmail, setVendorEmail] = useState('');
-  const [category, setCategory] = useState(BUSINESS_CATEGORIES[0]?.name || 'Retail & Kirana Store');
+  const [category, setCategory] = useState(BUSINESS_CATEGORIES[0]?.name || 'Education');
+  const [subCategory, setSubCategory] = useState(() => getSubCategoriesForMain(BUSINESS_CATEGORIES[0]?.name || 'Education')[0] || '');
   const [city, setCity] = useState('');
   const [stateName, setStateName] = useState('Uttar Pradesh');
   const [address, setAddress] = useState('');
@@ -109,7 +111,9 @@ export const AddWebsiteModal: React.FC<AddWebsiteModalProps> = ({
         vendorEmail: resolvedEmail,
         vendorPassword: password,
         passwordHash: passwordHash,
-        category,
+        category: subCategory ? `${category} - ${subCategory}` : category,
+        mainCategory: category,
+        subCategory: subCategory,
         address: address.trim() || `${city}, ${stateName}`,
         city: city.trim() || 'Varanasi',
         state: stateName,
@@ -275,19 +279,41 @@ export const AddWebsiteModal: React.FC<AddWebsiteModalProps> = ({
           </div>
 
           {/* Category & Location */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
             <div>
               <label className="block font-bold uppercase tracking-wider text-slate-700 mb-1">
-                Business Category
+                Main Category (1 of 27)
               </label>
               <select
                 value={category}
-                onChange={(e) => setCategory(e.target.value)}
+                onChange={(e) => {
+                  const newCat = e.target.value;
+                  setCategory(newCat);
+                  const subs = getSubCategoriesForMain(newCat);
+                  setSubCategory(subs[0] || '');
+                }}
                 className="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white font-medium text-slate-900"
               >
                 {BUSINESS_CATEGORIES.map((cat) => (
                   <option key={cat.id} value={cat.name}>
-                    {cat.name}
+                    #{cat.number} {cat.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block font-bold uppercase tracking-wider text-slate-700 mb-1">
+                Sub-Category
+              </label>
+              <select
+                value={subCategory}
+                onChange={(e) => setSubCategory(e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white font-medium text-slate-900"
+              >
+                {getSubCategoriesForMain(category).map((sub) => (
+                  <option key={sub} value={sub}>
+                    {sub}
                   </option>
                 ))}
               </select>

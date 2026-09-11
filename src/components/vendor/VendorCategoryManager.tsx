@@ -13,10 +13,14 @@ import {
   Wrench,
   GraduationCap,
   Layers,
-  AlertCircle
+  AlertCircle,
+  Tag,
+  ChevronRight
 } from 'lucide-react';
 import { Shop, ShopCategory, ProductType } from '../../types';
 import { CATEGORY_IMAGE_PRESETS, getCategoryImageByName } from '../../utils/categoryUtils';
+import { BUSINESS_CATEGORIES } from '../../data/initialData';
+import { getSubCategoriesForMain, findMainCategoryBySubCategory } from '../../data/categoryTaxonomy';
 
 interface VendorCategoryManagerProps {
   shop: Shop;
@@ -38,6 +42,13 @@ export const VendorCategoryManager: React.FC<VendorCategoryManagerProps> = ({
   const [formType, setFormType] = useState<ProductType | 'ALL'>('PRODUCT');
   const [formImage, setFormImage] = useState('');
   const [showPresets, setShowPresets] = useState(false);
+
+  // 27 Official Vendor Categories State
+  const [isEditingMainCat, setIsEditingMainCat] = useState(false);
+  const activeMainCatName = shop.mainCategory || findMainCategoryBySubCategory(shop.category);
+  const activeMainCatObj = BUSINESS_CATEGORIES.find((c) => c.name.toLowerCase() === activeMainCatName.toLowerCase()) || BUSINESS_CATEGORIES[0];
+  const [selectedMainCat, setSelectedMainCat] = useState(activeMainCatName);
+  const [selectedSubCat, setSelectedSubCat] = useState(shop.subCategory || '');
 
   const categories: ShopCategory[] = shop.customCategories || [];
 
@@ -232,6 +243,102 @@ export const VendorCategoryManager: React.FC<VendorCategoryManagerProps> = ({
 
   return (
     <div className="space-y-6">
+      {/* 27 MAIN VENDOR CATEGORIES TAXONOMY BANNER */}
+      <div className="bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 rounded-2xl p-5 text-white shadow-md relative overflow-hidden">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="space-y-1.5">
+            <div className="inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-xs text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full">
+              <Tag className="w-3 h-3" />
+              <span>Official Vendor Category #{activeMainCatObj.number} of 27</span>
+            </div>
+            <h2 className="text-xl font-black font-['Outfit',sans-serif] flex items-center gap-2">
+              <span>{activeMainCatName}</span>
+              {shop.subCategory && (
+                <>
+                  <span className="opacity-60 text-base">/</span>
+                  <span className="text-amber-100 font-bold text-base">{shop.subCategory}</span>
+                </>
+              )}
+            </h2>
+            <p className="text-xs text-orange-100 max-w-2xl leading-relaxed">
+              Yeh category aapki dukaan ke 19 sections ke layout, dynamic terminology, search filters aur catalogue structure ko automatically customize karti hai.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setIsEditingMainCat(!isEditingMainCat)}
+            className="self-start md:self-center px-4 py-2 bg-white text-orange-700 hover:bg-orange-50 rounded-xl font-black text-xs uppercase tracking-wider transition-all shadow-xs cursor-pointer flex items-center gap-1.5"
+          >
+            <Edit2 className="w-3.5 h-3.5" />
+            <span>{isEditingMainCat ? 'Close Switcher' : 'Change Main Category'}</span>
+          </button>
+        </div>
+
+        {/* Inline Category Switcher */}
+        {isEditingMainCat && (
+          <div className="mt-4 pt-4 border-t border-white/20 grid grid-cols-1 sm:grid-cols-2 gap-3 bg-white/10 p-3.5 rounded-xl backdrop-blur-xs">
+            <div>
+              <label className="block text-[11px] font-bold uppercase tracking-wider text-orange-100 mb-1">
+                Select 1 of 27 Main Categories
+              </label>
+              <select
+                value={selectedMainCat}
+                onChange={(e) => {
+                  const newMain = e.target.value;
+                  setSelectedMainCat(newMain);
+                  const subs = getSubCategoriesForMain(newMain);
+                  setSelectedSubCat(subs[0] || '');
+                }}
+                className="w-full px-3 py-2 rounded-lg bg-white text-slate-800 text-xs font-bold"
+              >
+                {BUSINESS_CATEGORIES.map((cat) => (
+                  <option key={cat.id} value={cat.name}>
+                    #{cat.number} {cat.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-bold uppercase tracking-wider text-orange-100 mb-1">
+                Select Sub-Category
+              </label>
+              <div className="flex gap-2">
+                <select
+                  value={selectedSubCat}
+                  onChange={(e) => setSelectedSubCat(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg bg-white text-slate-800 text-xs font-semibold"
+                >
+                  {getSubCategoriesForMain(selectedMainCat).map((sub) => (
+                    <option key={sub} value={sub}>
+                      {sub}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const updatedShop: Shop = {
+                      ...shop,
+                      mainCategory: selectedMainCat,
+                      subCategory: selectedSubCat,
+                      category: selectedSubCat ? `${selectedMainCat} - ${selectedSubCat}` : selectedMainCat,
+                    };
+                    onUpdateShop(updatedShop);
+                    setIsEditingMainCat(false);
+                    showToast(`Category updated to #${BUSINESS_CATEGORIES.find(c => c.name === selectedMainCat)?.number || ''} ${selectedMainCat}!`);
+                  }}
+                  className="px-4 py-2 bg-slate-900 hover:bg-black text-white font-bold text-xs rounded-lg whitespace-nowrap cursor-pointer"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Header Banner */}
       <div className="bg-white p-5 sm:p-6 rounded-2xl border border-gray-200 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>

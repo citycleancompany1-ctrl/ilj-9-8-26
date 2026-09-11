@@ -43,11 +43,11 @@ export const TemplatesPage: React.FC<TemplatesPageProps> = ({
         </p>
 
         {/* Category Filter Pills */}
-        <div className="flex items-center justify-center gap-2 overflow-x-auto pb-2 max-w-4xl mx-auto scrollbar-none">
+        <div className="flex items-center justify-start sm:justify-center gap-2 overflow-x-auto pb-2 max-w-5xl mx-auto scrollbar-none py-2 px-1">
           <button
             type="button"
             onClick={() => setSelectedCategoryFilter('ALL')}
-            className={`px-3 py-1.5 rounded-full text-xs font-bold tracking-wider uppercase transition-all cursor-pointer ${
+            className={`px-3 py-1.5 rounded-full text-xs font-bold tracking-wider uppercase transition-all cursor-pointer whitespace-nowrap ${
               selectedCategoryFilter === 'ALL'
                 ? 'bg-orange-600 text-white shadow-xs'
                 : 'bg-white text-slate-700 border border-gray-200 hover:bg-gray-100'
@@ -55,7 +55,7 @@ export const TemplatesPage: React.FC<TemplatesPageProps> = ({
           >
             All Templates ({BUSINESS_CATEGORIES.length})
           </button>
-          {BUSINESS_CATEGORIES.slice(0, 6).map((cat) => (
+          {BUSINESS_CATEGORIES.map((cat) => (
             <button
               key={cat.id}
               type="button"
@@ -66,7 +66,7 @@ export const TemplatesPage: React.FC<TemplatesPageProps> = ({
                   : 'bg-white text-slate-700 border border-gray-200 hover:bg-gray-100'
               }`}
             >
-              {cat.name.split('(')[0].trim()}
+              #{cat.number} {cat.name}
             </button>
           ))}
         </div>

@@ -19,6 +19,7 @@ import {
   MessageCircle
 } from 'lucide-react';
 import { BUSINESS_CATEGORIES, SUPER_ADMIN_CREDENTIALS, SUPER_ADMIN_ACCOUNTS } from '../data/initialData';
+import { getSubCategoriesForMain } from '../data/categoryTaxonomy';
 import { generateShopId, getOneYearExpiryDate, generateInvoiceNumber, formatINR } from '../utils/mediaUpload';
 import { hashPassword, verifyPassword } from '../utils/security';
 import { saveShopToFirestore, fetchShopFromFirestore } from '../services/firebase';
@@ -108,6 +109,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [regPassword, setRegPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [businessCategory, setBusinessCategory] = useState(BUSINESS_CATEGORIES[0].name);
+  const [subCategory, setSubCategory] = useState(() => getSubCategoriesForMain(BUSINESS_CATEGORIES[0].name)[0] || '');
   const [state, setState] = useState('Uttar Pradesh');
 
   const indianStates = [
@@ -250,7 +252,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         passwordHash: secureHash,
         businessName: businessName.trim(),
         tagline: `Welcome to ${businessName.trim()} — Best quality in ${state}`,
-        category: businessCategory,
+        category: subCategory ? `${businessCategory} - ${subCategory}` : businessCategory,
+        mainCategory: businessCategory,
+        subCategory: subCategory,
         state: state,
         city: 'Local City',
         address: `Shop No. 1, Main Market, ${state}`,
@@ -629,17 +633,22 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                    Business Category *
+                    Main Category (1 of 27) *
                   </label>
                   <select
                     id="reg-category"
                     value={businessCategory}
-                    onChange={(e) => setBusinessCategory(e.target.value)}
+                    onChange={(e) => {
+                      const newCat = e.target.value;
+                      setBusinessCategory(newCat);
+                      const subs = getSubCategoriesForMain(newCat);
+                      setSubCategory(subs[0] || '');
+                    }}
                     className="w-full px-3 py-2 rounded-sm border border-gray-300 text-xs focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-50/50 font-medium"
                   >
                     {BUSINESS_CATEGORIES.map((cat) => (
                       <option key={cat.id} value={cat.name}>
-                        {cat.name}
+                        #{cat.number} {cat.name}
                       </option>
                     ))}
                   </select>
@@ -647,21 +656,39 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                    State *
+                    Sub-Category / Type *
                   </label>
                   <select
-                    id="reg-state"
-                    value={state}
-                    onChange={(e) => setState(e.target.value)}
+                    id="reg-sub-category"
+                    value={subCategory}
+                    onChange={(e) => setSubCategory(e.target.value)}
                     className="w-full px-3 py-2 rounded-sm border border-gray-300 text-xs focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-50/50 font-medium"
                   >
-                    {indianStates.map((st) => (
-                      <option key={st} value={st}>
-                        {st}
+                    {getSubCategoriesForMain(businessCategory).map((sub) => (
+                      <option key={sub} value={sub}>
+                        {sub}
                       </option>
                     ))}
                   </select>
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                  State *
+                </label>
+                <select
+                  id="reg-state"
+                  value={state}
+                  onChange={(e) => setState(e.target.value)}
+                  className="w-full px-3 py-2 rounded-sm border border-gray-300 text-xs focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-50/50 font-medium"
+                >
+                  {indianStates.map((st) => (
+                    <option key={st} value={st}>
+                      {st}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

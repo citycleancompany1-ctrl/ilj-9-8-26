@@ -1,6 +1,7 @@
 import { Shop, AdvertisementPopup, PricingPackage, TutorialVideo, ShopInquiry, PlatformLead, PlatformState } from '../types';
 import { INDIAN_LAYOUT_THEMES } from './indianThemes';
 import { DEFAULT_PLATFORM_VERSIONS, DEFAULT_AUTO_BACKUP_CONFIG, ensureShopSafetyDefaults } from '../utils/moduleRegistry';
+import { CATEGORY_TAXONOMY } from './categoryTaxonomy';
 
 export interface SuperAdminAccount {
   email: string;
@@ -31,33 +32,21 @@ export const SUPER_ADMIN_CREDENTIALS = {
   name: 'R. K. Mehra (Super Admin)',
 };
 
-export const BUSINESS_CATEGORIES = [
-  { id: 'retail', name: 'Retail & Shopping (Kirana, General & Departmental)', icon: 'Store' },
-  { id: 'clothing', name: 'Clothing, Garments, Sarees & Boutique', icon: 'Shirt' },
-  { id: 'food', name: 'Restaurants, Sweets (Mithai) & Food Outlets', icon: 'Utensils' },
-  { id: 'electronics', name: 'Electronics, Mobile Store & Computer Repair', icon: 'Smartphone' },
-  { id: 'jewellery', name: 'Jewellery, Gold, Silver & Ornaments', icon: 'Gem' },
-  { id: 'footwear', name: 'Footwear, Shoes & Leather Store', icon: 'ShoppingBag' },
-  { id: 'hardware', name: 'Hardware, Sanitaryware, Paints & Electricals', icon: 'Wrench' },
-  { id: 'furniture', name: 'Furniture, Home Decor & Interior Design', icon: 'Home' },
-  { id: 'healthcare', name: 'Pharmacy, Medical Stores, Clinics & Healthcare', icon: 'HeartPulse' },
-  { id: 'beauty', name: 'Salon, Beauty Parlour, Spa & Grooming', icon: 'Scissors' },
-  { id: 'automobiles', name: 'Automobiles, Bike/Car Service, Tyres & Parts', icon: 'Car' },
-  { id: 'realestate', name: 'Real Estate, Property Dealers & Rentals', icon: 'Building' },
-  { id: 'education', name: 'Coaching Institutes, Tutors, Schools & Classes', icon: 'GraduationCap' },
-  { id: 'travels', name: 'Tour, Travels, Taxi & Car Rental Services', icon: 'Navigation' },
-  { id: 'events', name: 'Wedding & Event Planners, Photographers & Studio', icon: 'Camera' },
-  { id: 'fitness', name: 'Gym, Fitness Center, Yoga & Sports Academies', icon: 'Dumbbell' },
-  { id: 'printing', name: 'Printing Press, Flex, Stationery & Book Stores', icon: 'Printer' },
-  { id: 'agriculture', name: 'Krishi Kendra, Seeds, Fertilizers, Dairy & Agro', icon: 'Wheat' },
-  { id: 'construction', name: 'Construction, Contractors, Building Materials', icon: 'HardHat' },
-  { id: 'professional', name: 'CA, Lawyers, Tax Consultants & Digital Services', icon: 'Briefcase' },
-  { id: 'manufacturing', name: 'Wholesale, Manufacturing & Industrial Supplies', icon: 'Factory' },
-  { id: 'services', name: 'Cleaning, Pest Control & Home Maintenance', icon: 'Sparkles' },
-  { id: 'hotel', name: 'Hotel, Lodge, Guest House & Homestay', icon: 'Bed' },
-  { id: 'pets', name: 'Pet Shop, Veterinary Care & Pet Care', icon: 'PawPrint' },
-  { id: 'handicrafts', name: 'Handicrafts, Handloom, Gifts & Novelties', icon: 'Gift' },
-];
+export interface BusinessCategoryItem {
+  id: string;
+  number: number;
+  name: string;
+  icon: string;
+  subCategories: string[];
+}
+
+export const BUSINESS_CATEGORIES: BusinessCategoryItem[] = CATEGORY_TAXONOMY.map((cat, idx) => ({
+  id: cat.id,
+  number: idx + 1,
+  name: cat.name,
+  icon: cat.defaultIcon || 'Store',
+  subCategories: cat.subCategories,
+}));
 
 export const INITIAL_PRICING_PACKAGES: PricingPackage[] = [
   {
@@ -127,7 +116,9 @@ export const INITIAL_SHOPS: Shop[] = [
     vendorPassword: 'RameshKirana@101',
     businessName: 'Lala Ji Mega Kirana & Departmental',
     tagline: '100% Shuddh, Taaza & Sabse Sasta Kirana Store',
-    category: 'Retail & Shopping (Kirana, General & Departmental)',
+    category: 'Retail & Shopping',
+    mainCategory: 'Retail & Shopping',
+    subCategory: 'Kirana Store',
     state: 'Uttar Pradesh',
     city: 'Varanasi',
     address: 'Shop No. 12, Vishwanath Marg, Godowlia Chauraha',
@@ -318,7 +309,9 @@ export const INITIAL_SHOPS: Shop[] = [
     vendorPassword: 'RoyalPoshak@202',
     businessName: 'Royal Rajasthani Poshak & Ethnic Boutique',
     tagline: 'Traditional Rajputi Poshak, Bandhej Sarees & Bridal Lehengas',
-    category: 'Clothing, Fashion & Boutique',
+    category: 'Jewellery & Fashion',
+    mainCategory: 'Jewellery & Fashion',
+    subCategory: 'Boutique',
     state: 'Rajasthan',
     city: 'Jaipur',
     address: 'Shop 44, Johari Bazaar, Pink City',
@@ -453,7 +446,9 @@ export const INITIAL_SHOPS: Shop[] = [
     vendorPassword: 'CityClean@303',
     businessName: 'City Clean Pro Services & Sanitization',
     tagline: 'Ghar, Office & Sofa Deep Cleaning Experts',
-    category: 'Cleaning, Services & Home Maintenance',
+    category: 'Construction & Home Services',
+    mainCategory: 'Construction & Home Services',
+    subCategory: 'Home Renovation',
     state: 'Delhi',
     city: 'New Delhi',
     address: 'Sector 14, Dwarka & South Delhi Service Hub',
@@ -570,7 +565,9 @@ export const INITIAL_SHOPS: Shop[] = [
     vendorPassword: 'SharmaSweets@404',
     businessName: 'Sharma Sweets, Namkeen & Bakery',
     tagline: 'Desi Ghee Jalebi, Kaju Katli & Taaza Samosa',
-    category: 'Restaurants, Sweets & Food Outlets',
+    category: 'Food & Dining',
+    mainCategory: 'Food & Dining',
+    subCategory: 'Sweet Shop',
     state: 'Madhya Pradesh',
     city: 'Indore',
     address: '56 Dukan Street, Chhappan Dukan Market',
@@ -649,7 +646,9 @@ export const INITIAL_SHOPS: Shop[] = [
     vendorPassword: 'MehtaTech@505',
     businessName: 'Mehta Mobile & Electronics Hub',
     tagline: 'Latest Smartphones, Smart TVs & Rapid Repairing',
-    category: 'Electronics & Mobile Repair',
+    category: 'Repair & Maintenance',
+    mainCategory: 'Repair & Maintenance',
+    subCategory: 'Mobile Repair',
     state: 'Maharashtra',
     city: 'Pune',
     address: 'FC Road, Deccan Gymkhana',

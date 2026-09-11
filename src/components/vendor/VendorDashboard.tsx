@@ -67,6 +67,7 @@ import {
 import { Shop, ProductItem, VideoItem, ShopInquiry, ProductType, FloatingButtonsConfig, ShopCategory } from '../../types';
 import { fileToBase64, formatINR, getWhatsAppDirectUrl, getYouTubeEmbedUrl, formatDisplayDate, calculateDaysRemaining, getOneYearExpiryDate } from '../../utils/mediaUpload';
 import { BUSINESS_CATEGORIES } from '../../data/initialData';
+import { getSubCategoriesForMain, findMainCategoryBySubCategory } from '../../data/categoryTaxonomy';
 import { getCategoryImageByName, getAvailableCategoriesForShop, ensureCustomCategoriesSynced } from '../../utils/categoryUtils';
 import { VendorCategoryManager } from './VendorCategoryManager';
 import { SubscriptionInvoiceModal } from '../modals/SubscriptionInvoiceModal';
@@ -3071,21 +3072,62 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Business Category *</label>
-                <select
-                  value={currentShop.category}
-                  onChange={(e) => setCurrentShop({ ...currentShop, category: e.target.value })}
-                  className="w-full px-3.5 py-2 rounded-sm border border-gray-300 text-xs focus:ring-2 focus:ring-orange-500 bg-gray-50/50 font-semibold text-slate-800"
-                >
-                  {BUSINESS_CATEGORIES.map((cat) => (
-                    <option key={cat.id} value={cat.name}>
-                      {cat.name}
-                    </option>
-                  ))}
-                </select>
-                <p className="text-[10px] text-gray-500 mt-1">Aap apni dukaan ka business category kabhi bhi badal sakte hain.</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                    Main Category (1 of 27) *
+                  </label>
+                  <select
+                    value={currentShop.mainCategory || findMainCategoryBySubCategory(currentShop.category)}
+                    onChange={(e) => {
+                      const newMain = e.target.value;
+                      const subs = getSubCategoriesForMain(newMain);
+                      const newSub = subs[0] || '';
+                      setCurrentShop({
+                        ...currentShop,
+                        mainCategory: newMain,
+                        subCategory: newSub,
+                        category: newSub ? `${newMain} - ${newSub}` : newMain,
+                      });
+                    }}
+                    className="w-full px-3.5 py-2 rounded-sm border border-gray-300 text-xs focus:ring-2 focus:ring-orange-500 bg-gray-50/50 font-semibold text-slate-800"
+                  >
+                    {BUSINESS_CATEGORIES.map((cat) => (
+                      <option key={cat.id} value={cat.name}>
+                        #{cat.number} {cat.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                    Sub-Category / Business Specialty *
+                  </label>
+                  <select
+                    value={currentShop.subCategory || ''}
+                    onChange={(e) => {
+                      const newSub = e.target.value;
+                      const activeMain = currentShop.mainCategory || findMainCategoryBySubCategory(currentShop.category);
+                      setCurrentShop({
+                        ...currentShop,
+                        subCategory: newSub,
+                        category: newSub ? `${activeMain} - ${newSub}` : activeMain,
+                      });
+                    }}
+                    className="w-full px-3.5 py-2 rounded-sm border border-gray-300 text-xs focus:ring-2 focus:ring-orange-500 bg-gray-50/50 font-semibold text-slate-800"
+                  >
+                    {getSubCategoriesForMain(currentShop.mainCategory || findMainCategoryBySubCategory(currentShop.category)).map((sub) => (
+                      <option key={sub} value={sub}>
+                        {sub}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
+              <p className="text-[10px] text-gray-500 -mt-2">
+                Aapki 27 Main Category aur Sub-Category ke hisaab se live website ke 19 sections ke titles aur terminology automatically customize hote hain.
+              </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>

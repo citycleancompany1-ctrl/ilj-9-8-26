@@ -45,6 +45,7 @@ import {
 import { Shop, AdvertisementPopup, PricingPackage, TutorialVideo, PlatformLead, PlatformState } from '../../types';
 import { fileToBase64, formatINR, generateShopId, getWhatsAppDirectUrl, getYouTubeEmbedUrl, getYouTubeThumbnail, formatDisplayDate, calculateDaysRemaining, getOneYearExpiryDate } from '../../utils/mediaUpload';
 import { BUSINESS_CATEGORIES } from '../../data/initialData';
+import { getSubCategoriesForMain, findMainCategoryBySubCategory } from '../../data/categoryTaxonomy';
 import { generateSecurePassword, hashPassword } from '../../utils/security';
 import { deleteShopFromFirestore, savePlatformConfigToFirestore, saveShopToFirestore } from '../../services/firebase';
 import { VideoPlayerCard } from '../common/VideoPlayerCard';
@@ -1884,19 +1885,58 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Business Category</label>
-                <select
-                  value={editingShop.category}
-                  onChange={(e) => setEditingShop({ ...editingShop, category: e.target.value })}
-                  className="w-full px-3 py-2 rounded-sm border border-gray-300 text-xs bg-white font-medium"
-                >
-                  {BUSINESS_CATEGORIES.map((cat) => (
-                    <option key={cat.id} value={cat.name}>
-                      {cat.name}
-                    </option>
-                  ))}
-                </select>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                    Main Category (1 of 27)
+                  </label>
+                  <select
+                    value={editingShop.mainCategory || findMainCategoryBySubCategory(editingShop.category)}
+                    onChange={(e) => {
+                      const newMain = e.target.value;
+                      const subs = getSubCategoriesForMain(newMain);
+                      const newSub = subs[0] || '';
+                      setEditingShop({
+                        ...editingShop,
+                        mainCategory: newMain,
+                        subCategory: newSub,
+                        category: newSub ? `${newMain} - ${newSub}` : newMain,
+                      });
+                    }}
+                    className="w-full px-3 py-2 rounded-sm border border-gray-300 text-xs bg-white font-medium"
+                  >
+                    {BUSINESS_CATEGORIES.map((cat) => (
+                      <option key={cat.id} value={cat.name}>
+                        #{cat.number} {cat.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                    Sub-Category
+                  </label>
+                  <select
+                    value={editingShop.subCategory || ''}
+                    onChange={(e) => {
+                      const newSub = e.target.value;
+                      const activeMain = editingShop.mainCategory || findMainCategoryBySubCategory(editingShop.category);
+                      setEditingShop({
+                        ...editingShop,
+                        subCategory: newSub,
+                        category: newSub ? `${activeMain} - ${newSub}` : activeMain,
+                      });
+                    }}
+                    className="w-full px-3 py-2 rounded-sm border border-gray-300 text-xs bg-white font-medium"
+                  >
+                    {getSubCategoriesForMain(editingShop.mainCategory || findMainCategoryBySubCategory(editingShop.category)).map((sub) => (
+                      <option key={sub} value={sub}>
+                        {sub}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               {/* CONNECTED WEBSITE & CUSTOM DOMAIN */}

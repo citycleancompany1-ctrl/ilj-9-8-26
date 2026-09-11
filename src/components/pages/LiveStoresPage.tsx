@@ -35,7 +35,11 @@ export const LiveStoresPage: React.FC<LiveStoresPageProps> = ({
     if (selectedCategory === 'FEATURED') {
       matchesCategory = !!shop.isFeaturedInShowcase;
     } else if (selectedCategory !== 'ALL') {
-      matchesCategory = shop.category.toLowerCase().includes(selectedCategory.toLowerCase());
+      const matchTarget = selectedCategory.toLowerCase().trim();
+      matchesCategory =
+        (shop.mainCategory && shop.mainCategory.toLowerCase().trim() === matchTarget) ||
+        (shop.category && shop.category.toLowerCase().includes(matchTarget)) ||
+        (shop.subCategory && shop.subCategory.toLowerCase().includes(matchTarget));
     }
 
     const query = searchQuery.trim().toLowerCase();
@@ -118,14 +122,14 @@ export const LiveStoresPage: React.FC<LiveStoresPageProps> = ({
           {BUSINESS_CATEGORIES.map((cat) => (
             <button
               key={cat.id}
-              onClick={() => setSelectedCategory(cat.name.split(' ')[0])}
-              className={`px-3 py-1.5 rounded-sm text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all ${
-                selectedCategory === cat.name.split(' ')[0]
+              onClick={() => setSelectedCategory(cat.name)}
+              className={`px-3 py-1.5 rounded-sm text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all cursor-pointer ${
+                selectedCategory === cat.name
                   ? 'bg-orange-600 text-white shadow-xs'
                   : 'bg-gray-100 text-slate-700 hover:bg-gray-200'
               }`}
             >
-              {cat.name.split(' ')[0]}
+              #{cat.number} {cat.name}
             </button>
           ))}
         </div>

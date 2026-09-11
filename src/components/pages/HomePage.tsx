@@ -689,6 +689,21 @@ export const HomePage: React.FC<HomePageProps> = ({
                 <h3 className="text-base font-bold text-slate-900 leading-snug">
                   {cat.name}
                 </h3>
+
+                {cat.subCategories && cat.subCategories.length > 0 && (
+                  <div className="flex flex-wrap gap-1 pt-1">
+                    {cat.subCategories.slice(0, 3).map((sub) => (
+                      <span key={sub} className="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-medium">
+                        {sub}
+                      </span>
+                    ))}
+                    {cat.subCategories.length > 3 && (
+                      <span className="text-[10px] text-orange-600 font-bold self-center">
+                        +{cat.subCategories.length - 3} more
+                      </span>
+                    )}
+                  </div>
+                )}
                 
                 <p className="text-xs text-gray-500 leading-relaxed">
                   Includes tailored product cards, category filters, WhatsApp cart strip, UPI payment popup, and location map.
