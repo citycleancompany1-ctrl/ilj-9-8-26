@@ -2037,7 +2037,11 @@ function renderSectionEditor(
           category: { ...(prev.category || data), ...patch },
         }));
       };
-      const availableCategories = getAvailableCategoriesForShop(shop);
+      const availableCategories = [
+        ...getAvailableCategoriesForShop(shop.customCategories || [], shop.products || [], 'PRODUCT'),
+        ...getAvailableCategoriesForShop(shop.customCategories || [], shop.products || [], 'SERVICE'),
+        ...getAvailableCategoriesForShop(shop.customCategories || [], shop.products || [], 'COURSE'),
+      ].filter((cat, idx, arr) => arr.findIndex((c) => c.name.toLowerCase() === cat.name.toLowerCase()) === idx);
 
       return (
         <div className="space-y-5">
@@ -2086,10 +2090,10 @@ function renderSectionEditor(
             <div className="flex flex-wrap gap-2 pt-1">
               {availableCategories.map((cat, i) => (
                 <span
-                  key={i}
+                  key={cat.id || i}
                   className="px-2.5 py-1 bg-white border border-gray-200 rounded-full text-xs font-medium text-slate-700 shadow-2xs"
                 >
-                  {cat}
+                  {cat.name}
                 </span>
               ))}
               {availableCategories.length === 0 && (
