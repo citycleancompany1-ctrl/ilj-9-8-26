@@ -802,6 +802,300 @@ SPECIALIZED_TERMINOLOGY_REGISTRY['law firm'] = SPECIALIZED_TERMINOLOGY_REGISTRY[
 SPECIALIZED_TERMINOLOGY_REGISTRY['property dealer'] = SPECIALIZED_TERMINOLOGY_REGISTRY['real estate agency'];
 
 /**
+ * Standard dynamic terminology profiles for all 27 platform Main Categories
+ */
+export const MAIN_CATEGORY_TERMINOLOGY_MAP: Record<string, Partial<CategoryTerminology>> = {
+  'education': {
+    mainCategory: 'Education',
+    entityName: 'Educational Institute',
+    entityTypeLabel: 'Educational Institution',
+    ctaButtonText: 'Apply for Admission',
+    inquiryHeading: 'Admissions & Academic Inquiry',
+    inquirySubtitle: 'Connect directly with our administration office for admissions, courses, and guidance.',
+    inquiryItemLabel: 'Program / Class Required',
+    searchPlaceholder: 'Search programs, classes or campus facilities...',
+    viewAllCatalogLabel: 'Explore All Programs & Classes',
+    cartBadgeLabel: 'Admissions Desk',
+    catalogTabName: 'Programs & Classes',
+    servicesTabName: 'Campus Facilities',
+    coursesTabName: 'Academic Programs',
+    sections: {
+      heroBanner: { name: 'Hero Banner', defaultHeading: 'Welcome to Our Campus', actionLabel: 'Explore' },
+      hero: { name: 'Hero Section', defaultHeading: 'Empowering Future Leaders with Quality Education', actionLabel: 'Apply Now' },
+      about: { name: 'About Institute', defaultHeading: 'About Our Educational Institute', defaultSubtitle: 'Nurturing excellence, knowledge, and character.' },
+      features: { name: 'Why Choose Our Institute', defaultHeading: 'Why Choose Our Institute', defaultSubtitle: 'Key highlights that set our academic standards apart.' },
+      category: { name: 'Classes & Streams', defaultHeading: 'Academic Streams & Levels', defaultSubtitle: 'Explore learning stages from primary to advanced.' },
+      services: { name: 'Campus Facilities', defaultHeading: 'Modern Campus & Infrastructure Facilities', defaultSubtitle: 'State-of-the-art labs, library, sports, and safe transport.' },
+      products: { name: 'Courses & Programs', defaultHeading: 'Our Academic Programs & Batches', defaultSubtitle: 'Comprehensive curriculums designed for holistic success.' },
+      courses: { name: 'Special Programs', defaultHeading: 'Enrichment Courses & Competitive Batches', defaultSubtitle: 'Advanced coaching, competitive exams & skill workshops.' },
+      videos: { name: 'Campus Videos', defaultHeading: 'Campus Tour & Student Life', defaultSubtitle: 'Watch our classrooms, events, and student activities.' },
+      offers: { name: 'Admissions & Scholarships', defaultHeading: 'Admissions Open & Meritorious Scholarships', defaultSubtitle: 'Explore early enrollment benefits and scholarship quotas.' },
+      gallery: { name: 'Campus Gallery', defaultHeading: 'Campus & Activity Photo Gallery', defaultSubtitle: 'Glimpses of academic milestones, cultural festivals & sports.' },
+      portfolio: { name: 'Achievements', defaultHeading: 'Academic & Co-Curricular Achievements', defaultSubtitle: 'Our proud record of board toppers and competition winners.' },
+      team: { name: 'Faculty & Staff', defaultHeading: 'Distinguished Faculty & Mentors', defaultSubtitle: 'Passionate educators dedicated to student growth.' },
+      faq: { name: 'Student & Parent FAQs', defaultHeading: 'Frequently Asked Questions', defaultSubtitle: 'Answers regarding admissions, syllabus, timings, and fees.' },
+      cta: { name: 'Apply for Admission', defaultHeading: 'Admissions Open for New Academic Session', defaultSubtitle: 'Secure your child’s future with exceptional education.', actionLabel: 'Apply for Admission' },
+      contact: { name: 'Contact Admissions Office', defaultHeading: 'Contact Our Admissions Desk', defaultSubtitle: 'Reach out for prospectus, campus visits, and seat inquiries.', actionLabel: 'Submit Inquiry' },
+      socialMedia: { name: 'Social Media', defaultHeading: 'Connect on Social Media', defaultSubtitle: 'Stay updated with campus life and live notices.' },
+      blog: { name: 'Institute News', defaultHeading: 'Campus News, Circulars & Announcements', defaultSubtitle: 'Latest event notices, examination schedules, and student blogs.' },
+      footer: { name: 'Footer', defaultHeading: 'All Rights Reserved' },
+    },
+  },
+  'healthcare': {
+    mainCategory: 'Healthcare',
+    entityName: 'Healthcare Centre',
+    entityTypeLabel: 'Medical & Healthcare Clinic',
+    ctaButtonText: 'Book Appointment',
+    inquiryHeading: 'Patient Inquiry & Consultation',
+    inquirySubtitle: 'Connect directly with medical specialists for appointments and clinical advice.',
+    inquiryItemLabel: 'Specialty / Treatment Required',
+    searchPlaceholder: 'Search treatments, consultations or tests...',
+    viewAllCatalogLabel: 'Explore All Treatments',
+    cartBadgeLabel: 'Consultation Desk',
+    catalogTabName: 'Treatments & Packages',
+    servicesTabName: 'Consultations',
+    coursesTabName: 'Preventive Care',
+    sections: {
+      heroBanner: { name: 'Hero Banner', defaultHeading: 'Compassionate Healthcare Care', actionLabel: 'Book Appointment' },
+      hero: { name: 'Hero Section', defaultHeading: 'Advanced Medical Care & Patient Wellbeing', actionLabel: 'Consult Doctor' },
+      about: { name: 'About Clinic / Hospital', defaultHeading: 'About Our Healthcare Centre', defaultSubtitle: 'Dedicated to ethical, transparent, and evidence-based medicine.' },
+      features: { name: 'Why Consult Our Healthcare', defaultHeading: 'Why Choose Our Healthcare Centre', defaultSubtitle: 'Modern diagnostic equipment, hygiene protocols, and trusted doctors.' },
+      category: { name: 'Medical Specialties', defaultHeading: 'Clinical Specialties & Departments', defaultSubtitle: 'Comprehensive healthcare across major medical fields.' },
+      services: { name: 'Clinic Facilities & Diagnostics', defaultHeading: 'Diagnostic & Clinical Facilities', defaultSubtitle: 'In-house laboratory, emergency support, and daycare wards.' },
+      products: { name: 'Treatments & Consultations', defaultHeading: 'Medical Consultations & Treatments', defaultSubtitle: 'Transparent treatment packages and verified specialist care.' },
+      courses: { name: 'Health Checkup Packages', defaultHeading: 'Preventive Full-Body Health Checkups', defaultSubtitle: 'Routine wellness screening plans for every age group.' },
+      videos: { name: 'Medical Guidance Videos', defaultHeading: 'Doctor Insights & Health Guidance', defaultSubtitle: 'Informative videos on wellness, therapies, and post-op care.' },
+      offers: { name: 'Health Offers & Checkup Deals', defaultHeading: 'Seasonal Health Screening Offers', defaultSubtitle: 'Subsidized checkup camps and wellness packages.' },
+      gallery: { name: 'Hospital & Clinic Gallery', defaultHeading: 'Clinic Infrastructure & Facilities', defaultSubtitle: 'Clean, sanitized consultation suites and modern diagnostic labs.' },
+      portfolio: { name: 'Patient Recovery Stories', defaultHeading: 'Patient Recovery & Clinical Milestones', defaultSubtitle: 'Inspiring stories of healing, rehabilitation, and care.' },
+      team: { name: 'Doctors & Medical Staff', defaultHeading: 'Our Specialist Doctors & Care Team', defaultSubtitle: 'Certified doctors, nursing staff, and medical counselors.' },
+      faq: { name: 'Patient FAQs', defaultHeading: 'Patient FAQs & General Information', defaultSubtitle: 'Common questions on appointments, insurance, and reports.' },
+      cta: { name: 'Book Appointment', defaultHeading: 'Book Your Specialist Consultation Today', defaultSubtitle: 'Prioritize your health with immediate appointment booking.', actionLabel: 'Book Appointment' },
+      contact: { name: 'Contact Clinic & Emergency', defaultHeading: 'Contact Our Medical Reception', defaultSubtitle: 'Call our emergency desk or visit our clinic directly.', actionLabel: 'Send Inquiry' },
+      socialMedia: { name: 'Social Media', defaultHeading: 'Follow for Health Advice', defaultSubtitle: 'Daily health tips, wellness reminders, and doctor videos.' },
+      blog: { name: 'Health Tips & Articles', defaultHeading: 'Medical Articles & Health Insights', defaultSubtitle: 'Verified health advisories written by medical practitioners.' },
+      footer: { name: 'Footer', defaultHeading: 'All Rights Reserved' },
+    },
+  },
+  'beauty_wellness': {
+    mainCategory: 'Beauty & Wellness',
+    entityName: 'Salon & Spa',
+    entityTypeLabel: 'Beauty Salon & Wellness Studio',
+    ctaButtonText: 'Book Salon Appointment',
+    inquiryHeading: 'Appointment & Bridal Booking',
+    inquirySubtitle: 'Connect directly with our hair stylists and beauticians.',
+    inquiryItemLabel: 'Service / Treatment Required',
+    searchPlaceholder: 'Search hair, skin, bridal or spa treatments...',
+    viewAllCatalogLabel: 'Explore All Salon Services',
+    cartBadgeLabel: 'Salon Bookings',
+    catalogTabName: 'Beauty Services',
+    servicesTabName: 'Salon Treatments',
+    coursesTabName: 'Bridal & Packages',
+    sections: {
+      heroBanner: { name: 'Hero Banner', defaultHeading: 'Luxury Beauty & Wellness', actionLabel: 'Book Appointment' },
+      hero: { name: 'Hero Section', defaultHeading: 'Reinvent Your Look with Expert Stylists', actionLabel: 'Explore Services' },
+      about: { name: 'About Salon & Spa', defaultHeading: 'About Our Beauty Studio & Spa', defaultSubtitle: 'Premium grooming, luxury hair therapies, and revitalizing spa rituals.' },
+      features: { name: 'Why Choose Our Salon', defaultHeading: 'Why Clients Love Our Salon', defaultSubtitle: 'Top international brands, certified hair artists, and relaxing ambience.' },
+      category: { name: 'Beauty Categories', defaultHeading: 'Service Categories & Packages', defaultSubtitle: 'Hair styling, facials, skin rejuvenation, manicures & spa.' },
+      services: { name: 'Salon & Spa Treatments', defaultHeading: 'Signature Salon & Spa Treatments', defaultSubtitle: 'Keratin, botox hair treatments, hydra facials, and massages.' },
+      products: { name: 'Beauty & Grooming Services', defaultHeading: 'Hair, Skin & Makeup Services', defaultSubtitle: 'Complete pricing catalogue for all your beauty essentials.' },
+      courses: { name: 'Bridal & Styling Packages', defaultHeading: 'Bridal Makeovers & Pre-Bridal Packages', defaultSubtitle: 'Turnkey bridal makeup, groom packages, and party glam.' },
+      videos: { name: 'Makeover Videos', defaultHeading: 'Makeover Transformations & Demos', defaultSubtitle: 'Watch before-and-after bridal looks and hairstyle trends.' },
+      offers: { name: 'Salon Deals & Festive Offers', defaultHeading: 'Festive Beauty Deals & Combo Discounts', defaultSubtitle: 'Exclusive savings on hair care, facials, and mani-pedi combos.' },
+      gallery: { name: 'Makeover Gallery', defaultHeading: 'Styling & Makeover Portfolio', defaultSubtitle: 'Stunning real brides, party makeovers, and creative hair colors.' },
+      portfolio: { name: 'Bridal Transformations', defaultHeading: 'Bridal Transformations & Client Looks', defaultSubtitle: 'Our proudest bridal and fashion styling showcases.' },
+      team: { name: 'Stylists & Beauticians', defaultHeading: 'Our Master Stylists & Makeup Artists', defaultSubtitle: 'Industry-trained cosmetic experts and bridal specialists.' },
+      faq: { name: 'Salon FAQs', defaultHeading: 'Frequently Asked Questions', defaultSubtitle: 'Answers about hair chemicals, bridal bookings, and walk-in policies.' },
+      cta: { name: 'Book Salon Appointment', defaultHeading: 'Ready for Your Next Glam Makeover?', defaultSubtitle: 'Reserve your appointment slot with our senior stylists now.', actionLabel: 'Book Salon Appointment' },
+      contact: { name: 'Contact Salon', defaultHeading: 'Contact Our Salon Reception', defaultSubtitle: 'Call or WhatsApp us for instant appointment confirmation.', actionLabel: 'Book Appointment' },
+      socialMedia: { name: 'Social Media', defaultHeading: 'Follow on Instagram & Social', defaultSubtitle: 'Check out daily client stories, reels, and styling inspirations.' },
+      blog: { name: 'Beauty & Hair Care Tips', defaultHeading: 'Hair & Skincare Advice', defaultSubtitle: 'Expert beauty tips, home remedies, and post-salon care guides.' },
+      footer: { name: 'Footer', defaultHeading: 'All Rights Reserved' },
+    },
+  },
+  'food_dining': {
+    mainCategory: 'Food & Dining',
+    entityName: 'Restaurant',
+    entityTypeLabel: 'Restaurant & Dining Outlet',
+    ctaButtonText: 'Reserve Table / Order Now',
+    inquiryHeading: 'Table Reservation & Party Catering',
+    inquirySubtitle: 'Connect directly with our manager for table bookings or bulk party catering.',
+    inquiryItemLabel: 'Dish / Catering Requirement',
+    searchPlaceholder: 'Search dishes, cuisines or beverages...',
+    viewAllCatalogLabel: 'Explore Full Food Menu',
+    cartBadgeLabel: 'My Order',
+    catalogTabName: 'Food Menu',
+    servicesTabName: 'Catering & Dining',
+    coursesTabName: 'Chef Specials & Combos',
+    sections: {
+      heroBanner: { name: 'Hero Banner', defaultHeading: 'Delicious Fresh Flavours', actionLabel: 'View Menu' },
+      hero: { name: 'Hero Section', defaultHeading: 'Authentic Cuisines & Memorable Dining', actionLabel: 'Order Food' },
+      about: { name: 'About Restaurant', defaultHeading: 'About Our Culinary Journey', defaultSubtitle: 'Fresh authentic ingredients, passionate chefs, and warm hospitality.' },
+      features: { name: 'Why Dine With Us', defaultHeading: 'Why Guests Love Dining With Us', defaultSubtitle: 'Hygienic kitchen, zero-preservative recipes, and quick delivery.' },
+      category: { name: 'Menu Categories', defaultHeading: 'Explore Menu by Category', defaultSubtitle: 'Starters, main courses, tandoor specials, biryanis & desserts.' },
+      services: { name: 'Dining & Party Catering', defaultHeading: 'Party Catering & Bulk Orders', defaultSubtitle: 'Outdoor catering, birthday party halls, and office lunch boxes.' },
+      products: { name: 'Food Menu & Dishes', defaultHeading: 'Our Handcrafted Food Menu', defaultSubtitle: 'Authentic dishes prepared fresh upon your order.' },
+      courses: { name: 'Chef Specials & Combos', defaultHeading: 'Chef Specials & Family Meals', defaultSubtitle: 'Value family combos, executive platters, and seasonal treats.' },
+      videos: { name: 'Kitchen & Food Videos', defaultHeading: 'Kitchen Behind-the-Scenes & Recipes', defaultSubtitle: 'Watch our chefs in action crafting mouth-watering delights.' },
+      offers: { name: 'Today’s Deals & Offers', defaultHeading: 'Today’s Special Deals & Discounts', defaultSubtitle: 'Special WhatsApp direct discount codes and complimentary drinks.' },
+      gallery: { name: 'Food & Ambience Gallery', defaultHeading: 'Food & Restaurant Ambience', defaultSubtitle: 'Mouthwatering dishes, welcoming interiors, and family dining spaces.' },
+      portfolio: { name: 'Culinary Awards & Press', defaultHeading: 'Culinary Awards & Recognition', defaultSubtitle: 'Honored by food critics, dining portals, and happy patrons.' },
+      team: { name: 'Master Chefs & Team', defaultHeading: 'Our Master Chefs & Kitchen Team', defaultSubtitle: 'Culinary maestros who bring authentic taste to your plate.' },
+      faq: { name: 'Dining & Delivery FAQs', defaultHeading: 'Frequently Asked Questions', defaultSubtitle: 'Delivery radii, table reservations, Jain food options & allergens.' },
+      cta: { name: 'Reserve Table / Order Now', defaultHeading: 'Hungry? Indulge in Exquisite Flavours', defaultSubtitle: 'Order online for instant doorstep delivery or book your table.', actionLabel: 'Order on WhatsApp' },
+      contact: { name: 'Contact & Location', defaultHeading: 'Visit or Contact Our Restaurant', defaultSubtitle: 'Find our location, operational hours, and direct call desk.', actionLabel: 'Send Inquiry' },
+      socialMedia: { name: 'Social Media', defaultHeading: 'Follow Our Food Journey', defaultSubtitle: 'Tag us in your food photos and stay updated on weekend specials.' },
+      blog: { name: 'Food Stories & Recipes', defaultHeading: 'Culinary Stories & Chef Notes', defaultSubtitle: 'Secrets behind traditional recipes, spice blends & dining culture.' },
+      footer: { name: 'Footer', defaultHeading: 'All Rights Reserved' },
+    },
+  },
+  'retail_shopping': {
+    mainCategory: 'Retail & Shopping',
+    entityName: 'Store',
+    entityTypeLabel: 'Retail Store & Merchant',
+    ctaButtonText: 'Order on WhatsApp',
+    inquiryHeading: 'Direct Store Inquiry',
+    inquirySubtitle: 'Connect directly with store owner for prices, availability, and delivery.',
+    inquiryItemLabel: 'Product / Item Required',
+    searchPlaceholder: 'Search products, brands or items...',
+    viewAllCatalogLabel: 'Explore All Products',
+    cartBadgeLabel: 'My Order',
+    catalogTabName: 'Products',
+    servicesTabName: 'Store Services',
+    coursesTabName: 'Combos & Packs',
+    sections: {
+      heroBanner: { name: 'Hero Banner', defaultHeading: 'Verified Local Store', actionLabel: 'Shop Now' },
+      hero: { name: 'Hero Section', defaultHeading: 'Genuine Quality Products at Local Store Prices', actionLabel: 'Explore Products' },
+      about: { name: 'About Our Store', defaultHeading: 'About Our Store', defaultSubtitle: 'Your trusted neighborhood merchant delivering quality and savings.' },
+      features: { name: 'Why Shop With Us', defaultHeading: 'Why Shop With Us', defaultSubtitle: '100% authentic merchandise, fast doorstep delivery, and direct owner support.' },
+      category: { name: 'Product Categories', defaultHeading: 'Browse by Product Category', defaultSubtitle: 'Discover curated collections suited to your daily needs.' },
+      services: { name: 'Store Services & Delivery', defaultHeading: 'Store Services & Doorstep Delivery', defaultSubtitle: 'Express local delivery, easy replacement, and wholesale supply.' },
+      products: { name: 'Products Catalogue', defaultHeading: 'Our Products Catalogue', defaultSubtitle: 'Explore our complete in-stock inventory with transparent prices.' },
+      courses: { name: 'Value Packs & Combos', defaultHeading: 'Value Packs & Special Bundles', defaultSubtitle: 'Save more when you order curated combos and wholesale packs.' },
+      videos: { name: 'Product Demo Videos', defaultHeading: 'Product Demos & Unboxing', defaultSubtitle: 'Watch real demonstrations of our top-selling merchandise.' },
+      offers: { name: 'Offers & Seasonal Deals', defaultHeading: 'Promotional Offers & Festive Deals', defaultSubtitle: 'Special savings, limited period discounts, and festive perks.' },
+      gallery: { name: 'Store & Products Gallery', defaultHeading: 'Store & Inventory Gallery', defaultSubtitle: 'Take a look inside our retail outlet and product shelves.' },
+      portfolio: { name: 'Customer Showcase', defaultHeading: 'Customer Showcase & Testimonials', defaultSubtitle: 'Happy local shoppers enjoying direct savings and swift delivery.' },
+      team: { name: 'Store Team & Support', defaultHeading: 'Our Store Staff & Support', defaultSubtitle: 'Dedicated associates ready to assist your shopping experience.' },
+      faq: { name: 'Shopping FAQs', defaultHeading: 'Frequently Asked Questions', defaultSubtitle: 'Payment modes, return policies, delivery zones, and warranty.' },
+      cta: { name: 'Order on WhatsApp', defaultHeading: 'Shop Directly with 1-Click WhatsApp Ordering', defaultSubtitle: 'Skip intermediaries and order genuine products right away.', actionLabel: 'Order on WhatsApp' },
+      contact: { name: 'Contact Store', defaultHeading: 'Contact Store Coordinates', defaultSubtitle: 'Call, visit, or chat on WhatsApp for immediate assistance.', actionLabel: 'Send Inquiry' },
+      socialMedia: { name: 'Social Media', defaultHeading: 'Follow Our Store Updates', defaultSubtitle: 'Stay in the loop with fresh arrivals and weekend discount flash sales.' },
+      blog: { name: 'Store News & Updates', defaultHeading: 'Shopping Guides & New Arrivals', defaultSubtitle: 'Buying recommendations, new product announcements & maintenance tips.' },
+      footer: { name: 'Footer', defaultHeading: 'All Rights Reserved' },
+    },
+  },
+  'repair_maintenance': {
+    mainCategory: 'Repair & Maintenance',
+    entityName: 'Service Centre',
+    entityTypeLabel: 'Repair & Service Workshop',
+    ctaButtonText: 'Book Repair Service',
+    inquiryHeading: 'Service & Repair Inquiry',
+    inquirySubtitle: 'Connect directly with certified technicians for quotes and doorstep visits.',
+    inquiryItemLabel: 'Device / Issue Description',
+    searchPlaceholder: 'Search repairs, issues or spare parts...',
+    viewAllCatalogLabel: 'Explore All Repair Services',
+    cartBadgeLabel: 'Service Requests',
+    catalogTabName: 'Repair Services',
+    servicesTabName: 'Diagnostic & Repairs',
+    coursesTabName: 'Maintenance Packages',
+    sections: {
+      heroBanner: { name: 'Hero Banner', defaultHeading: 'Expert Repair Services', actionLabel: 'Book Repair' },
+      hero: { name: 'Hero Section', defaultHeading: 'Fast, Reliable Repairs with Genuine Spare Parts', actionLabel: 'Book Inspection' },
+      about: { name: 'About Service Centre', defaultHeading: 'About Our Service Centre', defaultSubtitle: 'Certified technicians providing guaranteed diagnosis and precision repairs.' },
+      features: { name: 'Why Choose Our Technicians', defaultHeading: 'Why Choose Our Service Centre', defaultSubtitle: 'Transparent pricing, 90-day service warranty, and quick turnaround.' },
+      category: { name: 'Repair Categories & Devices', defaultHeading: 'Repair Categories & Supported Brands', defaultSubtitle: 'Smartphones, laptops, home appliances, electricals, and AC systems.' },
+      services: { name: 'Doorstep & In-Shop Services', defaultHeading: 'Doorstep Visit & Workshop Services', defaultSubtitle: 'On-site technician visit or drop off at our equipped workshop.' },
+      products: { name: 'Repair Services & Solutions', defaultHeading: 'Our Repair Solutions & Rate Card', defaultSubtitle: 'Clear, competitive pricing for standard troubleshooting and parts.' },
+      courses: { name: 'Maintenance Packages', defaultHeading: 'Preventive Annual Maintenance Plans', defaultSubtitle: 'Keep your equipment running smoothly with scheduled servicing.' },
+      videos: { name: 'Repair Demo Videos', defaultHeading: 'Repair Walkthroughs & Tech Tips', defaultSubtitle: 'Watch our skilled technicians troubleshoot common hardware issues.' },
+      offers: { name: 'Repair Discounts & Deals', defaultHeading: 'Service Offers & Free Diagnostic Check', defaultSubtitle: 'Discount vouchers on major part replacements and servicing.' },
+      gallery: { name: 'Workshop Gallery', defaultHeading: 'Workshop & Diagnostic Bench', defaultSubtitle: 'Modern soldering, testing tools, and clean repair environments.' },
+      portfolio: { name: 'Restored Devices Showcase', defaultHeading: 'Restored Equipment & Successful Repairs', defaultSubtitle: 'Before and after restoration of damaged devices and appliances.' },
+      team: { name: 'Certified Technicians', defaultHeading: 'Our Certified Technicians & Engineers', defaultSubtitle: 'Experienced repair specialists trained across leading manufacturers.' },
+      faq: { name: 'Repair FAQs', defaultHeading: 'Frequently Asked Questions', defaultSubtitle: 'Warranty coverage, repair turnaround times, and backup advice.' },
+      cta: { name: 'Book Repair Service', defaultHeading: 'Facing a Hardware or Appliance Breakdown?', defaultSubtitle: 'Schedule an immediate technician visit or visit our workshop.', actionLabel: 'Book Repair Service' },
+      contact: { name: 'Contact Service Centre', defaultHeading: 'Contact Our Service Desk', defaultSubtitle: 'Call for immediate breakdown emergency or schedule a repair.', actionLabel: 'Submit Repair Request' },
+      socialMedia: { name: 'Social Media', defaultHeading: 'Follow Our Tech Desk', defaultSubtitle: 'Helpful troubleshooting tips and equipment care updates.' },
+      blog: { name: 'Device Care Tips', defaultHeading: 'Maintenance Guides & Tech Tips', defaultSubtitle: 'Practical tips to extend the lifespan of your gadgets and appliances.' },
+      footer: { name: 'Footer', defaultHeading: 'All Rights Reserved' },
+    },
+  },
+  'fitness_sports': {
+    mainCategory: 'Fitness & Sports',
+    entityName: 'Fitness Club',
+    entityTypeLabel: 'Gym & Fitness Centre',
+    ctaButtonText: 'Claim Free Trial Pass',
+    inquiryHeading: 'Membership & Personal Training Inquiry',
+    inquirySubtitle: 'Connect with our head coaches for batch timings, memberships, and trial sessions.',
+    inquiryItemLabel: 'Goal / Membership Plan',
+    searchPlaceholder: 'Search workouts, plans or equipment...',
+    viewAllCatalogLabel: 'Explore All Membership Plans',
+    cartBadgeLabel: 'Gym Memberships',
+    catalogTabName: 'Memberships & Plans',
+    servicesTabName: 'Personal Training',
+    coursesTabName: 'Fitness Workshops',
+    sections: {
+      heroBanner: { name: 'Hero Banner', defaultHeading: 'Transform Your Fitness', actionLabel: 'Join Now' },
+      hero: { name: 'Hero Section', defaultHeading: 'Crush Your Goals with State-of-the-Art Training', actionLabel: 'Start Free Trial' },
+      about: { name: 'About Our Gym / Club', defaultHeading: 'About Our Fitness Centre', defaultSubtitle: 'Passionate trainers, top-tier equipment, and an encouraging community.' },
+      features: { name: 'Why Train With Us', defaultHeading: 'Why Athletes & Members Choose Us', defaultSubtitle: 'Certified coaches, personalized diet plans, and clean hygienic facilities.' },
+      category: { name: 'Training Zones & Programs', defaultHeading: 'Training Zones & Fitness Disciplines', defaultSubtitle: 'Strength training, cardio, CrossFit, HIIT, yoga & zumba.' },
+      services: { name: 'Personal Training & Facilities', defaultHeading: 'Personal Training & Nutrition Guidance', defaultSubtitle: '1-on-1 coaching, body composition analysis, and custom diet regimes.' },
+      products: { name: 'Memberships & Workout Plans', defaultHeading: 'Membership Plans & Packages', defaultSubtitle: 'Flexible monthly, quarterly, and annual subscription memberships.' },
+      courses: { name: 'Fitness Bootcamps & Workshops', defaultHeading: 'Bootcamps, Calisthenics & Workshops', defaultSubtitle: 'Special weekend weight loss camps and strength clinics.' },
+      videos: { name: 'Workout Demos & Reels', defaultHeading: 'Workout Demos & Member Highlights', defaultSubtitle: 'Watch proper exercise forms, intensity routines & gym tours.' },
+      offers: { name: 'Membership Offers & Free Trial Pass', defaultHeading: 'Special Membership Offers & Free Pass', defaultSubtitle: 'Claim a complimentary 1-day workout pass or festive joining discount.' },
+      gallery: { name: 'Gym & Equipment Gallery', defaultHeading: 'Gym Floor & Workout Gallery', defaultSubtitle: 'Heavy weights, cardio line, turf area, and modern locker rooms.' },
+      portfolio: { name: 'Member Transformations', defaultHeading: 'Inspiring Member Transformations', defaultSubtitle: 'Real before-and-after fat loss and muscle gain results.' },
+      team: { name: 'Certified Trainers & Coaches', defaultHeading: 'Our Certified Fitness Coaches', defaultSubtitle: 'National certified trainers, nutritionists, and wellness mentors.' },
+      faq: { name: 'Gym FAQs', defaultHeading: 'Frequently Asked Questions', defaultSubtitle: 'Timings, personal trainer fees, locker access, and guest passes.' },
+      cta: { name: 'Claim Free Trial Pass', defaultHeading: 'Ready to Start Your Fitness Journey?', defaultSubtitle: 'Claim your complimentary 1-day workout trial pass today.', actionLabel: 'Claim Free Trial Pass' },
+      contact: { name: 'Contact Gym & Visit Us', defaultHeading: 'Contact Gym Front Desk', defaultSubtitle: 'Drop by for a campus tour or call for membership inquiry.', actionLabel: 'Send Inquiry' },
+      socialMedia: { name: 'Social Media', defaultHeading: 'Join Our Fitness Community', defaultSubtitle: 'Daily workout motivation, member shoutouts, and nutrition tips.' },
+      blog: { name: 'Fitness & Nutrition Blog', defaultHeading: 'Workout Tips & Diet Guidance', defaultSubtitle: 'Evidence-based articles on meal prep, fat loss & workout recovery.' },
+      footer: { name: 'Footer', defaultHeading: 'All Rights Reserved' },
+    },
+  },
+  'real_estate': {
+    mainCategory: 'Real Estate',
+    entityName: 'Real Estate Agency',
+    entityTypeLabel: 'Real Estate Consultant & Property Advisory',
+    ctaButtonText: 'Book Site Visit / Enquire',
+    inquiryHeading: 'Property Inquiry & Site Visit',
+    inquirySubtitle: 'Connect directly with verified property advisors for site tours and price sheets.',
+    inquiryItemLabel: 'Property Type / Budget / Locality',
+    searchPlaceholder: 'Search residential, commercial or plots...',
+    viewAllCatalogLabel: 'Explore All Properties',
+    cartBadgeLabel: 'Saved Properties',
+    catalogTabName: 'Properties Catalogue',
+    servicesTabName: 'Real Estate Advisory',
+    coursesTabName: 'Investment Schemes',
+    sections: {
+      heroBanner: { name: 'Hero Banner', defaultHeading: 'Find Your Dream Property', actionLabel: 'Browse Properties' },
+      hero: { name: 'Hero Section', defaultHeading: 'Verified Properties & Transparent Real Estate Advisory', actionLabel: 'Explore Listings' },
+      about: { name: 'About Our Agency', defaultHeading: 'About Our Real Estate Advisory', defaultSubtitle: 'Trusted property consultants delivering verified title deeds and prime locations.' },
+      features: { name: 'Why Choose Our Agency', defaultHeading: 'Why Homebuyers & Investors Trust Us', defaultSubtitle: 'RERA compliance, zero brokerage on select projects, and end-to-end registry assistance.' },
+      category: { name: 'Property Types & Localities', defaultHeading: 'Explore by Property Type', defaultSubtitle: 'Luxury apartments, independent villas, commercial shops & prime plots.' },
+      services: { name: 'Real Estate Services', defaultHeading: 'Comprehensive Property Services', defaultSubtitle: 'Home loan facilitation, legal verification, registry, and property valuation.' },
+      products: { name: 'Featured Properties', defaultHeading: 'Featured Properties for Sale & Rent', defaultSubtitle: 'Curated residential and commercial listings ready for possession.' },
+      courses: { name: 'Investment Schemes', defaultHeading: 'Pre-Leased & High-ROI Investment Schemes', defaultSubtitle: 'Commercial retail spaces and assured return schemes.' },
+      videos: { name: 'Property Tour Videos', defaultHeading: 'Sample Flat & Site Walkthrough Videos', defaultSubtitle: 'Take a virtual walkthrough of model flats and site master plans.' },
+      offers: { name: 'Pre-Launch & Booking Deals', defaultHeading: 'Exclusive Pre-Launch Deals & Spot Discounts', defaultSubtitle: 'Limited-period developer discounts, modular kitchen inclusions & flexible payment plans.' },
+      gallery: { name: 'Project & Site Gallery', defaultHeading: 'Project & Elevation Gallery', defaultSubtitle: 'Actual site photographs, amenities, clubhouse, and modern facades.' },
+      portfolio: { name: 'Delivered Projects', defaultHeading: 'Successfully Handed-Over Projects', defaultSubtitle: 'Track record of delivered residential complexes and commercial hubs.' },
+      team: { name: 'Property Advisors', defaultHeading: 'Our Senior Property Consultants', defaultSubtitle: 'Experienced advisors with deep insights into local micro-markets.' },
+      faq: { name: 'Property Buyer FAQs', defaultHeading: 'Frequently Asked Questions', defaultSubtitle: 'RERA verification, home loan eligibility, stamp duty, and possession dates.' },
+      cta: { name: 'Schedule Site Visit', defaultHeading: 'Found a Property You Like?', defaultSubtitle: 'Book a free chauffeur-driven site visit or speak to our advisory team.', actionLabel: 'Schedule Site Visit' },
+      contact: { name: 'Contact Sales Office', defaultHeading: 'Contact Our Property Desk', defaultSubtitle: 'Call or visit our sales gallery for detailed brochures and master plans.', actionLabel: 'Book Site Visit' },
+      socialMedia: { name: 'Social Media', defaultHeading: 'Follow for New Project Launches', defaultSubtitle: 'Stay ahead of real estate pre-launches, market trends, and price appreciation alerts.' },
+      blog: { name: 'Real Estate Market Insights', defaultHeading: 'Market Reports & Buyer Advice', defaultSubtitle: 'Infrastructure updates, price appreciation trends & smart homebuying guides.' },
+      footer: { name: 'Footer', defaultHeading: 'All Rights Reserved' },
+    },
+  },
+};
+
+/**
  * Universal Dynamic Terminology Generator:
  * Generates tailor-made dynamic terminology for ANY of the 295+ Sub Categories
  * by extracting domain entity name and building domain-aware section labels.
@@ -812,14 +1106,15 @@ export const resolveCategoryTerminology = (
   businessName?: string
 ): CategoryTerminology => {
   const cleanSub = (subCategoryName || '').toLowerCase().trim();
-  const cleanMain = (mainCategoryName || findMainCategoryBySubCategory(cleanSub)).trim();
+  const rawMain = (mainCategoryName || findMainCategoryBySubCategory(cleanSub)).trim();
+  const cleanMainKey = rawMain.toLowerCase().replace(/[^a-z0-9]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
 
   // 1. Check exact subcategory match in registry
   if (cleanSub && SPECIALIZED_TERMINOLOGY_REGISTRY[cleanSub]) {
     const reg = SPECIALIZED_TERMINOLOGY_REGISTRY[cleanSub]!;
     const base = createGenericSections(reg.entityName || 'Store');
     return {
-      mainCategory: reg.mainCategory || cleanMain,
+      mainCategory: reg.mainCategory || rawMain,
       subCategory: subCategoryName || reg.subCategory || 'General',
       entityName: reg.entityName || 'Store',
       entityTypeLabel: reg.entityTypeLabel || 'Business Outlet',
@@ -840,7 +1135,35 @@ export const resolveCategoryTerminology = (
     };
   }
 
-  // 2. Keyword-based matching for specialized families
+  // 2. Check main category profile in MAIN_CATEGORY_TERMINOLOGY_MAP if no specialized subcat
+  if (MAIN_CATEGORY_TERMINOLOGY_MAP[cleanMainKey]) {
+    const mainProfile = MAIN_CATEGORY_TERMINOLOGY_MAP[cleanMainKey]!;
+    const subEntity = subCategoryName && subCategoryName.toLowerCase() !== 'general' && subCategoryName.toLowerCase() !== 'all' ? subCategoryName : mainProfile.entityName || 'Store';
+    const base = createGenericSections(subEntity);
+
+    return {
+      mainCategory: mainProfile.mainCategory || rawMain,
+      subCategory: subCategoryName || subEntity,
+      entityName: subEntity,
+      entityTypeLabel: mainProfile.entityTypeLabel || `${rawMain} Enterprise`,
+      ctaButtonText: mainProfile.ctaButtonText || 'Connect on WhatsApp',
+      inquiryHeading: mainProfile.inquiryHeading || `Connect With ${businessName || subEntity}`,
+      inquirySubtitle: mainProfile.inquirySubtitle || 'Send your requirements directly to the merchant.',
+      inquiryItemLabel: mainProfile.inquiryItemLabel || 'Item / Service Required',
+      searchPlaceholder: mainProfile.searchPlaceholder || `Search ${subEntity.toLowerCase()} items or services...`,
+      viewAllCatalogLabel: mainProfile.viewAllCatalogLabel || 'Explore All Items',
+      cartBadgeLabel: mainProfile.cartBadgeLabel || 'My Order',
+      catalogTabName: mainProfile.catalogTabName || 'Products',
+      servicesTabName: mainProfile.servicesTabName || 'Services',
+      coursesTabName: mainProfile.coursesTabName || 'Courses',
+      sections: {
+        ...base,
+        ...(mainProfile.sections as any),
+      },
+    };
+  }
+
+  // 3. Keyword-based matching for specialized families
   const isSchoolFamily = /school|preschool|montessori|daycare|play school|kindergarten/i.test(cleanSub);
   if (isSchoolFamily) {
     const schoolReg = SPECIALIZED_TERMINOLOGY_REGISTRY['school']!;
@@ -1084,9 +1407,33 @@ export const getShopTerminology = (shop?: Partial<Shop> | null): CategoryTermino
   }
 
   const subCat = shop.subCategory || shop.category || '';
-  const mainCat = shop.mainCategory || findMainCategoryBySubCategory(subCat);
+  let mainCat = shop.mainCategory || findMainCategoryBySubCategory(subCat);
 
-  return resolveCategoryTerminology(mainCat, subCat, shop.businessName);
+  // If subCat is empty or general but businessName has strong hints (e.g. "Rahul Model School")
+  let effectiveSubCat = subCat;
+  if ((!effectiveSubCat || effectiveSubCat.toLowerCase() === 'general' || effectiveSubCat.toLowerCase() === 'all') && shop.businessName) {
+    if (/school|vidyalaya|pathshala/i.test(shop.businessName)) {
+      effectiveSubCat = 'School';
+      if (!mainCat) mainCat = 'Education';
+    } else if (/college|university|vishwavidyalaya/i.test(shop.businessName)) {
+      effectiveSubCat = 'College';
+      if (!mainCat) mainCat = 'Education';
+    } else if (/hospital|clinic|nursing home/i.test(shop.businessName)) {
+      effectiveSubCat = 'Clinic';
+      if (!mainCat) mainCat = 'Healthcare';
+    } else if (/restaurant|cafe|dhaba|bhojanalaya/i.test(shop.businessName)) {
+      effectiveSubCat = 'Restaurant';
+      if (!mainCat) mainCat = 'Food & Dining';
+    } else if (/salon|parlour|spa/i.test(shop.businessName)) {
+      effectiveSubCat = 'Beauty Salon';
+      if (!mainCat) mainCat = 'Beauty & Wellness';
+    } else if (/gym|fitness/i.test(shop.businessName)) {
+      effectiveSubCat = 'Gym';
+      if (!mainCat) mainCat = 'Fitness & Sports';
+    }
+  }
+
+  return resolveCategoryTerminology(mainCat, effectiveSubCat, shop.businessName);
 };
 
 /**

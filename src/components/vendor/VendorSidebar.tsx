@@ -40,6 +40,7 @@ import {
   ShieldCheck
 } from 'lucide-react';
 import { Shop } from '../../types';
+import { getShopTerminology } from '../../utils/categoryTerminology';
 
 export interface VendorSidebarProps {
   shop: Shop;
@@ -98,6 +99,9 @@ export const VendorSidebar: React.FC<VendorSidebarProps> = ({
     }));
   };
 
+  // Dynamic Category Terminology for the 19 Modular Website Sections
+  const terminology = useMemo(() => getShopTerminology(shop), [shop]);
+
   // Structured menu items exactly as specified by user
   const menuItems: SidebarMenuItem[] = useMemo(
     () => [
@@ -129,28 +133,28 @@ export const VendorSidebar: React.FC<VendorSidebarProps> = ({
         label: 'All Sections',
         emoji: '📄',
         icon: FileText,
-        badge: '18 Live',
+        badge: '19 Live',
         badgeColor: 'bg-orange-500/20 text-orange-300 border border-orange-500/30',
         subItems: [
-          { id: 'section_hero_banner', label: 'Hero Banner', icon: ImageIcon },
-          { id: 'section_hero', label: 'Hero Section', icon: Sparkles },
-          { id: 'section_about', label: 'About Us', icon: Award },
-          { id: 'section_why_choose_us', label: 'Why Choose Us', icon: CheckCircle2 },
-          { id: 'section_categories', label: 'Category', icon: FolderTree },
-          { id: 'section_services', label: 'Service', icon: Wrench },
-          { id: 'section_products', label: 'Product', icon: Tag },
-          { id: 'section_courses', label: 'Course', icon: GraduationCap },
-          { id: 'section_videos', label: 'Video', icon: Video },
-          { id: 'section_offers', label: 'Offer', icon: Sparkles },
-          { id: 'section_gallery', label: 'Photo Gallery', icon: ImageIcon },
-          { id: 'section_portfolio', label: 'Portfolio', icon: ImageIcon },
-          { id: 'section_team', label: 'Team', icon: Users },
-          { id: 'section_faq', label: 'FAQ', icon: HelpCircle },
-          { id: 'section_cta', label: 'CTA', icon: Zap },
-          { id: 'section_contact', label: 'Contact Us', icon: Phone },
-          { id: 'section_social_media', label: 'Social Media', icon: MessageCircle },
-          { id: 'section_blog', label: 'Blog', icon: FileText },
-          { id: 'section_footer', label: 'Footer', icon: Globe },
+          { id: 'section_hero_banner', label: terminology.sections.heroBanner.name, icon: ImageIcon },
+          { id: 'section_hero', label: terminology.sections.hero.name, icon: Sparkles },
+          { id: 'section_about', label: terminology.sections.about.name, icon: Award },
+          { id: 'section_why_choose_us', label: terminology.sections.features.name, icon: CheckCircle2 },
+          { id: 'section_categories', label: terminology.sections.category.name, icon: FolderTree },
+          { id: 'section_services', label: terminology.sections.services.name, icon: Wrench },
+          { id: 'section_products', label: terminology.sections.products.name, icon: Tag },
+          { id: 'section_courses', label: terminology.sections.courses.name, icon: GraduationCap },
+          { id: 'section_videos', label: terminology.sections.videos.name, icon: Video },
+          { id: 'section_offers', label: terminology.sections.offers.name, icon: Sparkles },
+          { id: 'section_gallery', label: terminology.sections.gallery.name, icon: ImageIcon },
+          { id: 'section_portfolio', label: terminology.sections.portfolio.name, icon: ImageIcon },
+          { id: 'section_team', label: terminology.sections.team.name, icon: Users },
+          { id: 'section_faq', label: terminology.sections.faq.name, icon: HelpCircle },
+          { id: 'section_cta', label: terminology.sections.cta.name, icon: Zap },
+          { id: 'section_contact', label: terminology.sections.contact.name, icon: Phone },
+          { id: 'section_social_media', label: terminology.sections.socialMedia.name, icon: MessageCircle },
+          { id: 'section_blog', label: terminology.sections.blog.name, icon: FileText },
+          { id: 'section_footer', label: terminology.sections.footer.name, icon: Globe },
         ],
       },
       {
@@ -207,7 +211,7 @@ export const VendorSidebar: React.FC<VendorSidebarProps> = ({
         icon: LogOut,
       },
     ],
-    [unreadInquiriesCount]
+    [unreadInquiriesCount, terminology]
   );
 
   // Auto-expand menu containing current activeNav

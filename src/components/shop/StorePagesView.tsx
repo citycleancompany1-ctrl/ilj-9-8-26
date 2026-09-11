@@ -32,6 +32,7 @@ import { Shop, ProductItem, CartItem, ShopSectionsConfig } from '../../types';
 import { formatINR, getWhatsAppDirectUrl } from '../../utils/mediaUpload';
 import { StoreCategoryBar, CategoryBarItem } from './StoreCategoryBar';
 import { extractStoreCategories } from '../../utils/categoryUtils';
+import { getShopTerminology } from '../../utils/categoryTerminology';
 import { SharedItemCard } from './StoreItemsCarouselSection';
 import {
   AboutSectionRenderer,

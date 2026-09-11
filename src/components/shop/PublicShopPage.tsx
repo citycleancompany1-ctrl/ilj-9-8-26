@@ -63,6 +63,7 @@ import {
   AboutSectionRenderer,
   FeaturesSectionRenderer,
   BenefitsSectionRenderer,
+  CategorySectionRenderer,
   ServicesSectionRenderer,
   CoursesSectionRenderer,
   OffersSectionRenderer,
@@ -75,6 +76,7 @@ import {
   GallerySectionRenderer,
   VideoSectionRenderer,
 } from './PublicStoreSections';
+import { getShopTerminology } from '../../utils/categoryTerminology';
 import { StoreItemsCarouselSection, SharedItemCard } from './StoreItemsCarouselSection';
 import { StoreCategoryBar } from './StoreCategoryBar';
 import { extractStoreCategories } from '../../utils/categoryUtils';
@@ -239,6 +241,9 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
 
   // 16 Modular Website Sections Config (fallback to smart category defaults)
   const sectionsConfig = shop ? (shop.sectionsConfig || getDefaultSectionsConfig(shop)) : null;
+
+  // Dynamic 19-section terminology based on shop main category & business type
+  const terminology = useMemo(() => shop ? getShopTerminology(shop) : null, [shop]);
 
   // Popup targeting logic (STEP 30–33)
   useEffect(() => {
@@ -510,6 +515,11 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
   const catalogServices = shop.products.filter((p) => p.type === 'SERVICE');
   const catalogCourses = shop.products.filter((p) => p.type === 'COURSE');
 
+  // Unified store categories for Category section
+  const storeCategories = useMemo(() => {
+    return extractStoreCategories(shop.products, shop.customCategories);
+  }, [shop.products, shop.customCategories]);
+
   // Products filtering (strictly for products section)
   const filteredProducts = catalogProducts.filter((p) => {
     // Type/stock filter
@@ -688,7 +698,7 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
                   : 'text-slate-700 hover:text-orange-600 hover:bg-orange-50'
               }`}
             >
-              {getTranslation('nav.products', currentLanguage, 'Products')}
+              {terminology?.catalogTabName || getTranslation('nav.products', currentLanguage, 'Products')}
             </button>
             {catalogServices.length > 0 && (
               <button
@@ -700,7 +710,7 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
                     : 'text-slate-700 hover:text-orange-600 hover:bg-orange-50'
                 }`}
               >
-                {getTranslation('nav.services', currentLanguage, 'Services')}
+                {terminology?.servicesTabName || getTranslation('nav.services', currentLanguage, 'Services')}
               </button>
             )}
             {catalogCourses.length > 0 && (
@@ -713,7 +723,7 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
                     : 'text-slate-700 hover:text-orange-600 hover:bg-orange-50'
                 }`}
               >
-                Courses
+                {terminology?.coursesTabName || 'Courses'}
               </button>
             )}
             <button
@@ -725,7 +735,7 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
                   : 'text-slate-700 hover:text-orange-600 hover:bg-orange-50'
               }`}
             >
-              {getTranslation('nav.about', currentLanguage, 'About Us')}
+              {terminology?.sections.about.name || getTranslation('nav.about', currentLanguage, 'About Us')}
             </button>
             {((shop.videos && shop.videos.length > 0) || (sectionsConfig?.gallery && sectionsConfig.gallery.enabled)) && (
               <button
@@ -737,7 +747,7 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
                     : 'text-slate-700 hover:text-orange-600 hover:bg-orange-50'
                 }`}
               >
-                Gallery
+                {terminology?.sections.gallery.name || 'Gallery'}
               </button>
             )}
             <button
@@ -749,7 +759,7 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
                   : 'text-slate-700 hover:text-orange-600 hover:bg-orange-50'
               }`}
             >
-              {getTranslation('nav.contact', currentLanguage, 'Contact')}
+              {terminology?.sections.contact.name || getTranslation('nav.contact', currentLanguage, 'Contact')}
             </button>
           </nav>
 
@@ -850,7 +860,7 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
                 }`}
               >
                 <ShoppingBag className="w-3.5 h-3.5 shrink-0" />
-                <span>{getTranslation('nav.products', currentLanguage, 'Products')}</span>
+                <span>{terminology?.catalogTabName || getTranslation('nav.products', currentLanguage, 'Products')}</span>
               </button>
 
               {catalogServices.length > 0 && (
@@ -864,7 +874,7 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
                   }`}
                 >
                   <Sparkles className="w-3.5 h-3.5 shrink-0" />
-                  <span>{getTranslation('nav.services', currentLanguage, 'Services')}</span>
+                  <span>{terminology?.servicesTabName || getTranslation('nav.services', currentLanguage, 'Services')}</span>
                 </button>
               )}
 
@@ -879,7 +889,7 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
                   }`}
                 >
                   <FileText className="w-3.5 h-3.5 shrink-0" />
-                  <span>Courses</span>
+                  <span>{terminology?.coursesTabName || 'Courses'}</span>
                 </button>
               )}
 
@@ -893,7 +903,7 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
                 }`}
               >
                 <Info className="w-3.5 h-3.5 shrink-0" />
-                <span>{getTranslation('nav.about', currentLanguage, 'About Us')}</span>
+                <span>{terminology?.sections.about.name || getTranslation('nav.about', currentLanguage, 'About Us')}</span>
               </button>
 
               {((shop.videos && shop.videos.length > 0) || (sectionsConfig?.gallery && sectionsConfig.gallery.enabled)) && (
@@ -907,7 +917,7 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
                   }`}
                 >
                   <Play className="w-3.5 h-3.5 shrink-0" />
-                  <span>Gallery</span>
+                  <span>{terminology?.sections.gallery.name || 'Gallery'}</span>
                 </button>
               )}
 
@@ -921,7 +931,7 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
                 }`}
               >
                 <Phone className="w-3.5 h-3.5 shrink-0" />
-                <span>{getTranslation('nav.contact', currentLanguage, 'Contact')}</span>
+                <span>{terminology?.sections.contact.name || getTranslation('nav.contact', currentLanguage, 'Contact')}</span>
               </button>
             </div>
 
@@ -987,6 +997,21 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
         <BenefitsSectionRenderer config={sectionsConfig.benefits} />
       )}
 
+      {/* CATEGORY SECTION (DYNAMIC BASED ON MAIN CATEGORY) */}
+      {(!sectionsConfig || sectionsConfig.category?.enabled !== false) && storeCategories.length > 0 && (
+        <CategorySectionRenderer
+          config={sectionsConfig?.category}
+          shop={shop}
+          categories={storeCategories}
+          onSelectCategory={(catName) => {
+            if (catName !== 'ALL') {
+              navigateToPage('products');
+            }
+          }}
+          onViewAll={() => navigateToPage('products')}
+        />
+      )}
+
       {/* 4. SERVICES SECTION (Rendered from Store's Services Catalogue) */}
       {catalogServices.length > 0 && (
         <ServicesSectionRenderer
@@ -1008,9 +1033,9 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
       {(!sectionsConfig || sectionsConfig.products.enabled) && catalogProducts.length > 0 && (
         <StoreItemsCarouselSection
           id="products"
-          title={getTranslation('nav.products', currentLanguage, 'Store Products')}
-          subtitle="Direct store prices with verified authentic quality and instant WhatsApp delivery."
-          badgeText="Products Catalogue"
+          title={sectionsConfig?.products?.title || terminology?.sections.products.defaultHeading || getTranslation('nav.products', currentLanguage, 'Store Products')}
+          subtitle={sectionsConfig?.products?.subtitle || terminology?.sections.products.defaultSubtitle || 'Direct store prices with verified authentic quality and instant WhatsApp delivery.'}
+          badgeText={sectionsConfig?.products?.title || terminology?.sections.products.name || 'Products Catalogue'}
           isService={false}
           items={catalogProducts}
           shop={shop}
@@ -1018,9 +1043,9 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
           onAddToCart={addToCart}
           onRemoveFromCart={removeFromCart}
           onSelectItem={(prod) => setSelectedProduct(prod)}
-          searchPlaceholder={getTranslation('search.placeholder', currentLanguage, 'Search products...')}
+          searchPlaceholder={terminology?.searchPlaceholder || getTranslation('search.placeholder', currentLanguage, 'Search products...')}
           onViewAllClick={() => navigateToPage('products')}
-          viewAllLabel="Explore All Products"
+          viewAllLabel={`Explore All ${terminology?.sections.products.itemPlural || 'Products'}`}
         />
       )}
 
@@ -1079,13 +1104,13 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
           
           <div className="text-center max-w-2xl mx-auto space-y-2 mb-10">
             <div className="inline-flex items-center gap-1.5 bg-orange-600 text-white text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-md shadow-xs">
-              <MessageSquare className="w-3.5 h-3.5" /> Direct Merchant Connect
+              <MessageSquare className="w-3.5 h-3.5" /> {sectionsConfig?.contact?.title ? sectionsConfig.contact.title : `Direct ${terminology?.entityName || 'Merchant'} Connect`}
             </div>
             <h3 className="text-2xl sm:text-3xl lg:text-4xl font-black uppercase tracking-tight text-slate-900 font-['Outfit',sans-serif]">
-              Connect With {shop.businessName}
+              {sectionsConfig?.contact?.title || `${terminology?.sections.contact.name || 'Connect With'} ${shop.businessName}`}
             </h3>
             <p className="text-xs sm:text-sm text-gray-600">
-              Send your message or service inquiry directly to {shop.vendorName}. It will instantly notify the vendor.
+              {sectionsConfig?.contact?.subtitle || `Send your message or ${terminology?.sections.services.itemSingular.toLowerCase() || 'inquiry'} directly to ${shop.vendorName}. It will instantly notify the ${terminology?.entityName.toLowerCase() || 'merchant'}.`}
             </p>
           </div>
 
@@ -1232,11 +1257,11 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
 
                   <div>
                     <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-                      Product or Service Required (Optional)
+                      {terminology?.inquiryItemLabel || 'Product or Service Required'} (Optional)
                     </label>
                     <input
                       type="text"
-                      placeholder="e.g. Sofa Cleaning / Special Order / Bulk Rate"
+                      placeholder={`e.g. Inquire about ${terminology?.sections.products.itemSingular || 'item'} or ${terminology?.sections.services.itemSingular || 'service'}`}
                       value={custService}
                       onChange={(e) => setCustService(e.target.value)}
                       className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-xs bg-gray-50/60 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
@@ -1245,7 +1270,7 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
 
                   <div>
                     <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-                      Your Message / Inquiry Details *
+                      {terminology?.inquiryHeading ? `${terminology.inquiryHeading} *` : 'Your Message / Inquiry Details *'}
                     </label>
                     <textarea
                       rows={4}
@@ -1262,7 +1287,7 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
                     className="w-full py-3.5 bg-orange-600 hover:bg-orange-700 text-white font-bold uppercase tracking-wider text-xs rounded-xl shadow-md flex items-center justify-center gap-2 transition-all hover:scale-101 cursor-pointer"
                   >
                     <Send className="w-4 h-4" />
-                    <span>Submit Direct Inquiry </span>
+                    <span>{terminology?.ctaButtonText || 'Submit Direct Inquiry'}</span>
                   </button>
                 </form>
               )}
@@ -1421,31 +1446,31 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
               </li>
               <li>
                 <button type="button" onClick={() => navigateToPage('products')} className="hover:text-orange-600 transition-colors cursor-pointer text-left">
-                  Products Catalogue
+                  {terminology?.catalogTabName || 'Products'} Catalogue
                 </button>
               </li>
               {catalogServices.length > 0 && (
                 <li>
                   <button type="button" onClick={() => navigateToPage('services')} className="hover:text-orange-600 transition-colors cursor-pointer text-left">
-                    Services & Booking
+                    {terminology?.servicesTabName || 'Services'} & Booking
                   </button>
                 </li>
               )}
               {catalogCourses.length > 0 && (
                 <li>
                   <button type="button" onClick={() => navigateToPage('courses')} className="hover:text-orange-600 transition-colors cursor-pointer text-left">
-                    Courses & Training
+                    {terminology?.coursesTabName || 'Courses'}
                   </button>
                 </li>
               )}
               <li>
                 <button type="button" onClick={() => navigateToPage('about')} className="hover:text-orange-600 transition-colors cursor-pointer text-left">
-                  About Proprietor
+                  {terminology?.sections.about.name || 'About Us'}
                 </button>
               </li>
               <li>
                 <button type="button" onClick={() => navigateToPage('contact')} className="hover:text-orange-600 transition-colors cursor-pointer text-left">
-                  Direct Inquiry & Coordinates
+                  {terminology?.sections.contact.name || 'Contact'} & Inquiries
                 </button>
               </li>
               <li>

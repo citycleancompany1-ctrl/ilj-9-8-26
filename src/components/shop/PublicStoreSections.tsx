@@ -45,6 +45,7 @@ import {
   Camera,
   MessageCircle,
   Send,
+  FolderTree,
 } from 'lucide-react';
 import {
   Shop,
@@ -53,6 +54,7 @@ import {
   HeroSectionConfig,
   AboutSectionConfig,
   FeaturesSectionConfig,
+  CategorySectionConfig,
   ServicesSectionConfig,
   CoursesSectionConfig,
   HowItWorksSectionConfig,
@@ -78,6 +80,7 @@ import {
 } from '../../types';
 import { getWhatsAppDirectUrl, formatINR, getYouTubeEmbedUrl } from '../../utils/mediaUpload';
 import { StoreItemsCarouselSection } from './StoreItemsCarouselSection';
+import { StoreCategoryBar, CategoryBarItem } from './StoreCategoryBar';
 import { CardDetailModal, CardDetailModalData } from '../modals/CardDetailModal';
 
 // ==========================================
@@ -1067,7 +1070,65 @@ export const FeaturesSectionRenderer: React.FC<{
 };
 
 // ==========================================
-// 4. SERVICES SECTION (Product Card Visual Style)
+// 5. CATEGORY SHOWCASE SECTION
+// ==========================================
+export const CategorySectionRenderer: React.FC<{
+  config?: CategorySectionConfig;
+  shop: Shop;
+  categories: CategoryBarItem[];
+  selectedCategory?: string;
+  onSelectCategory?: (categoryName: string) => void;
+  onViewAll?: () => void;
+}> = ({
+  config,
+  shop,
+  categories,
+  selectedCategory = 'ALL',
+  onSelectCategory,
+  onViewAll,
+}) => {
+  if (config && config.enabled === false) return null;
+  if (!categories || categories.length === 0) return null;
+
+  return (
+    <section id="categories" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 space-y-3.5">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 border-b border-gray-100 pb-3">
+        <div>
+          <div className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-orange-600 bg-orange-50 px-2.5 py-0.5 rounded-md border border-orange-200 shadow-2xs">
+            <FolderTree className="w-3.5 h-3.5" />
+            <span>{config?.title || 'Browse By Category'}</span>
+          </div>
+          <h2 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-slate-900 font-['Outfit',sans-serif] mt-1">
+            {config?.title || 'Featured Categories'}
+          </h2>
+          {config?.subtitle && (
+            <p className="text-xs text-gray-500 mt-0.5">{config.subtitle}</p>
+          )}
+        </div>
+        {onViewAll && (
+          <button
+            type="button"
+            onClick={onViewAll}
+            className="text-xs font-bold text-orange-600 hover:text-orange-700 uppercase tracking-wider flex items-center gap-1 self-start sm:self-auto cursor-pointer transition-colors"
+          >
+            <span>Explore All Items</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        )}
+      </div>
+
+      <StoreCategoryBar
+        categories={categories}
+        selectedCategory={selectedCategory}
+        onSelectCategory={onSelectCategory || (() => {})}
+        accentColor="orange"
+      />
+    </section>
+  );
+};
+
+// ==========================================
+// 6. SERVICES SECTION (Product Card Visual Style)
 // ==========================================
 export const ServicesSectionRenderer: React.FC<{
   config?: ServicesSectionConfig;
