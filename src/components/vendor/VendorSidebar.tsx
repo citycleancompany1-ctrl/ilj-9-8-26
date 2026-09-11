@@ -167,7 +167,7 @@ export const VendorSidebar: React.FC<VendorSidebarProps> = ({
           { id: 'addon_whatsapp', label: 'WhatsApp', icon: MessageCircle },
           { id: 'addon_email', label: 'Email', icon: Mail },
           { id: 'addon_payment_qr', label: 'Payment QR', icon: QrCode },
-          { id: 'addon_custom_domain', label: 'Custom Domain Req..', icon: Globe },
+          { id: 'addon_custom_domain', label: 'Domain Request', icon: Globe },
           { id: 'addon_shop_standee', label: 'Shop QR Standee', icon: Printer },
           { id: 'addon_website_switch', label: 'Website Switch', icon: ToggleLeft },
         ],

@@ -1413,6 +1413,82 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
         );
       })()}
 
+      {/* VENDOR PANEL → DASHBOARD → DOMAIN REQUEST CARD */}
+      <div className="bg-gradient-to-r from-indigo-950 via-slate-900 to-indigo-950 text-white rounded-2xl p-5 sm:p-6 shadow-md border border-indigo-500/30 space-y-4">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="flex items-start gap-3.5">
+            <div className="w-12 h-12 rounded-2xl bg-indigo-600/30 text-indigo-300 border border-indigo-500/40 flex items-center justify-center font-bold shrink-0 shadow-sm">
+              <Globe className="w-6 h-6 text-indigo-400" />
+            </div>
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="bg-indigo-500/20 text-indigo-300 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full border border-indigo-500/30">
+                  Custom Domain Options
+                </span>
+                {currentShop.customDomain && currentShop.domainConnectStatus === 'CONNECTED' ? (
+                  <span className="bg-emerald-500/20 text-emerald-300 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full border border-emerald-500/30">
+                    🟢 Live: {currentShop.customDomain}
+                  </span>
+                ) : currentShop.domainRequest ? (
+                  <span className="bg-amber-500/20 text-amber-300 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full border border-amber-500/30 animate-pulse">
+                    🟡 Request Status: {currentShop.domainRequest.status}
+                  </span>
+                ) : (
+                  <span className="bg-orange-500/20 text-orange-300 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full border border-orange-500/30">
+                    ₹599 / ₹1,499 Setup
+                  </span>
+                )}
+              </div>
+              <h3 className="text-base sm:text-lg font-black text-white font-['Outfit',sans-serif] tracking-tight">
+                Domain Request: Run Store on Your Brand Name
+              </h3>
+              <p className="text-xs text-gray-300 max-w-xl leading-relaxed">
+                Apni dukaan ko <strong>www.yourbusiness.in</strong> ya <strong>.com</strong> par chalayein. 
+                Chuniye <strong>₹599 (Already Have a Domain)</strong> ya <strong>₹1,499 (Buy New Domain + Setup)</strong>.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full md:w-auto shrink-0">
+            <button
+              type="button"
+              onClick={() => setActiveNav('addon_custom_domain')}
+              className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
+            >
+              <span>Choose Domain Option</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        {/* Mini 2-Column Summary of the two options */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 text-xs border-t border-indigo-500/20">
+          <div 
+            onClick={() => setActiveNav('addon_custom_domain')}
+            className="bg-white/5 hover:bg-white/10 p-3 rounded-xl border border-white/10 flex items-center justify-between cursor-pointer transition-colors"
+          >
+            <div>
+              <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider block">Option 1</span>
+              <span className="font-black text-white text-sm">₹599 — Already Have a Domain</span>
+              <span className="text-[11px] text-gray-400 block mt-0.5">Enter existing domain (e.g. www.mybusiness.in)</span>
+            </div>
+            <ArrowRight className="w-4 h-4 text-gray-400" />
+          </div>
+
+          <div 
+            onClick={() => setActiveNav('addon_custom_domain')}
+            className="bg-white/5 hover:bg-white/10 p-3 rounded-xl border border-white/10 flex items-center justify-between cursor-pointer transition-colors"
+          >
+            <div>
+              <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider block">Option 2</span>
+              <span className="font-black text-white text-sm">₹1,499 — Buy New Domain + Setup</span>
+              <span className="text-[11px] text-gray-400 block mt-0.5">Enter preferred domain • Admin checks availability</span>
+            </div>
+            <ArrowRight className="w-4 h-4 text-gray-400" />
+          </div>
+        </div>
+      </div>
+
       {/* DUKAAN COUNTER QR STANDEE & WEBSITE QR CARD (LIGHT THEME) */}
       <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-xs border border-emerald-200 space-y-4">
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-5">

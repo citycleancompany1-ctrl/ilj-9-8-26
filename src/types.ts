@@ -149,6 +149,7 @@ export interface Shop {
   dnsStatus?: 'PROPAGATED' | 'PENDING' | 'ERROR';
   sslStatus?: 'ACTIVE' | 'ISSUING' | 'PENDING' | 'EXPIRED';
   isCustomDomainActive?: boolean;
+  domainRequest?: VendorDomainRequest;
 
   // Floating Action Circle Buttons (Bottom Right: WhatsApp, Call, Multi-Language, Google Location)
   floatingButtons?: FloatingButtonsConfig;
@@ -234,6 +235,23 @@ export interface CustomDomainRecord {
   targetHost?: string;
   targetIp?: string;
   notes?: string;
+}
+
+export interface VendorDomainRequest {
+  id: string;
+  shopId: string;
+  businessName: string;
+  vendorName: string;
+  phone: string;
+  whatsapp?: string;
+  type: 'ALREADY_HAVE' | 'BUY_NEW'; // 'ALREADY_HAVE' (₹599) or 'BUY_NEW' (₹1,499)
+  amount: number; // 599 or 1499
+  domain: string; // e.g. "www.mybusiness.in" or "mybusiness.in"
+  status: 'PENDING' | 'CHECKING_AVAILABILITY' | 'APPROVED' | 'REJECTED';
+  requestedAt: string;
+  updatedAt?: string;
+  adminNotes?: string;
+  paymentStatus?: 'PENDING' | 'PAID' | 'WAIVED';
 }
 
 export interface VendorWebsiteBackup {

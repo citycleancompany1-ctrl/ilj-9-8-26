@@ -112,6 +112,12 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
     return state.shops.filter((s) => Boolean(s.customDomain)).length;
   }, [state.shops]);
 
+  const pendingDomainRequests = useMemo(() => {
+    return state.shops.filter(
+      (s) => s.domainRequest && (s.domainRequest.status === 'PENDING' || s.domainRequest.status === 'CHECKING_AVAILABILITY')
+    ).length;
+  }, [state.shops]);
+
   const menuGroups: SidebarMenuGroup[] = useMemo(
     () => [
       {
@@ -149,10 +155,10 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
           {
             id: 'sub_domains',
             tabKey: 'DOMAINS',
-            label: 'Custom Domains & DNS',
+            label: 'Domain Requests & DNS',
             icon: Globe,
-            badge: domainCount > 0 ? domainCount : undefined,
-            badgeColor: 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30',
+            badge: pendingDomainRequests > 0 ? `${pendingDomainRequests} New` : (domainCount > 0 ? domainCount : undefined),
+            badgeColor: pendingDomainRequests > 0 ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse' : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30',
           },
         ],
       },
@@ -254,7 +260,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
         badgeColor: 'bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold',
       },
     ],
-    [state.shops.length, domainCount, state.popups.length, state.platformLeads.length, onOpenAddWebsite]
+    [state.shops.length, domainCount, pendingDomainRequests, state.popups.length, state.platformLeads.length, onOpenAddWebsite]
   );
 
   // Filter groups and subitems by search query
