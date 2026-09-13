@@ -37,7 +37,9 @@ import {
   CheckCircle2,
   Printer,
   GraduationCap,
-  ShieldCheck
+  ShieldCheck,
+  Palette,
+  Layout
 } from 'lucide-react';
 import { Shop } from '../../types';
 import { getShopTerminology } from '../../utils/categoryTerminology';
@@ -65,7 +67,6 @@ export interface SidebarMenuItem {
   id: string;
   label: string;
   icon: React.ElementType;
-  emoji?: string;
   badge?: string | number;
   badgeColor?: string;
   subItems?: SubMenuItem[];
@@ -83,6 +84,7 @@ export const VendorSidebar: React.FC<VendorSidebarProps> = ({
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({
+    menu_customization: true,
     menu_profile: true,
     menu_sections: true,
     menu_addons: false,
@@ -107,13 +109,27 @@ export const VendorSidebar: React.FC<VendorSidebarProps> = ({
     () => [
       {
         id: 'dashboard',
-        label: 'DASHBOARD + ',
+        label: 'Dashboard',
         icon: LayoutDashboard,
+      },
+      {
+        id: 'menu_customization',
+        label: 'Website Customization',
+        icon: Palette,
+        badge: 'Customizer',
+        badgeColor: 'bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold',
+        subItems: [
+          { id: 'custom_themes', label: 'Themes & Brand Colors', icon: Palette },
+          { id: 'custom_header', label: 'Header & Top Bar', icon: Layout },
+          { id: 'custom_banners', label: 'Hero Banner & Media', icon: ImageIcon },
+          { id: 'custom_floating', label: 'Floating Buttons (WhatsApp/Call)', icon: MessageCircle },
+          { id: 'custom_footer', label: 'Footer & Trust Badges', icon: ShieldCheck },
+          { id: 'custom_sections_visibility', label: 'Section Visibility (Show/Hide)', icon: ToggleLeft },
+        ],
       },
       {
         id: 'menu_profile',
         label: 'My Profile',
-        emoji: '👤',
         icon: User,
         subItems: [
           { id: 'profile_business', label: 'Business Profile', icon: Store },
@@ -131,7 +147,6 @@ export const VendorSidebar: React.FC<VendorSidebarProps> = ({
       {
         id: 'menu_sections',
         label: 'All Sections',
-        emoji: '📄',
         icon: FileText,
         badge: '19 Live',
         badgeColor: 'bg-orange-500/20 text-orange-300 border border-orange-500/30',
@@ -160,7 +175,6 @@ export const VendorSidebar: React.FC<VendorSidebarProps> = ({
       {
         id: 'menu_addons',
         label: 'Addons',
-        emoji: '➕',
         icon: Zap,
         subItems: [
           { id: 'addon_call', label: 'Call', icon: PhoneCall },
@@ -175,7 +189,6 @@ export const VendorSidebar: React.FC<VendorSidebarProps> = ({
       {
         id: 'menu_billing',
         label: 'Plan & Billing',
-        emoji: '💳',
         icon: CreditCard,
         subItems: [
           { id: 'billing_plan', label: 'My Plan', icon: CreditCard },
@@ -186,7 +199,6 @@ export const VendorSidebar: React.FC<VendorSidebarProps> = ({
       {
         id: 'menu_support',
         label: 'Support',
-        emoji: '🎧',
         icon: Headphones,
         subItems: [
           { id: 'support_help', label: 'Help Center', icon: HelpCircle },
@@ -196,7 +208,6 @@ export const VendorSidebar: React.FC<VendorSidebarProps> = ({
       {
         id: 'menu_settings',
         label: 'Settings',
-        emoji: '⚙',
         icon: Settings,
         subItems: [
           { id: 'settings_backup', label: 'Backup & Restore', icon: Database },
@@ -207,7 +218,6 @@ export const VendorSidebar: React.FC<VendorSidebarProps> = ({
       {
         id: 'logout',
         label: 'Logout',
-        emoji: '🚪',
         icon: LogOut,
       },
     ],
@@ -254,6 +264,12 @@ export const VendorSidebar: React.FC<VendorSidebarProps> = ({
     }
     if (hasSubItems) {
       toggleExpand(itemId);
+      if (itemId === 'menu_customization') {
+        onSelectNav('menu_customization');
+        if (isOpenMobile) {
+          onCloseMobile();
+        }
+      }
       return;
     }
     onSelectNav(itemId);
@@ -408,7 +424,6 @@ export const VendorSidebar: React.FC<VendorSidebarProps> = ({
                 }`}
               >
                 <div className="flex items-center gap-2.5 min-w-0">
-                  {item.emoji && <span className="text-sm shrink-0">{item.emoji}</span>}
                   <IconComponent
                     className={`w-4 h-4 shrink-0 transition-colors ${
                       isItemActive
@@ -475,17 +490,21 @@ export const VendorSidebar: React.FC<VendorSidebarProps> = ({
                             : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
                         }`}
                       >
-                        <div className="flex items-center gap-1.5 min-w-0">
-                          {/* Tree branch connector indicator */}
-                          <span className="font-mono text-slate-500 text-[10px] select-none shrink-0 group-hover:text-slate-400">
-                            {isLast ? '└─' : '├─'}
-                          </span>
+                        <div className="flex items-center gap-2 min-w-0">
+                          {/* Clean bullet indicator */}
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full shrink-0 transition-colors ${
+                              isSubActive
+                                ? 'bg-orange-400 ring-2 ring-orange-400/30'
+                                : 'bg-slate-600 group-hover:bg-slate-400'
+                            }`}
+                          />
                           {SubIcon && (
                             <SubIcon
                               className={`w-3.5 h-3.5 shrink-0 transition-colors ${
                                 isSubActive
                                   ? 'text-white'
-                                  : 'text-slate-500 group-hover:text-slate-300'
+                                  : 'text-slate-400 group-hover:text-slate-200'
                               }`}
                             />
                           )}

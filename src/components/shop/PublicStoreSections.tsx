@@ -224,6 +224,22 @@ export const HeroBannerRenderer: React.FC<{
           })}
         </div>
 
+        {/* Desktop Banner Title & Subtitle Overlay (from Website Customization) */}
+        {(shop.bannerTitle || shop.bannerSubtitle) && (
+          <div className="absolute inset-0 z-15 bg-gradient-to-t from-black/80 via-black/25 to-transparent flex flex-col justify-end p-6 sm:p-12 text-white pointer-events-none">
+            {shop.bannerTitle && (
+              <h2 className="text-xl sm:text-3xl md:text-4xl font-black uppercase tracking-tight drop-shadow-md font-['Outfit',sans-serif]">
+                {shop.bannerTitle}
+              </h2>
+            )}
+            {shop.bannerSubtitle && (
+              <p className="text-xs sm:text-base font-medium text-white/95 drop-shadow-sm mt-1 sm:mt-2 max-w-2xl leading-relaxed">
+                {shop.bannerSubtitle}
+              </p>
+            )}
+          </div>
+        )}
+
         {/* Desktop Controls: Left & Right Arrows */}
         {desktopBanners.length > 1 && (
           <>
@@ -297,6 +313,22 @@ export const HeroBannerRenderer: React.FC<{
             );
           })}
         </div>
+
+        {/* Mobile Banner Title & Subtitle Overlay (from Website Customization) */}
+        {(shop.bannerTitle || shop.bannerSubtitle) && (
+          <div className="absolute inset-0 z-15 bg-gradient-to-t from-black/85 via-black/30 to-transparent flex flex-col justify-end p-4 text-white pointer-events-none">
+            {shop.bannerTitle && (
+              <h2 className="text-base sm:text-lg font-black uppercase tracking-tight drop-shadow-md">
+                {shop.bannerTitle}
+              </h2>
+            )}
+            {shop.bannerSubtitle && (
+              <p className="text-[11px] font-medium text-white/95 drop-shadow-sm mt-0.5 line-clamp-2">
+                {shop.bannerSubtitle}
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Mobile Slide Counter Badge */}
         {mobileBanners.length > 1 && (

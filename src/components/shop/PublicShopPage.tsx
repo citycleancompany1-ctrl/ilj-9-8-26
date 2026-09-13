@@ -45,6 +45,7 @@ import {
   Info,
   SlidersHorizontal,
   ArrowLeft,
+  MessageCircle,
 } from 'lucide-react';
 import { Shop, ProductItem, CartItem, AdvertisementPopup, ShopInquiry } from '../../types';
 import { formatINR, getWhatsAppCartMessageUrl, getWhatsAppDirectUrl, getYouTubeEmbedUrl } from '../../utils/mediaUpload';
@@ -389,6 +390,32 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
   const activeThemeId = shop ? (shop.themeId || shop.templateId || 'bharat-royal') : 'bharat-royal';
   const activeTheme = getThemeById(activeThemeId);
 
+  // Dynamic Brand Color Palette from Website Customization
+  const resolvedBrandColor = useMemo(() => {
+    if (shop?.colorTheme === 'emerald') return '#059669';
+    if (shop?.colorTheme === 'royal') return '#2563eb';
+    if (shop?.colorTheme === 'maroon') return '#991b1b';
+    if (shop?.colorTheme === 'gold') return '#d97706';
+    if (shop?.colorTheme === 'rose') return '#e11d48';
+    if (shop?.colorTheme === 'saffron') return '#ea580c';
+    return activeTheme.primaryColor || '#ea580c';
+  }, [shop?.colorTheme, activeTheme.primaryColor]);
+
+  // Dynamic Font Style from Website Customization
+  const resolvedFontClass = useMemo(() => {
+    if (shop?.fontStyle === 'serif') return 'font-serif';
+    if (shop?.fontStyle === 'outfit') return "font-['Outfit',sans-serif]";
+    if (shop?.fontStyle === 'heading-playfair') return "font-['Playfair_Display',serif]";
+    return 'font-sans';
+  }, [shop?.fontStyle]);
+
+  // Dynamic Button Corner Style from Website Customization
+  const resolvedButtonClass = useMemo(() => {
+    if (shop?.buttonStyle === 'pill') return 'rounded-full';
+    if (shop?.buttonStyle === 'square') return 'rounded-xs';
+    return 'rounded-xl';
+  }, [shop?.buttonStyle]);
+
   // PWA beforeinstallprompt & standalone check
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -592,9 +619,31 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
   )}`;
 
   return (
-    <div className={`min-h-screen bg-[#FBF9F6] bg-gradient-to-b ${activeTheme.bgGradient} text-slate-900 font-sans pb-0`}>
+    <div
+      className={`min-h-screen bg-[#FBF9F6] bg-gradient-to-b ${activeTheme.bgGradient} text-slate-900 ${resolvedFontClass} pb-0`}
+      style={{
+        '--brand-color': resolvedBrandColor,
+      } as React.CSSProperties}
+    >
       
       {/* 1. TOP TRUST & DIRECT MERCHANT ANNOUNCEMENT BAR (LIGHT THEME) */}
+      {shop.announcementBar?.enabled && shop.announcementBar?.text && (
+        <div
+          className="text-xs py-2 px-4 font-bold text-center flex items-center justify-center gap-2 shadow-xs transition-colors"
+          style={{
+            backgroundColor: shop.announcementBar.bgColor || '#ea580c',
+            color: '#ffffff',
+          }}
+        >
+          <Sparkles className="w-3.5 h-3.5 shrink-0" />
+          <span>{shop.announcementBar.text}</span>
+          {shop.announcementBar.link && (
+            <a href={shop.announcementBar.link} className="underline ml-1 font-extrabold hover:opacity-90">
+              View Details &rarr;
+            </a>
+          )}
+        </div>
+      )}
       {shop.status !== 'PUBLISHED' && (
         <div className="bg-amber-500 text-slate-900 text-xs py-1.5 px-4 font-bold text-center flex items-center justify-center gap-2">
           <span>⚡ Store Setup Mode ({shop.status}): All products and details are live and visible across all devices.</span>
@@ -664,13 +713,18 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
                 </span>
               </div>
               <div className="flex items-center gap-2 text-xs text-gray-500 truncate">
-                <span className="font-mono font-bold text-orange-600 text-[11px]">{shop.shopId}</span>
-                {shop.city && (
+                <span className="font-mono font-bold text-[11px]" style={{ color: resolvedBrandColor }}>{shop.shopId}</span>
+                {shop.tagline ? (
+                  <>
+                    <span className="text-gray-300">•</span>
+                    <span className="truncate italic font-medium text-slate-600">{shop.tagline}</span>
+                  </>
+                ) : shop.city ? (
                   <>
                     <span className="text-gray-300">•</span>
                     <span className="truncate">{shop.city}</span>
                   </>
-                )}
+                ) : null}
               </div>
             </div>
           </button>
@@ -680,22 +734,24 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
             <button
               type="button"
               onClick={() => navigateToPage('home')}
-              className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
+              className={`px-3 py-1.5 ${resolvedButtonClass} transition-all cursor-pointer ${
                 activePage === 'home'
-                  ? 'bg-orange-600 text-white shadow-xs font-black'
-                  : 'text-slate-700 hover:text-orange-600 hover:bg-orange-50'
+                  ? 'text-white shadow-xs font-black'
+                  : 'text-slate-700 hover:text-slate-950 hover:bg-black/5'
               }`}
+              style={activePage === 'home' ? { backgroundColor: resolvedBrandColor } : {}}
             >
               {getTranslation('nav.home', currentLanguage, 'Home')}
             </button>
             <button
               type="button"
               onClick={() => navigateToPage('products')}
-              className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
+              className={`px-3 py-1.5 ${resolvedButtonClass} transition-all cursor-pointer ${
                 activePage === 'products'
-                  ? 'bg-orange-600 text-white shadow-xs font-black'
-                  : 'text-slate-700 hover:text-orange-600 hover:bg-orange-50'
+                  ? 'text-white shadow-xs font-black'
+                  : 'text-slate-700 hover:text-slate-950 hover:bg-black/5'
               }`}
+              style={activePage === 'products' ? { backgroundColor: resolvedBrandColor } : {}}
             >
               {terminology?.catalogTabName || getTranslation('nav.products', currentLanguage, 'Products')}
             </button>
@@ -703,11 +759,12 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
               <button
                 type="button"
                 onClick={() => navigateToPage('services')}
-                className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
+                className={`px-3 py-1.5 ${resolvedButtonClass} transition-all cursor-pointer ${
                   activePage === 'services'
-                    ? 'bg-orange-600 text-white shadow-xs font-black'
-                    : 'text-slate-700 hover:text-orange-600 hover:bg-orange-50'
+                    ? 'text-white shadow-xs font-black'
+                    : 'text-slate-700 hover:text-slate-950 hover:bg-black/5'
                 }`}
+                style={activePage === 'services' ? { backgroundColor: resolvedBrandColor } : {}}
               >
                 {terminology?.servicesTabName || getTranslation('nav.services', currentLanguage, 'Services')}
               </button>
@@ -716,11 +773,12 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
               <button
                 type="button"
                 onClick={() => navigateToPage('courses')}
-                className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
+                className={`px-3 py-1.5 ${resolvedButtonClass} transition-all cursor-pointer ${
                   activePage === 'courses'
-                    ? 'bg-orange-600 text-white shadow-xs font-black'
-                    : 'text-slate-700 hover:text-orange-600 hover:bg-orange-50'
+                    ? 'text-white shadow-xs font-black'
+                    : 'text-slate-700 hover:text-slate-950 hover:bg-black/5'
                 }`}
+                style={activePage === 'courses' ? { backgroundColor: resolvedBrandColor } : {}}
               >
                 {terminology?.coursesTabName || 'Courses'}
               </button>
@@ -728,11 +786,12 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
             <button
               type="button"
               onClick={() => navigateToPage('about')}
-              className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
+              className={`px-3 py-1.5 ${resolvedButtonClass} transition-all cursor-pointer ${
                 activePage === 'about'
-                  ? 'bg-orange-600 text-white shadow-xs font-black'
-                  : 'text-slate-700 hover:text-orange-600 hover:bg-orange-50'
+                  ? 'text-white shadow-xs font-black'
+                  : 'text-slate-700 hover:text-slate-950 hover:bg-black/5'
               }`}
+              style={activePage === 'about' ? { backgroundColor: resolvedBrandColor } : {}}
             >
               {terminology?.sections.about.name || getTranslation('nav.about', currentLanguage, 'About Us')}
             </button>
@@ -740,11 +799,12 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
               <button
                 type="button"
                 onClick={() => navigateToPage('gallery')}
-                className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
+                className={`px-3 py-1.5 ${resolvedButtonClass} transition-all cursor-pointer ${
                   activePage === 'gallery'
-                    ? 'bg-orange-600 text-white shadow-xs font-black'
-                    : 'text-slate-700 hover:text-orange-600 hover:bg-orange-50'
+                    ? 'text-white shadow-xs font-black'
+                    : 'text-slate-700 hover:text-slate-950 hover:bg-black/5'
                 }`}
+                style={activePage === 'gallery' ? { backgroundColor: resolvedBrandColor } : {}}
               >
                 {terminology?.sections.gallery.name || 'Gallery'}
               </button>
@@ -792,7 +852,8 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
               <button
                 id="header-cart-btn"
                 onClick={() => setIsCartOpen(true)}
-                className="relative p-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white transition-all shadow-xs hover:scale-105 cursor-pointer"
+                className={`relative p-2.5 ${resolvedButtonClass} text-white transition-all shadow-xs hover:scale-105 cursor-pointer`}
+                style={{ backgroundColor: resolvedBrandColor }}
                 title="View Shopping Cart"
               >
                 <ShoppingBag className="w-3.5 h-3.5 text-white" />
@@ -839,11 +900,12 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
               <button 
                 type="button"
                 onClick={() => navigateToPage('home')}
-                className={`p-2.5 rounded-xl text-left transition-all cursor-pointer flex items-center gap-2 ${
+                className={`p-2.5 ${resolvedButtonClass} text-left transition-all cursor-pointer flex items-center gap-2 ${
                   activePage === 'home'
-                    ? 'bg-orange-600 text-white font-black shadow-xs'
-                    : 'bg-gray-50 text-slate-800 hover:bg-orange-50 hover:text-orange-700'
+                    ? 'text-white font-black shadow-xs'
+                    : 'bg-gray-50 text-slate-800 hover:bg-gray-100'
                 }`}
+                style={activePage === 'home' ? { backgroundColor: resolvedBrandColor } : {}}
               >
                 <Home className="w-3.5 h-3.5 shrink-0" />
                 <span>{getTranslation('nav.home', currentLanguage, 'Home')}</span>
@@ -852,11 +914,12 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
               <button 
                 type="button"
                 onClick={() => navigateToPage('products')}
-                className={`p-2.5 rounded-xl text-left transition-all cursor-pointer flex items-center gap-2 ${
+                className={`p-2.5 ${resolvedButtonClass} text-left transition-all cursor-pointer flex items-center gap-2 ${
                   activePage === 'products'
-                    ? 'bg-orange-600 text-white font-black shadow-xs'
-                    : 'bg-gray-50 text-slate-800 hover:bg-orange-50 hover:text-orange-700'
+                    ? 'text-white font-black shadow-xs'
+                    : 'bg-gray-50 text-slate-800 hover:bg-gray-100'
                 }`}
+                style={activePage === 'products' ? { backgroundColor: resolvedBrandColor } : {}}
               >
                 <ShoppingBag className="w-3.5 h-3.5 shrink-0" />
                 <span>{terminology?.catalogTabName || getTranslation('nav.products', currentLanguage, 'Products')}</span>
@@ -866,11 +929,12 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
                 <button 
                   type="button"
                   onClick={() => navigateToPage('services')}
-                  className={`p-2.5 rounded-xl text-left transition-all cursor-pointer flex items-center gap-2 ${
+                  className={`p-2.5 ${resolvedButtonClass} text-left transition-all cursor-pointer flex items-center gap-2 ${
                     activePage === 'services'
-                      ? 'bg-orange-600 text-white font-black shadow-xs'
-                      : 'bg-gray-50 text-slate-800 hover:bg-orange-50 hover:text-orange-700'
+                      ? 'text-white font-black shadow-xs'
+                      : 'bg-gray-50 text-slate-800 hover:bg-gray-100'
                   }`}
+                  style={activePage === 'services' ? { backgroundColor: resolvedBrandColor } : {}}
                 >
                   <Sparkles className="w-3.5 h-3.5 shrink-0" />
                   <span>{terminology?.servicesTabName || getTranslation('nav.services', currentLanguage, 'Services')}</span>
@@ -881,11 +945,12 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
                 <button 
                   type="button"
                   onClick={() => navigateToPage('courses')}
-                  className={`p-2.5 rounded-xl text-left transition-all cursor-pointer flex items-center gap-2 ${
+                  className={`p-2.5 ${resolvedButtonClass} text-left transition-all cursor-pointer flex items-center gap-2 ${
                     activePage === 'courses'
-                      ? 'bg-orange-600 text-white font-black shadow-xs'
-                      : 'bg-gray-50 text-slate-800 hover:bg-orange-50 hover:text-orange-700'
+                      ? 'text-white font-black shadow-xs'
+                      : 'bg-gray-50 text-slate-800 hover:bg-gray-100'
                   }`}
+                  style={activePage === 'courses' ? { backgroundColor: resolvedBrandColor } : {}}
                 >
                   <FileText className="w-3.5 h-3.5 shrink-0" />
                   <span>{terminology?.coursesTabName || 'Courses'}</span>
@@ -895,11 +960,12 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
               <button 
                 type="button"
                 onClick={() => navigateToPage('about')}
-                className={`p-2.5 rounded-xl text-left transition-all cursor-pointer flex items-center gap-2 ${
+                className={`p-2.5 ${resolvedButtonClass} text-left transition-all cursor-pointer flex items-center gap-2 ${
                   activePage === 'about'
-                    ? 'bg-orange-600 text-white font-black shadow-xs'
-                    : 'bg-gray-50 text-slate-800 hover:bg-orange-50 hover:text-orange-700'
+                    ? 'text-white font-black shadow-xs'
+                    : 'bg-gray-50 text-slate-800 hover:bg-gray-100'
                 }`}
+                style={activePage === 'about' ? { backgroundColor: resolvedBrandColor } : {}}
               >
                 <Info className="w-3.5 h-3.5 shrink-0" />
                 <span>{terminology?.sections.about.name || getTranslation('nav.about', currentLanguage, 'About Us')}</span>
@@ -909,11 +975,12 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
                 <button 
                   type="button"
                   onClick={() => navigateToPage('gallery')}
-                  className={`p-2.5 rounded-xl text-left transition-all cursor-pointer flex items-center gap-2 ${
+                  className={`p-2.5 ${resolvedButtonClass} text-left transition-all cursor-pointer flex items-center gap-2 ${
                     activePage === 'gallery'
-                      ? 'bg-orange-600 text-white font-black shadow-xs'
-                      : 'bg-gray-50 text-slate-800 hover:bg-orange-50 hover:text-orange-700'
+                      ? 'text-white font-black shadow-xs'
+                      : 'bg-gray-50 text-slate-800 hover:bg-gray-100'
                   }`}
+                  style={activePage === 'gallery' ? { backgroundColor: resolvedBrandColor } : {}}
                 >
                   <Play className="w-3.5 h-3.5 shrink-0" />
                   <span>{terminology?.sections.gallery.name || 'Gallery'}</span>
@@ -1402,6 +1469,49 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
           onCopyUpi={handleCopyUpi}
           copiedUpi={copiedUpi}
         />
+      )}
+
+      {/* 16.5 VENDOR TRUST BADGES STRIP (CUSTOMIZABLE) */}
+      {(!sectionsConfig || sectionsConfig.footer?.enabled !== false) && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 sm:mt-16">
+          <div className="bg-white rounded-2xl sm:rounded-3xl border border-gray-200/80 p-5 sm:p-7 shadow-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 divide-y sm:divide-y-0 sm:divide-x divide-gray-100">
+              {(shop.trustBadges && shop.trustBadges.length > 0 ? shop.trustBadges : [
+                { id: 'tb1', title: '100% Genuine Direct Store', subtitle: 'Original items directly from registered shop owner', icon: 'ShieldCheck' },
+                { id: 'tb2', title: 'Direct Store Rate', subtitle: 'Zero middleman commission or hidden fees', icon: 'CheckCircle2' },
+                { id: 'tb3', title: 'Fast WhatsApp Seva', subtitle: 'Instant chat, order updates & delivery coordination', icon: 'MessageCircle' },
+                { id: 'tb4', title: 'Secure Direct UPI', subtitle: 'Pay directly to merchant QR or cash on delivery', icon: 'Sparkles' },
+              ]).map((badge, idx) => (
+                <div key={badge.id || `tb-${idx}`} className={`flex items-start gap-3.5 ${idx > 0 ? 'pt-3 sm:pt-0 sm:pl-4' : ''}`}>
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-2xs border"
+                    style={{
+                      backgroundColor: `${resolvedBrandColor}15`,
+                      borderColor: `${resolvedBrandColor}30`,
+                      color: resolvedBrandColor,
+                    }}
+                  >
+                    {idx === 0 && <ShieldCheck className="w-5 h-5" />}
+                    {idx === 1 && <CheckCircle2 className="w-5 h-5" />}
+                    {idx === 2 && <MessageCircle className="w-5 h-5" />}
+                    {idx === 3 && <Sparkles className="w-5 h-5" />}
+                    {idx > 3 && <ShieldCheck className="w-5 h-5" />}
+                  </div>
+                  <div className="min-w-0">
+                    <h4 className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-tight">
+                      {badge.title}
+                    </h4>
+                    {badge.subtitle && (
+                      <p className="text-[11px] text-slate-500 leading-snug mt-0.5">
+                        {badge.subtitle}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
       )}
 
       {/* 17. STORE FOOTER WITH VENDOR PAYMENT QR (LIGHT THEME) */}

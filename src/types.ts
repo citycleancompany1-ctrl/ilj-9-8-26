@@ -100,6 +100,18 @@ export interface Shop {
   heroBannerEnabled?: boolean; // Independent toggle for hero banner carousel
   bannerTitle?: string;
   bannerSubtitle?: string;
+  announcementBar?: {
+    enabled: boolean;
+    text: string;
+    bgColor?: string;
+    link?: string;
+  };
+  trustBadges?: Array<{
+    id: string;
+    title: string;
+    subtitle?: string;
+    icon?: string;
+  }>;
   aboutPhotoUrl: string;
   aboutStory: string;
   establishedYear: string;

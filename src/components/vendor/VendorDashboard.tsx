@@ -62,7 +62,8 @@ import {
   ToggleLeft,
   ToggleRight,
   MessageCircle,
-  RefreshCw
+  RefreshCw,
+  Users
 } from 'lucide-react';
 import { Shop, ProductItem, VideoItem, ShopInquiry, ProductType, FloatingButtonsConfig, ShopCategory } from '../../types';
 import { fileToBase64, formatINR, getWhatsAppDirectUrl, getYouTubeEmbedUrl, formatDisplayDate, calculateDaysRemaining, getOneYearExpiryDate } from '../../utils/mediaUpload';
@@ -96,6 +97,7 @@ import {
   StorageManagerView,
 } from './VendorAddonsAndSettingsViews';
 import { FloatingButtonsSettingsCard } from '../shared/FloatingButtonsSettingsCard';
+import { WebsiteCustomizationManager } from './WebsiteCustomizationManager';
 import { VendorSidebar } from './VendorSidebar';
 
 interface VendorDashboardProps {
@@ -290,6 +292,20 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
     switch (nav) {
       case 'dashboard':
         return { title: 'Store Overview Dashboard', category: 'DASHBOARD', desc: 'Main control center, store performance & quick actions' };
+      case 'menu_customization':
+        return { title: 'Website Customization Suite', category: 'CUSTOMIZER', desc: 'Themes, brand colors, header, banners, floating buttons & trust badges' };
+      case 'custom_themes':
+        return { title: 'Themes & Brand Colors', category: 'CUSTOMIZER', desc: '10 Indian cultural layouts, color palette & typography' };
+      case 'custom_header':
+        return { title: 'Header & Top Bar', category: 'CUSTOMIZER', desc: 'Store logo, business name, top announcement notice bar & quick contact' };
+      case 'custom_banners':
+        return { title: 'Hero Banner & Media Slider', category: 'CUSTOMIZER', desc: 'Desktop and mobile promotional banner sliders' };
+      case 'custom_floating':
+        return { title: 'Floating Action Buttons (WhatsApp/Call/Map)', category: 'CUSTOMIZER', desc: 'Quick action circle buttons at bottom right of website' };
+      case 'custom_footer':
+        return { title: 'Footer & Trust Badges', category: 'CUSTOMIZER', desc: 'Store guarantees, footer about text, copyright & social links' };
+      case 'custom_sections_visibility':
+        return { title: 'Section Visibility (Show/Hide)', category: 'CUSTOMIZER', desc: 'Turn modular sections on/off while keeping grid and order preserved' };
       case 'profile':
       case 'profile_business':
         return { title: 'Business Profile & Shop Details', category: 'MY PROFILE', desc: 'Business name, owner, contact, address, logo & timings' };
@@ -955,34 +971,39 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
         return (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-emerald-100 text-emerald-800 border border-emerald-300">
             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-            <span>🟢 PUBLISHED (LIVE PUBLIC)</span>
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span>PUBLISHED (LIVE PUBLIC)</span>
           </span>
         );
       case 'PENDING_APPROVAL':
         return (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-amber-100 text-amber-900 border border-amber-300 animate-pulse">
             <Clock className="w-3.5 h-3.5 text-amber-600" />
-            <span>🟡 UNDER ADMIN REVIEW</span>
+            <span className="w-2 h-2 rounded-full bg-amber-500" />
+            <span>UNDER ADMIN REVIEW</span>
           </span>
         );
       case 'HOLD':
         return (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-blue-100 text-blue-900 border border-blue-300">
             <Clock className="w-3.5 h-3.5 text-blue-600" />
-            <span>🔵 ON HOLD</span>
+            <span className="w-2 h-2 rounded-full bg-blue-500" />
+            <span>ON HOLD</span>
           </span>
         );
       case 'REJECTED':
         return (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-red-100 text-red-900 border border-red-300">
             <AlertCircle className="w-3.5 h-3.5 text-red-600" />
-            <span>🔴 CORRECTION REQUIRED</span>
+            <span className="w-2 h-2 rounded-full bg-red-500" />
+            <span>CORRECTION REQUIRED</span>
           </span>
         );
       default:
         return (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-stone-100 text-stone-700 border border-stone-300">
-            <span>📝 DRAFT (EDITING)</span>
+            <FileText className="w-3.5 h-3.5 text-stone-600" />
+            <span>DRAFT (EDITING)</span>
           </span>
         );
     }
@@ -1131,6 +1152,7 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
       <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar lg:hidden">
         {[
           { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
+          { id: 'menu_customization', label: 'Customization', icon: Palette },
           { id: 'profile', label: 'Profile', icon: User },
           { id: 'products', label: 'Products', icon: Package, badge: catalogProducts.length },
           { id: 'services', label: 'Services', icon: Wrench, badge: catalogServices.length },
@@ -1317,7 +1339,7 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
                     <span>{currentShop.planName || '1-Year Official LalaJi Store Plan'}</span>
                   </span>
 
-                  <span className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-sm ${
+                  <span className={`inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-sm ${
                     isExpired 
                       ? 'bg-red-500/20 text-red-300 border border-red-500/30' 
                       : isExpiringSoon 
@@ -1325,7 +1347,8 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
                       : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
                   }`}>
                     <CheckCircle2 className="w-3 h-3" />
-                    <span>{isExpired ? '🔴 Subscription Expired' : `🟢 Active (${daysRemaining} Days Left)`}</span>
+                    <span className={`w-1.5 h-1.5 rounded-full ${isExpired ? 'bg-red-400' : 'bg-emerald-400 animate-pulse'}`} />
+                    <span>{isExpired ? 'Subscription Expired' : `Active (${daysRemaining} Days Left)`}</span>
                   </span>
                 </div>
 
@@ -1426,12 +1449,14 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
                   Custom Domain Options
                 </span>
                 {currentShop.customDomain && currentShop.domainConnectStatus === 'CONNECTED' ? (
-                  <span className="bg-emerald-500/20 text-emerald-300 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full border border-emerald-500/30">
-                    🟢 Live: {currentShop.customDomain}
+                  <span className="bg-emerald-500/20 text-emerald-300 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full border border-emerald-500/30 flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    <span>Live: {currentShop.customDomain}</span>
                   </span>
                 ) : currentShop.domainRequest ? (
-                  <span className="bg-amber-500/20 text-amber-300 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full border border-amber-500/30 animate-pulse">
-                    🟡 Request Status: {currentShop.domainRequest.status}
+                  <span className="bg-amber-500/20 text-amber-300 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full border border-amber-500/30 flex items-center gap-1.5 animate-pulse">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                    <span>Request Status: {currentShop.domainRequest.status}</span>
                   </span>
                 ) : (
                   <span className="bg-orange-500/20 text-orange-300 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full border border-orange-500/30">
@@ -1687,6 +1712,41 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
 
 
       </div>
+      )}
+
+      {/* WEBSITE CUSTOMIZATION SUITE */}
+      {(activeNav === 'menu_customization' ||
+        activeNav === 'custom_themes' ||
+        activeNav === 'custom_header' ||
+        activeNav === 'custom_banners' ||
+        activeNav === 'custom_floating' ||
+        activeNav === 'custom_footer' ||
+        activeNav === 'custom_sections_visibility') && (
+        <WebsiteCustomizationManager
+          shop={currentShop}
+          initialTab={
+            activeNav === 'custom_themes'
+              ? 'themes'
+              : activeNav === 'custom_header'
+              ? 'header'
+              : activeNav === 'custom_banners'
+              ? 'banners'
+              : activeNav === 'custom_floating'
+              ? 'floating'
+              : activeNav === 'custom_footer'
+              ? 'footer'
+              : activeNav === 'custom_sections_visibility'
+              ? 'visibility'
+              : 'themes'
+          }
+          onUpdateShop={(updated) => {
+            setCurrentShop(updated);
+            setHasUnsavedChanges(true);
+            onUpdateShop(updated);
+          }}
+          onPreviewShop={() => onNavigateToShop(currentShop.shopId)}
+          showToast={showToast}
+        />
       )}
 
       {(activeNav === 'categories' || activeNav === 'section_categories') && (
@@ -3376,35 +3436,40 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
               {/* 16 Sections Visual Grid */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
                 {[
-                  { num: 1, name: 'Hero Banner', icon: '🌟' },
-                  { num: 2, name: 'About Store', icon: '🏪' },
-                  { num: 3, name: 'Key Features', icon: '⚡' },
-                  { num: 4, name: 'Store Services', icon: '🛠️' },
-                  { num: 5, name: 'Products Catalog', icon: '📦' },
-                  { num: 6, name: 'Why Choose Us', icon: '🛡️' },
-                  { num: 7, name: 'Testimonials', icon: '💬' },
-                  { num: 8, name: 'Offers & Deals', icon: '🏷️' },
-                  { num: 9, name: 'Videos & Reels', icon: '🎬' },
-                  { num: 10, name: 'Portfolio / Work', icon: '🖼️' },
-                  { num: 11, name: 'Team Members', icon: '👥' },
-                  { num: 12, name: 'FAQ Section', icon: '❓' },
-                  { num: 13, name: 'Call To Action', icon: '🚀' },
-                  { num: 14, name: 'Contact Info', icon: '📞' },
-                  { num: 15, name: 'Blog / Articles', icon: '📰' },
-                  { num: 16, name: 'Footer & Links', icon: '🌐' },
-                ].map((sec) => (
-                  <div
-                    key={sec.num}
-                    onClick={() => setActiveMainTab('SECTIONS')}
-                    className="p-2.5 bg-gray-50 hover:bg-orange-50/60 rounded-lg border border-gray-200 hover:border-orange-300 cursor-pointer transition-all flex items-center gap-2"
-                  >
-                    <span className="text-base">{sec.icon}</span>
-                    <div className="min-w-0">
-                      <div className="text-[10px] text-gray-500 font-mono font-bold">#{sec.num}</div>
-                      <div className="font-bold text-slate-800 text-[11px] truncate">{sec.name}</div>
+                  { num: 1, name: 'Hero Banner', icon: ImageIcon },
+                  { num: 2, name: 'About Store', icon: Store },
+                  { num: 3, name: 'Key Features', icon: Sparkles },
+                  { num: 4, name: 'Store Services', icon: Wrench },
+                  { num: 5, name: 'Products Catalog', icon: Package },
+                  { num: 6, name: 'Why Choose Us', icon: ShieldCheck },
+                  { num: 7, name: 'Testimonials', icon: MessageSquare },
+                  { num: 8, name: 'Offers & Deals', icon: Tag },
+                  { num: 9, name: 'Videos & Reels', icon: Video },
+                  { num: 10, name: 'Portfolio / Work', icon: Layers },
+                  { num: 11, name: 'Team Members', icon: Users },
+                  { num: 12, name: 'FAQ Section', icon: HelpCircle },
+                  { num: 13, name: 'Call To Action', icon: Zap },
+                  { num: 14, name: 'Contact Info', icon: Phone },
+                  { num: 15, name: 'Blog / Articles', icon: FileText },
+                  { num: 16, name: 'Footer & Links', icon: Globe },
+                ].map((sec) => {
+                  const SecIcon = sec.icon;
+                  return (
+                    <div
+                      key={sec.num}
+                      onClick={() => setActiveMainTab('SECTIONS')}
+                      className="p-2.5 bg-gray-50 hover:bg-orange-50/60 rounded-lg border border-gray-200 hover:border-orange-300 cursor-pointer transition-all flex items-center gap-2.5 group"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-orange-100/70 text-orange-600 group-hover:bg-orange-600 group-hover:text-white transition-colors flex items-center justify-center shrink-0">
+                        <SecIcon className="w-4 h-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-[10px] text-gray-500 font-mono font-bold">#{sec.num}</div>
+                        <div className="font-bold text-slate-800 text-[11px] truncate group-hover:text-orange-600 transition-colors">{sec.name}</div>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}

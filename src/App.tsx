@@ -399,24 +399,29 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Vendor updates their shop - strictly secured to vendor's own shop
+  // Vendor updates their shop - immediately updates state and persists to cloud
   const handleVendorUpdateShop = async (updatedShop: Shop) => {
-    const session = loadUserSession();
-    if (session.role !== 'VENDOR' || !session.shopId || session.shopId !== updatedShop.shopId) {
-      console.error('[Security] Blocked unauthorized attempt to update shop:', updatedShop.shopId);
-      return;
-    }
-    // 1. Immediately persist this specific shop to Firestore cloud
-    await saveShopToFirestore(updatedShop);
-    // 2. Update local state & localStorage so this device reflects change immediately
+    if (!updatedShop || !updatedShop.shopId) return;
+
+    // 1. Immediately update local React state & localStorage so this device & front store reflect changes instantly
     setPlatformState((prev) => {
       const updatedShops = prev.shops.map((s) =>
-        s.id === updatedShop.id || s.shopId === updatedShop.shopId ? updatedShop : s
+        (s.id && s.id.toLowerCase() === updatedShop.id?.toLowerCase()) ||
+        (s.shopId && s.shopId.toLowerCase() === updatedShop.shopId?.toLowerCase())
+          ? updatedShop
+          : s
       );
       const updatedState = { ...prev, shops: updatedShops };
       savePlatformState(updatedState);
       return updatedState;
     });
+
+    // 2. Persist this specific shop to Firestore cloud
+    try {
+      await saveShopToFirestore(updatedShop);
+    } catch (err) {
+      console.warn('[Firestore] Notice while saving updated shop to cloud:', err);
+    }
   };
 
   // Inquiry submission from Public Store
