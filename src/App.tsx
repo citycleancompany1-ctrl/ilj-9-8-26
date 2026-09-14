@@ -49,8 +49,10 @@ import {
   AuthSession 
 } from './services/authSession';
 import { ProtectedAccessBanner } from './components/common/ProtectedAccessBanner';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { updateShopSeoMeta, resetPlatformSeoMeta } from './utils/seo';
 import { initGoogleTranslate } from './utils/googleTranslate';
+import { ensureShopSafetyDefaults } from './utils/moduleRegistry';
 
 export default function App() {
   // Global platform state from localStorage with Firestore real-time sync
@@ -62,6 +64,7 @@ export default function App() {
   // Current view state
   const [currentView, setCurrentView] = useState<string>('home');
   const [activeShopId, setActiveShopId] = useState<string | null>(null);
+  const [isShopLoading, setIsShopLoading] = useState<boolean>(false);
 
   // Authentication session state
   const [currentRole, setCurrentRole] = useState<'VISITOR' | 'VENDOR' | 'ADMIN'>(initialSession.role);
@@ -255,29 +258,38 @@ export default function App() {
         setIsAuthOpen(true);
       }
 
-      const shopParam = searchParams.get('shop') || (!isLoginAction ? searchParams.get('shopId') : null) || searchParams.get('id');
+      const rawShopParam = searchParams.get('shop') || (!isLoginAction ? searchParams.get('shopId') : null) || searchParams.get('id');
+      const shopParam = rawShopParam ? rawShopParam.trim() : null;
       const cleanPath = (path || '').replace(/^\//, '') || 'home';
 
-      // Check URL search param first (?shop=SHP...) ONLY if not accessing vendor-dashboard
-      if (shopParam && !isLoginAction && cleanPath !== 'vendor-dashboard') {
+      // Check URL search param first (?shop=SHP... or ?shopId=SHP...)
+      if (shopParam && !isLoginAction) {
         setCurrentView('shop');
         setActiveShopId(shopParam);
+        // Normalize URL if opened with dirty path like /vendor-dashboard?shop=... or /stores?shop=...
+        if (cleanPath !== 'home' && cleanPath !== '' && cleanPath !== 'shop') {
+          const pageParam = searchParams.get('page');
+          const cleanUrl = `/?shop=${encodeURIComponent(shopParam)}${pageParam ? `&page=${encodeURIComponent(pageParam)}` : ''}`;
+          window.history.replaceState({}, '', cleanUrl);
+        }
         return;
       }
 
       // Check hash route (#/shop/SHP... or #shop=SHP...)
       const matchHashShop = hash.match(/#\/?shop[=\/]([a-zA-Z0-9_-]+)/i) || hash.match(/#([a-zA-Z0-9_-]{5,})/i);
       if (matchHashShop) {
+        const cleanSid = matchHashShop[1].trim();
         setCurrentView('shop');
-        setActiveShopId(matchHashShop[1]);
+        setActiveShopId(cleanSid);
         return;
       }
 
       // Check pathname (/shop/SHP...)
       const matchShop = path.match(/^\/shop\/([a-zA-Z0-9_-]+)/i);
       if (matchShop) {
+        const cleanSid = matchShop[1].trim();
         setCurrentView('shop');
-        setActiveShopId(matchShop[1]);
+        setActiveShopId(cleanSid);
         return;
       }
 
@@ -391,13 +403,15 @@ export default function App() {
   const handleNavigate = (view: string, shopIdParam?: string) => {
     if (view.startsWith('shop/')) {
       const sid = view.split('/')[1] || shopIdParam;
-      setActiveShopId(sid || null);
+      const cleanSid = (sid || '').trim();
+      setActiveShopId(cleanSid || null);
       setCurrentView('shop');
-      window.history.pushState({}, '', `?shop=${sid}`);
+      window.history.pushState({}, '', `/?shop=${encodeURIComponent(cleanSid)}`);
     } else if (view === 'shop' && shopIdParam) {
-      setActiveShopId(shopIdParam);
+      const cleanSid = shopIdParam.trim();
+      setActiveShopId(cleanSid);
       setCurrentView('shop');
-      window.history.pushState({}, '', `?shop=${shopIdParam}`);
+      window.history.pushState({}, '', `/?shop=${encodeURIComponent(cleanSid)}`);
     } else if (view === 'vendor-dashboard') {
       const session = loadUserSession();
       if (session.role !== 'VENDOR' || !session.shopId) {
@@ -582,55 +596,87 @@ export default function App() {
 
   // Real-time live subscription for active shop to guarantee instant cross-device product & catalogue sync
   useEffect(() => {
-    if (!activeShopId) return;
+    if (!activeShopId) {
+      setIsShopLoading(false);
+      return;
+    }
 
-    // Immediate direct cloud fetch in case shop was just added on another device
-    fetchShopFromFirestore(activeShopId).then((fetchedShop) => {
-      if (fetchedShop) {
-        setPlatformState((prev) => {
-          const existingShop = prev.shops.find(
-            (s) =>
-              (s.shopId && s.shopId.toLowerCase() === fetchedShop.shopId.toLowerCase()) ||
-              (s.id && s.id.toLowerCase() === fetchedShop.id?.toLowerCase())
-          );
-          if (existingShop) {
-            const localTime = new Date(existingShop.updatedAt || 0).getTime();
-            const cloudTime = new Date(fetchedShop.updatedAt || 0).getTime();
-            if (localTime >= cloudTime) {
-              return prev; // Retain fresh local edits and media
+    const cleanShopId = activeShopId.trim();
+    if (!cleanShopId) {
+      setIsShopLoading(false);
+      return;
+    }
+
+    // Check if we already have this shop loaded in memory
+    const existingInState = platformState.shops.find(
+      (s) =>
+        (s.shopId && s.shopId.trim().toLowerCase() === cleanShopId.toLowerCase()) ||
+        (s.id && s.id.trim().toLowerCase() === cleanShopId.toLowerCase())
+    );
+
+    // If shop is not in memory yet, display smooth loading state while fetching from cloud
+    if (!existingInState) {
+      setIsShopLoading(true);
+    }
+
+    // Immediate direct cloud fetch in case shop was just added or visited directly by URL
+    fetchShopFromFirestore(cleanShopId)
+      .then((fetchedShop) => {
+        if (fetchedShop) {
+          const safeShop = ensureShopSafetyDefaults(fetchedShop);
+          setPlatformState((prev) => {
+            const existingIdx = prev.shops.findIndex(
+              (s) =>
+                (s.shopId && s.shopId.trim().toLowerCase() === safeShop.shopId.trim().toLowerCase()) ||
+                (s.id && s.id.trim().toLowerCase() === safeShop.id?.trim().toLowerCase())
+            );
+
+            let updatedShops: Shop[];
+            if (existingIdx >= 0) {
+              const currentLocal = prev.shops[existingIdx];
+              const localTime = new Date(currentLocal.updatedAt || 0).getTime();
+              const cloudTime = new Date(safeShop.updatedAt || 0).getTime();
+              if (localTime >= cloudTime) {
+                return prev; // Retain fresh local edits and media
+              }
+              updatedShops = [...prev.shops];
+              updatedShops[existingIdx] = safeShop;
+            } else {
+              updatedShops = [safeShop, ...prev.shops];
             }
-          }
-          const exists = prev.shops.some((s) => s.shopId === fetchedShop.shopId);
-          const updatedShops = exists
-            ? prev.shops.map((s) => (s.shopId === fetchedShop.shopId ? fetchedShop : s))
-            : [fetchedShop, ...prev.shops];
-          const updated = { ...prev, shops: updatedShops };
-          savePlatformState(updated);
-          return updated;
-        });
-      }
-    });
+            const updated = { ...prev, shops: updatedShops };
+            savePlatformState(updated);
+            return updated;
+          });
+        }
+      })
+      .finally(() => {
+        setIsShopLoading(false);
+      });
 
     // Real-time listener: any product added on mobile will reflect instantly on this device
-    const unsubSingle = subscribeToShop(activeShopId, (liveShop) => {
+    const unsubSingle = subscribeToShop(cleanShopId, (liveShop) => {
       if (liveShop && liveShop.shopId) {
+        const safeShop = ensureShopSafetyDefaults(liveShop);
         setPlatformState((prev) => {
-          const existingShop = prev.shops.find(
+          const existingIdx = prev.shops.findIndex(
             (s) =>
-              (s.shopId && s.shopId.toLowerCase() === liveShop.shopId.toLowerCase()) ||
-              (s.id && s.id.toLowerCase() === liveShop.id?.toLowerCase())
+              (s.shopId && s.shopId.trim().toLowerCase() === safeShop.shopId.trim().toLowerCase()) ||
+              (s.id && s.id.trim().toLowerCase() === safeShop.id?.trim().toLowerCase())
           );
-          if (existingShop) {
-            const localTime = new Date(existingShop.updatedAt || 0).getTime();
-            const cloudTime = new Date(liveShop.updatedAt || 0).getTime();
+          let updatedShops: Shop[];
+          if (existingIdx >= 0) {
+            const currentLocal = prev.shops[existingIdx];
+            const localTime = new Date(currentLocal.updatedAt || 0).getTime();
+            const cloudTime = new Date(safeShop.updatedAt || 0).getTime();
             if (localTime >= cloudTime) {
               return prev; // Retain fresh local edits and media
             }
+            updatedShops = [...prev.shops];
+            updatedShops[existingIdx] = safeShop;
+          } else {
+            updatedShops = [safeShop, ...prev.shops];
           }
-          const exists = prev.shops.some((s) => s.shopId === liveShop.shopId);
-          const updatedShops = exists
-            ? prev.shops.map((s) => (s.shopId === liveShop.shopId ? liveShop : s))
-            : [liveShop, ...prev.shops];
           const updated = { ...prev, shops: updatedShops };
           savePlatformState(updated);
           return updated;
@@ -650,8 +696,8 @@ export default function App() {
   const currentPublicShop = activeShopId
     ? platformState.shops.find(
         (s) =>
-          s.shopId.toLowerCase() === activeShopId.toLowerCase() ||
-          s.id.toLowerCase() === activeShopId.toLowerCase()
+          (s.shopId && s.shopId.trim().toLowerCase() === activeShopId.trim().toLowerCase()) ||
+          (s.id && s.id.trim().toLowerCase() === activeShopId.trim().toLowerCase())
       )
     : undefined;
 
@@ -803,19 +849,23 @@ export default function App() {
 
         {/* Dynamic Public Store Page (/shop/{SHOP_ID}) */}
         {currentView === 'shop' && (
-          <PublicShopPage
-            shop={currentPublicShop}
-            shopId={activeShopId || undefined}
-            popups={platformState.popups}
-            globalPopupEnabled={platformState.globalPopupEnabled}
-            onNavigateHome={() => handleNavigate('home')}
-            onOpenVendorLogin={() => handleOpenAuth('LOGIN')}
-            onSubmitInquiry={handleSubmitShopInquiry}
-            isVendorOrAdminPreview={
-              currentRole === 'ADMIN' ||
-              (currentRole === 'VENDOR' && loggedVendorShopId === currentPublicShop?.shopId)
-            }
-          />
+          <ErrorBoundary fallbackTitle="Error Loading Store Website">
+            <PublicShopPage
+              shop={currentPublicShop}
+              shopId={activeShopId || undefined}
+              isLoading={isShopLoading}
+              popups={platformState.popups}
+              globalPopupEnabled={platformState.globalPopupEnabled}
+              onNavigateHome={() => handleNavigate('home')}
+              onOpenVendorLogin={() => handleOpenAuth('LOGIN')}
+              onNavigateToDashboard={() => handleNavigate('vendor-dashboard')}
+              onSubmitInquiry={handleSubmitShopInquiry}
+              isVendorOrAdminPreview={
+                currentRole === 'ADMIN' ||
+                (currentRole === 'VENDOR' && loggedVendorShopId === currentPublicShop?.shopId)
+              }
+            />
+          </ErrorBoundary>
         )}
       </main>
 

@@ -203,11 +203,40 @@ export async function deleteShopFromFirestore(shopId: string): Promise<void> {
  */
 export async function fetchShopFromFirestore(shopId: string): Promise<Shop | null> {
   if (!shopId) return null;
+  const cleanId = shopId.trim();
+  if (!cleanId) return null;
+
   try {
-    const docRef = doc(db, SHOPS_COLLECTION, shopId);
+    // 1. Direct document lookup with given ID
+    const docRef = doc(db, SHOPS_COLLECTION, cleanId);
     const snap = await getDoc(docRef);
     if (snap.exists()) {
       return snap.data() as Shop;
+    }
+
+    // 2. Direct document lookup with uppercase ID (Firestore doc keys are case-sensitive)
+    const upperId = cleanId.toUpperCase();
+    if (upperId !== cleanId) {
+      const upperDocRef = doc(db, SHOPS_COLLECTION, upperId);
+      const upperSnap = await getDoc(upperDocRef);
+      if (upperSnap.exists()) {
+        return upperSnap.data() as Shop;
+      }
+    }
+
+    // 3. Query collection by shopId field (case-insensitive fallback)
+    const shopsColl = collection(db, SHOPS_COLLECTION);
+    const qShop = query(shopsColl, where('shopId', '==', upperId));
+    const snapShop = await getDocs(qShop);
+    if (!snapShop.empty) {
+      return snapShop.docs[0].data() as Shop;
+    }
+
+    // 4. Query collection by internal id field
+    const qInternal = query(shopsColl, where('id', '==', cleanId));
+    const snapInternal = await getDocs(qInternal);
+    if (!snapInternal.empty) {
+      return snapInternal.docs[0].data() as Shop;
     }
   } catch (error) {
     if (isQuotaExhaustionError(error)) {
@@ -275,8 +304,10 @@ export async function fetchShopByCustomDomain(domain: string): Promise<Shop | nu
  */
 export function subscribeToShop(shopId: string, onUpdate: (shop: Shop) => void): () => void {
   if (!shopId) return () => {};
+  const cleanId = shopId.trim();
+  if (!cleanId) return () => {};
   try {
-    const docRef = doc(db, SHOPS_COLLECTION, shopId);
+    const docRef = doc(db, SHOPS_COLLECTION, cleanId.toUpperCase());
     const unsubscribe = onSnapshot(
       docRef,
       (docSnap) => {

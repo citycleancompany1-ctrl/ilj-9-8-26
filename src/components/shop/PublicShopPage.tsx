@@ -46,6 +46,7 @@ import {
   SlidersHorizontal,
   ArrowLeft,
   MessageCircle,
+  RefreshCw,
 } from 'lucide-react';
 import { Shop, ProductItem, CartItem, AdvertisementPopup, ShopInquiry } from '../../types';
 import { formatINR, getWhatsAppCartMessageUrl, getWhatsAppDirectUrl, getYouTubeEmbedUrl } from '../../utils/mediaUpload';
@@ -54,7 +55,7 @@ import { ShopShareModal } from '../modals/ShopShareModal';
 import { TermsAndConditionsModal } from '../modals/TermsAndConditionsModal';
 import { updateShopSeoMeta, resetPlatformSeoMeta } from '../../utils/seo';
 import { getThemeById } from '../../data/indianThemes';
-import { getDefaultSectionsConfig } from '../../utils/sectionDefaults';
+import { getDefaultSectionsConfig, mergeWithDefaultSectionsConfig } from '../../utils/sectionDefaults';
 import { FloatingActionButtons } from './FloatingActionButtons';
 import { SupportedLanguage, SUPPORTED_LANGUAGES, getTranslation } from '../../utils/shopTranslations';
 import { initGoogleTranslate, applyGoogleTranslation } from '../../utils/googleTranslate';
@@ -96,10 +97,12 @@ export type ShopWebsitePage = 'home' | 'products' | 'services' | 'courses' | 'ab
 interface PublicShopPageProps {
   shop?: Shop;
   shopId?: string;
+  isLoading?: boolean;
   popups: AdvertisementPopup[];
   globalPopupEnabled: boolean;
   onNavigateHome: () => void;
   onOpenVendorLogin: () => void;
+  onNavigateToDashboard?: () => void;
   onSubmitInquiry: (inquiry: Omit<ShopInquiry, 'id' | 'date' | 'status'>) => void;
   isVendorOrAdminPreview?: boolean;
 }
@@ -107,10 +110,12 @@ interface PublicShopPageProps {
 export const PublicShopPage: React.FC<PublicShopPageProps> = ({
   shop,
   shopId,
+  isLoading = false,
   popups,
   globalPopupEnabled,
   onNavigateHome,
   onOpenVendorLogin,
+  onNavigateToDashboard,
   onSubmitInquiry,
   isVendorOrAdminPreview = false,
 }) => {
@@ -239,8 +244,8 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
   // Store accessibility: accessible as long as shop exists; shows status badge if not yet published
   const isAccessible = Boolean(shop);
 
-  // 16 Modular Website Sections Config (fallback to smart category defaults)
-  const sectionsConfig = shop ? (shop.sectionsConfig || getDefaultSectionsConfig(shop)) : null;
+  // 16 Modular Website Sections Config (deep merge with smart category defaults so every section is defined)
+  const sectionsConfig = shop ? mergeWithDefaultSectionsConfig(shop.sectionsConfig, shop) : null;
 
   // Dynamic 19-section terminology based on shop main category & business type
   const terminology = useMemo(() => shop ? getShopTerminology(shop) : null, [shop]);
@@ -278,24 +283,63 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
     }
   }, [shop, isAccessible, globalPopupEnabled, popups]);
 
+  // Loading state while fetching shop from cloud database
+  if (isLoading && !shop) {
+    return (
+      <div className="min-h-[85vh] flex items-center justify-center p-4 bg-[#FCF9F5]">
+        <div className="max-w-md w-full bg-white rounded-3xl p-8 border border-orange-200/80 shadow-xl text-center space-y-5">
+          <div className="w-16 h-16 bg-gradient-to-tr from-orange-500 to-amber-500 text-white rounded-2xl flex items-center justify-center mx-auto shadow-md shadow-orange-500/20 animate-pulse">
+            <Store className="w-8 h-8 animate-bounce" />
+          </div>
+          <div className="space-y-2">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-50 text-orange-800 text-xs font-mono font-bold border border-orange-200">
+              <span>{shopId || 'Store'}</span>
+            </div>
+            <h2 className="text-xl font-black uppercase tracking-tight text-slate-900 font-['Outfit',sans-serif]">
+              Connecting to Live Store...
+            </h2>
+            <p className="text-xs text-gray-600 leading-relaxed">
+              Loading verified digital catalogue & store website directly from IndianLalaJi network.
+            </p>
+          </div>
+          <div className="flex items-center justify-center gap-2 pt-2 text-xs font-bold text-orange-700">
+            <div className="w-4 h-4 border-2 border-orange-600 border-t-transparent rounded-full animate-spin"></div>
+            <span>Synchronizing live products & media...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // If Shop Not Found
   if (!shop) {
     return (
       <div className="min-h-[80vh] flex items-center justify-center p-4 bg-[#FCF9F5]">
-        <div className="max-w-md w-full bg-white rounded-2xl p-8 border border-gray-200 shadow-xl text-center space-y-4">
+        <div className="max-w-md w-full bg-white rounded-2xl p-8 border border-gray-200 shadow-xl text-center space-y-5">
           <div className="w-16 h-16 bg-red-100 text-red-600 rounded-xl flex items-center justify-center mx-auto">
             <AlertCircle className="w-8 h-8" />
           </div>
-          <h2 className="text-xl font-black uppercase tracking-tight text-slate-900">Shop Not Found (404)</h2>
-          <p className="text-xs text-gray-600">
-            Shop ID <strong>{shopId}</strong> does not exist on the platform or has been removed.
-          </p>
-          <button
-            onClick={onNavigateHome}
-            className="px-5 py-2.5 bg-orange-600 hover:bg-orange-700 text-white font-bold uppercase tracking-wider text-xs rounded-sm shadow-xs"
-          >
-            Back to IndianLalaJi Home
-          </button>
+          <div className="space-y-1.5">
+            <h2 className="text-xl font-black uppercase tracking-tight text-slate-900">Shop Not Found (404)</h2>
+            <p className="text-xs text-gray-600">
+              Shop ID <strong>{shopId}</strong> was not found on the platform or is currently initializing.
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-2 pt-2">
+            <button
+              onClick={() => window.location.reload()}
+              className="w-full sm:w-auto px-4 py-2.5 bg-orange-50 hover:bg-orange-100 text-orange-800 font-bold uppercase tracking-wider text-xs rounded-sm border border-orange-200 shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span>Retry Loading</span>
+            </button>
+            <button
+              onClick={onNavigateHome}
+              className="w-full sm:w-auto px-5 py-2.5 bg-orange-600 hover:bg-orange-700 text-white font-bold uppercase tracking-wider text-xs rounded-sm shadow-xs cursor-pointer"
+            >
+              Platform Home
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -671,14 +715,25 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
               <Phone className="w-3 h-3 text-orange-600" />
               <span className="hidden sm:inline">Call:</span> {shop.phone}
             </a>
-            <button 
-              onClick={onOpenVendorLogin} 
-              className="hover:text-orange-600 flex items-center gap-1 transition-colors pl-2.5 border-l border-amber-300/80 cursor-pointer"
-              title="Store Owner Portal"
-            >
-              <Lock className="w-3 h-3 text-orange-600" />
-              <span>Merchant Login</span>
-            </button>
+            {isVendorOrAdminPreview && onNavigateToDashboard ? (
+              <button 
+                onClick={onNavigateToDashboard} 
+                className="bg-orange-600 hover:bg-orange-700 text-white text-[11px] font-bold px-2.5 py-1 rounded flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs ml-1"
+                title="Return to Dashboard"
+              >
+                <ArrowLeft className="w-3 h-3 text-white" />
+                <span>Dashboard</span>
+              </button>
+            ) : (
+              <button 
+                onClick={onOpenVendorLogin} 
+                className="hover:text-orange-600 flex items-center gap-1 transition-colors pl-2.5 border-l border-amber-300/80 cursor-pointer"
+                title="Store Owner Portal"
+              >
+                <Lock className="w-3 h-3 text-orange-600" />
+                <span>Merchant Login</span>
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -1031,7 +1086,7 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
       {activePage === 'home' && (
         <>
           {/* 0. HERO BANNER SLIDER (ON/OFF & Custom Builder Config) */}
-          {sectionsConfig && (sectionsConfig.heroBanner ? sectionsConfig.heroBanner.enabled !== false : shop.heroBannerEnabled !== false) && (
+          {(sectionsConfig?.heroBanner ? sectionsConfig.heroBanner.enabled !== false : shop.heroBannerEnabled !== false) && (
             <HeroBannerRenderer
               config={sectionsConfig?.heroBanner}
               shop={shop}
@@ -1039,7 +1094,7 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
           )}
 
           {/* 1. HERO SECTION (ON/OFF & Custom Builder Config) */}
-          {sectionsConfig && sectionsConfig.hero.enabled && (
+          {sectionsConfig?.hero?.enabled && (
             <HeroSectionRenderer
               config={sectionsConfig.hero}
               shop={shop}
@@ -1049,17 +1104,17 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
           )}
 
       {/* 2. ABOUT US SECTION */}
-      {sectionsConfig && sectionsConfig.about.enabled && (
+      {sectionsConfig?.about?.enabled && (
         <AboutSectionRenderer config={sectionsConfig.about} shop={shop} />
       )}
 
       {/* 3. FEATURES SECTION (ON/OFF & Custom Builder Config) */}
-      {sectionsConfig && sectionsConfig.features.enabled && (
+      {sectionsConfig?.features?.enabled && (
         <FeaturesSectionRenderer config={sectionsConfig.features} />
       )}
 
       {/* BENEFITS / WHY CHOOSE US SECTION (ON/OFF & Custom Builder Config) */}
-      {sectionsConfig && sectionsConfig.benefits && sectionsConfig.benefits.enabled && (
+      {sectionsConfig?.benefits?.enabled && (
         <BenefitsSectionRenderer config={sectionsConfig.benefits} />
       )}
 
@@ -1096,7 +1151,7 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
       )}
 
       {/* 5. PRODUCTS CATALOGUE SECTION */}
-      {(!sectionsConfig || sectionsConfig.products.enabled) && catalogProducts.length > 0 && (
+      {(!sectionsConfig || sectionsConfig.products?.enabled !== false) && catalogProducts.length > 0 && (
         <StoreItemsCarouselSection
           id="products"
           title={sectionsConfig?.products?.title || terminology?.sections.products.defaultHeading || getTranslation('nav.products', currentLanguage, 'Store Products')}
@@ -1134,7 +1189,7 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
       )}
 
       {/* 8. OUR OFFERS & PROMOTIONAL BANNERS */}
-      {sectionsConfig && sectionsConfig.offers && sectionsConfig.offers.enabled && (
+      {sectionsConfig?.offers?.enabled && (
         <OffersSectionRenderer config={sectionsConfig.offers} shop={shop} />
       )}
 
@@ -1144,27 +1199,27 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
       )}
 
       {/* 10. PORTFOLIO / WORK SHOWCASE (ON/OFF & Custom Builder Config) */}
-      {sectionsConfig && sectionsConfig.portfolio.enabled && (
+      {sectionsConfig?.portfolio?.enabled && (
         <PortfolioSectionRenderer config={sectionsConfig.portfolio} />
       )}
 
       {/* 11. TEAM SECTION (ON/OFF & Custom Builder Config - Image + Position + Name) */}
-      {sectionsConfig && sectionsConfig.team.enabled && (
+      {sectionsConfig?.team?.enabled && (
         <TeamSectionRenderer config={sectionsConfig.team} />
       )}
 
       {/* 12. FAQ SECTION (ON/OFF & Custom Builder Config) */}
-      {sectionsConfig && sectionsConfig.faq.enabled && (
+      {sectionsConfig?.faq?.enabled && (
         <FaqSectionRenderer config={sectionsConfig.faq} />
       )}
 
       {/* 13. CTA SECTION (ON/OFF & Custom Builder Config) */}
-      {sectionsConfig && sectionsConfig.cta.enabled && (
+      {sectionsConfig?.cta?.enabled && (
         <CtaSectionRenderer config={sectionsConfig.cta} shop={shop} />
       )}
 
       {/* 14. CONTACT US & CUSTOMER INQUIRY FORM SECTION (ON/OFF & Custom Builder Config) */}
-      {(!sectionsConfig || sectionsConfig.contact.enabled) && (
+      {(!sectionsConfig || sectionsConfig.contact?.enabled !== false) && (
       <section id="contact-inquiry" ref={inquirySectionRef} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 space-y-8">
         <div className="bg-gradient-to-br from-orange-50/80 via-white to-white rounded-3xl border border-orange-200/80 p-4 sm:p-10 lg:p-12 shadow-sm">
           
@@ -1371,7 +1426,7 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
           )}
 
           {/* 16. BLOG / ARTICLES SECTION (ON/OFF & Custom Builder Config) */}
-          {sectionsConfig && sectionsConfig.blog.enabled && (
+          {sectionsConfig?.blog?.enabled && (
             <BlogSectionRenderer config={sectionsConfig.blog} shop={shop} />
           )}
         </>
@@ -1472,7 +1527,7 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
       )}
 
       {/* 17. STORE FOOTER WITH VENDOR PAYMENT QR (LIGHT THEME) */}
-      {(!sectionsConfig || sectionsConfig.footer.enabled) && (
+      {(!sectionsConfig || sectionsConfig.footer?.enabled !== false) && (
       <footer className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 sm:mt-20 mb-0 pb-0">
         <div className="bg-white text-slate-900 rounded-3xl border border-gray-200/90 p-5 sm:p-10 lg:p-12 shadow-sm grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 text-xs">
           

@@ -457,3 +457,27 @@ export function getDefaultSectionsConfig(shop: Partial<Shop> = {}): ShopSections
     },
   };
 }
+
+/**
+ * Deeply merges a shop's partial or user-customized sectionsConfig with default sectionsConfig,
+ * guaranteeing that EVERY section (hero, products, about, features, etc.) exists and has .enabled boolean.
+ * This prevents runtime undefined crashes if a vendor only customized a single section (e.g. only about).
+ */
+export function mergeWithDefaultSectionsConfig(
+  userConfig?: Partial<ShopSectionsConfig> | null,
+  shop: Partial<Shop> = {}
+): ShopSectionsConfig {
+  const defaults = getDefaultSectionsConfig(shop);
+  if (!userConfig) return defaults;
+
+  const result = { ...defaults };
+  for (const key of Object.keys(defaults) as Array<keyof ShopSectionsConfig>) {
+    if (userConfig[key]) {
+      result[key] = {
+        ...defaults[key],
+        ...userConfig[key],
+      } as any;
+    }
+  }
+  return result;
+}
