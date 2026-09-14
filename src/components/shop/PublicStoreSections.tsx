@@ -853,7 +853,7 @@ export const FeaturesSectionRenderer: React.FC<{
             <div
               ref={desktopScrollRef}
               onScroll={handleDesktopScroll}
-              className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-3 pt-1 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] touch-pan-x [&::-webkit-scrollbar]:hidden"
+              className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-3 pt-1 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] touch-pan-y [&::-webkit-scrollbar]:hidden"
             >
               {config.items.map((item, idx) => (
                 <div
@@ -999,7 +999,7 @@ export const FeaturesSectionRenderer: React.FC<{
             <div
               ref={mobileScrollRef}
               onScroll={handleMobileScroll}
-              className="flex gap-2.5 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-2 pt-1 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] touch-pan-x [&::-webkit-scrollbar]:hidden"
+              className="flex gap-2.5 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-2 pt-1 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] touch-pan-y [&::-webkit-scrollbar]:hidden"
             >
               {config.items.map((item, idx) => (
                 <div
@@ -1524,7 +1524,7 @@ export const BenefitsSectionRenderer: React.FC<{
             <div
               ref={scrollRef}
               onScroll={handleScroll}
-              className="flex gap-2.5 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-2 pt-1 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] touch-pan-x [&::-webkit-scrollbar]:hidden"
+              className="flex gap-2.5 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-2 pt-1 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] touch-pan-y [&::-webkit-scrollbar]:hidden"
             >
               {config.items.map((b, idx) => (
                 <div
@@ -2155,7 +2155,7 @@ export const OffersSectionRenderer: React.FC<{
             <div
               ref={mobileOffersScrollRef}
               onScroll={handleMobileScroll}
-              className="flex gap-2.5 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-2 pt-1 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] touch-pan-x [&::-webkit-scrollbar]:hidden"
+              className="flex gap-2.5 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-2 pt-1 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] touch-pan-y [&::-webkit-scrollbar]:hidden"
             >
               {validBanners.map((banner, idx) => {
                 const whatsappMsg = `Namaste ${shop.businessName}! I want to claim your offer: "${banner.title || 'Special Offer'}"${banner.couponCode ? ` (Coupon: ${banner.couponCode})` : ''}.`;
@@ -2662,7 +2662,7 @@ export const PortfolioSectionRenderer: React.FC<{
             <div
               ref={scrollRef}
               onScroll={handleScroll}
-              className="flex gap-2.5 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-2 pt-1 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] touch-pan-x [&::-webkit-scrollbar]:hidden"
+              className="flex gap-2.5 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-2 pt-1 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] touch-pan-y [&::-webkit-scrollbar]:hidden"
             >
               {config.items.map((item, idx) => (
                 <div
@@ -3331,7 +3331,7 @@ export const VideoSectionRenderer: React.FC<{
             <div
               ref={scrollRef}
               onScroll={handleScroll}
-              className="flex gap-2.5 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-2 pt-1 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] touch-pan-x [&::-webkit-scrollbar]:hidden"
+              className="flex gap-2.5 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-2 pt-1 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] touch-pan-y [&::-webkit-scrollbar]:hidden"
             >
               {allVideos.map((vid, idx) => {
                 return (
@@ -4015,7 +4015,7 @@ export const TeamSectionRenderer: React.FC<{
             <div
               ref={scrollRef}
               onScroll={handleScroll}
-              className="flex gap-2.5 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-2 pt-1 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] touch-pan-x [&::-webkit-scrollbar]:hidden"
+              className="flex gap-2.5 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-2 pt-1 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] touch-pan-y [&::-webkit-scrollbar]:hidden"
             >
               {config.members.map((member, idx) => (
                 <div
@@ -4451,7 +4451,7 @@ export const BlogSectionRenderer: React.FC<{
             <div
               ref={scrollRef}
               onScroll={handleScroll}
-              className="flex gap-2.5 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-2 pt-1 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] touch-pan-x [&::-webkit-scrollbar]:hidden"
+              className="flex gap-2.5 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-2 pt-1 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] touch-pan-y [&::-webkit-scrollbar]:hidden"
             >
               {config.posts.map((post, idx) => (
                 <article
