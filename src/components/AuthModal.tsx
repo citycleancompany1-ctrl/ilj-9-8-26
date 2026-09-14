@@ -101,23 +101,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [adminPin, setAdminPin] = useState('');
   const [showAdminPin, setShowAdminPin] = useState(false);
 
-  // Vendor Registration Form State
+  // Vendor Registration Form State (Your Name, Business Name, WhatsApp Number, Business Category, Business Sub-Category, Password, Confirm Password)
   const [ownerName, setOwnerName] = useState('');
   const [businessName, setBusinessName] = useState('');
-  const [regEmail, setRegEmail] = useState('');
   const [mobileNumber, setMobileNumber] = useState('');
-  const [regPassword, setRegPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [businessCategory, setBusinessCategory] = useState(BUSINESS_CATEGORIES[0].name);
   const [subCategory, setSubCategory] = useState(() => getSubCategoriesForMain(BUSINESS_CATEGORIES[0].name)[0] || '');
-  const [state, setState] = useState('Uttar Pradesh');
-
-  const indianStates = [
-    'Uttar Pradesh', 'Maharashtra', 'Rajasthan', 'Delhi', 'Madhya Pradesh', 
-    'Gujarat', 'Bihar', 'Punjab', 'Haryana', 'West Bengal', 'Karnataka', 
-    'Tamil Nadu', 'Telangana', 'Kerala', 'Odisha', 'Assam', 'Jharkhand', 
-    'Uttarakhand', 'Himachal Pradesh', 'Chhattisgarh', 'Goa', 'Andhra Pradesh'
-  ];
+  const [regPassword, setRegPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [sendWhatsAppOnCreate, setSendWhatsAppOnCreate] = useState(true);
 
   if (!isOpen) return null;
 
@@ -212,12 +204,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     setErrorMsg(null);
   };
 
-  const handleVendorRegister = async (e?: React.FormEvent, sendWhatsApp: boolean = false) => {
+  const handleVendorRegister = async (e?: React.FormEvent, sendWhatsApp?: boolean) => {
     if (e) e.preventDefault();
     setErrorMsg(null);
 
-    if (!ownerName.trim() || !businessName.trim() || !regEmail.trim() || !mobileNumber.trim() || !regPassword) {
-      setErrorMsg('Please fill in all required fields.');
+    if (!ownerName.trim() || !businessName.trim() || !mobileNumber.trim() || !regPassword || !confirmPassword) {
+      setErrorMsg('Please fill in all required fields (Your Name, Business Name, WhatsApp Number, Password, Confirm Password).');
+      return;
+    }
+
+    const cleanPhone = (mobileNumber || '').replace(/[^0-9]/g, '');
+    if (cleanPhone.length < 10) {
+      setErrorMsg('Please enter a valid 10-digit WhatsApp number.');
       return;
     }
 
@@ -226,12 +224,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       return;
     }
 
-    const cleanPhone = (mobileNumber || '').replace(/[^0-9]/g, '');
-    if (cleanPhone.length < 10) {
-      setErrorMsg('Please enter a valid 10-digit mobile number.');
-      return;
-    }
-
+    const shouldSendWhatsApp = sendWhatsApp !== undefined ? sendWhatsApp : sendWhatsAppOnCreate;
     setIsSubmitting(true);
     try {
       // Generate unique Shop ID and salted hash
@@ -241,23 +234,24 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
       const currentOrigin = typeof window !== 'undefined' ? window.location.origin : 'https://indianlalaji.com';
       const loginUrl = `${currentOrigin}/?action=login&shopId=${newShopId}`;
+      const storeEmail = `${cleanPhone}@store.indianlalaji.com`;
 
       const newShop: Shop = {
         id: `shop_${Date.now()}`,
         shopId: newShopId,
         vendorId: `vend_${Date.now()}`,
-        vendorEmail: regEmail.trim(),
+        vendorEmail: storeEmail,
         vendorName: ownerName.trim(),
         vendorPassword: rawPass,
         passwordHash: secureHash,
         businessName: businessName.trim(),
-        tagline: `Welcome to ${businessName.trim()} — Best quality in ${state}`,
+        tagline: `Welcome to ${businessName.trim()} — Official Online Store`,
         category: subCategory ? `${businessCategory} - ${subCategory}` : businessCategory,
         mainCategory: businessCategory,
         subCategory: subCategory,
-        state: state,
-        city: 'Local City',
-        address: `Shop No. 1, Main Market, ${state}`,
+        state: 'Uttar Pradesh',
+        city: 'Local Market',
+        address: 'Shop No. 1, Main Market',
         pincode: '110001',
         status: 'DRAFT', // Registered in Draft mode. Admin payment verification ke baad website publish hogi
         templateId: 'tpl_premium_retail',
@@ -271,7 +265,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         viewsCount: 1,
         phone: cleanPhone,
         whatsapp: cleanPhone,
-        email: regEmail.trim(),
+        email: storeEmail,
         workingHours: '9:00 AM - 9:00 PM',
         logoUrl: 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=300&auto=format&fit=crop&q=80',
         banners: [
@@ -302,8 +296,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               businessName: businessName.trim(),
               vendorName: ownerName.trim(),
               vendorPhone: cleanPhone,
-              vendorEmail: regEmail.trim(),
-              vendorAddress: `Shop No. 1, Main Market, ${state} - 110001`,
+              vendorEmail: storeEmail,
+              vendorAddress: 'Shop No. 1, Main Market - 110001',
               planName: finalPlanName,
               planPeriod: '1 Full Year (365 Days Validity)',
               activeDate: regDateStr,
@@ -340,13 +334,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       // Save directly to Firestore cloud database
       await saveShopToFirestore(newShop);
 
-      if (sendWhatsApp) {
+      if (shouldSendWhatsApp) {
         // WhatsApp message with Username/ID, Mobile, Password, Login URL
         const whatsappMsg = `*Hello ${ownerName.trim()}!* 🙏\n\n` +
           `Your *IndianLalaJi Digital Store* account has been created in *DRAFT Mode*!\n\n` +
           `🏪 *Shop Name:* ${businessName.trim()}\n` +
           `🆔 *Username / Shop ID:* ${newShopId}\n` +
-          `📱 *Registered Mobile:* ${cleanPhone}\n` +
+          `📱 *Registered WhatsApp:* ${cleanPhone}\n` +
           `🔑 *Password:* ${rawPass}\n` +
           `📋 *Status:* DRAFT (Admin payment verification ke baad website publish hogi)\n` +
           `🌐 *System Generated Login URL:* ${loginUrl}\n\n` +
@@ -358,8 +352,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       }
 
       setSuccessMsg(
-        `Store account (${newShopId}) has been created in DRAFT mode! Admin payment verification ke baad website publish hogi. ${
-          sendWhatsApp ? 'Credentials WhatsApp par bhej diye gaye hain. ' : ''
+        `Store account (${newShopId}) created successfully! ${
+          shouldSendWhatsApp ? 'Credentials WhatsApp par bhej diye gaye hain. ' : ''
         }Opening your dashboard...`
       );
 
@@ -478,7 +472,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             <form onSubmit={handleVendorLogin} className="space-y-4">
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                  Registered Email or Mobile Number
+                  Registered WhatsApp Number, Mobile or Shop ID
                 </label>
                 <div className="relative">
                   <User className="w-4 h-4 text-gray-400 absolute left-3.5 top-3" />
@@ -486,7 +480,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     id="vendor-login-email"
                     type="text"
                     required
-                    placeholder="e.g. ramesh.store@gmail.com or 9876543210"
+                    placeholder="e.g. 9876543210 or SHP..."
                     value={loginEmailOrPhone}
                     onChange={(e) => setLoginEmailOrPhone(e.target.value)}
                     className="w-full pl-10 pr-3 py-2.5 rounded-sm border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-gray-50/50"
@@ -553,32 +547,34 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
           {/* TAB 2: VENDOR REGISTRATION (Exact specification fields) */}
           {activeTab === 'REGISTER' && (
-            <form onSubmit={handleVendorRegister} className="space-y-3.5 max-h-[60vh] overflow-y-auto pr-1">
+            <form onSubmit={(e) => handleVendorRegister(e)} className="space-y-3.5 max-h-[65vh] overflow-y-auto pr-1">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* 1. Your Name */}
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                    Owner Name *
+                    Your Name *
                   </label>
                   <div className="relative">
-                    <User className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-3" />
+                    <User className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
                     <input
-                      id="reg-owner-name"
+                      id="reg-your-name"
                       type="text"
                       required
                       placeholder="e.g. Ramesh Kumar"
                       value={ownerName}
                       onChange={(e) => setOwnerName(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2 rounded-sm border border-gray-300 text-xs focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-50/50"
+                      className="w-full pl-9 pr-3 py-2.5 rounded-sm border border-gray-300 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-50/50"
                     />
                   </div>
                 </div>
 
+                {/* 2. Business Name */}
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                    Business / Shop Name *
+                    Business Name *
                   </label>
                   <div className="relative">
-                    <Briefcase className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-3" />
+                    <Briefcase className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
                     <input
                       id="reg-business-name"
                       type="text"
@@ -586,57 +582,39 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                       placeholder="e.g. Lala Ji Kirana Store"
                       value={businessName}
                       onChange={(e) => setBusinessName(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2 rounded-sm border border-gray-300 text-xs focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-50/50"
+                      className="w-full pl-9 pr-3 py-2.5 rounded-sm border border-gray-300 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-50/50"
                     />
                   </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                    Email Address *
-                  </label>
-                  <div className="relative">
-                    <Mail className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-3" />
-                    <input
-                      id="reg-email"
-                      type="email"
-                      required
-                      placeholder="e.g. ramesh@gmail.com"
-                      value={regEmail}
-                      onChange={(e) => setRegEmail(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2 rounded-sm border border-gray-300 text-xs focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-50/50"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                    Mobile Number (WhatsApp) *
-                  </label>
-                  <div className="relative">
-                    <Phone className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-3" />
-                    <input
-                      id="reg-mobile"
-                      type="tel"
-                      required
-                      placeholder="e.g. 9876543210"
-                      value={mobileNumber}
-                      onChange={(e) => setMobileNumber(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2 rounded-sm border border-gray-300 text-xs focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-50/50"
-                    />
-                  </div>
+              {/* 3. WhatsApp Number */}
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                  WhatsApp Number *
+                </label>
+                <div className="relative">
+                  <Phone className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
+                  <input
+                    id="reg-whatsapp-number"
+                    type="tel"
+                    required
+                    placeholder="10-digit WhatsApp number (e.g. 9876543210)"
+                    value={mobileNumber}
+                    onChange={(e) => setMobileNumber(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2.5 rounded-sm border border-gray-300 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-50/50"
+                  />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* 4. Business Category */}
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                    Main Category (1 of 27) *
+                    Business Category *
                   </label>
                   <select
-                    id="reg-category"
+                    id="reg-business-category"
                     value={businessCategory}
                     onChange={(e) => {
                       const newCat = e.target.value;
@@ -644,7 +622,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                       const subs = getSubCategoriesForMain(newCat);
                       setSubCategory(subs[0] || '');
                     }}
-                    className="w-full px-3 py-2 rounded-sm border border-gray-300 text-xs focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-50/50 font-medium"
+                    className="w-full px-3 py-2.5 rounded-sm border border-gray-300 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-50/50 font-medium"
                   >
                     {BUSINESS_CATEGORIES.map((cat) => (
                       <option key={cat.id} value={cat.name}>
@@ -654,15 +632,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   </select>
                 </div>
 
+                {/* 5. Business Sub-Category */}
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                    Sub-Category / Type *
+                    Business Sub-Category *
                   </label>
                   <select
-                    id="reg-sub-category"
+                    id="reg-business-sub-category"
                     value={subCategory}
                     onChange={(e) => setSubCategory(e.target.value)}
-                    className="w-full px-3 py-2 rounded-sm border border-gray-300 text-xs focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-50/50 font-medium"
+                    className="w-full px-3 py-2.5 rounded-sm border border-gray-300 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-50/50 font-medium"
                   >
                     {getSubCategoriesForMain(businessCategory).map((sub) => (
                       <option key={sub} value={sub}>
@@ -673,31 +652,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                  State *
-                </label>
-                <select
-                  id="reg-state"
-                  value={state}
-                  onChange={(e) => setState(e.target.value)}
-                  className="w-full px-3 py-2 rounded-sm border border-gray-300 text-xs focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-50/50 font-medium"
-                >
-                  {indianStates.map((st) => (
-                    <option key={st} value={st}>
-                      {st}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* 6. Password */}
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
                     Password *
                   </label>
                   <div className="relative">
-                    <Lock className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-3" />
+                    <Lock className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
                     <input
                       id="reg-password"
                       type={showRegPassword ? 'text' : 'password'}
@@ -705,26 +667,27 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                       placeholder="••••••••"
                       value={regPassword}
                       onChange={(e) => setRegPassword(e.target.value)}
-                      className="w-full pl-9 pr-9 py-2 rounded-sm border border-gray-300 text-xs focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-50/50"
+                      className="w-full pl-9 pr-9 py-2.5 rounded-sm border border-gray-300 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-50/50"
                     />
                     <button
                       id="toggle-reg-password"
                       type="button"
                       onClick={() => setShowRegPassword(!showRegPassword)}
-                      className="absolute right-2.5 top-2 p-0.5 text-gray-400 hover:text-gray-600 cursor-pointer"
+                      className="absolute right-2.5 top-2.5 p-0.5 text-gray-400 hover:text-gray-600 cursor-pointer"
                       title={showRegPassword ? 'Hide Password' : 'Show Password'}
                     >
-                      {showRegPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      {showRegPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
                 </div>
 
+                {/* 7. Confirm Password */}
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
                     Confirm Password *
                   </label>
                   <div className="relative">
-                    <Lock className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-3" />
+                    <Lock className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
                     <input
                       id="reg-confirm-password"
                       type={showConfirmPassword ? 'text' : 'password'}
@@ -732,67 +695,56 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                       placeholder="••••••••"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="w-full pl-9 pr-9 py-2 rounded-sm border border-gray-300 text-xs focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-50/50"
+                      className="w-full pl-9 pr-9 py-2.5 rounded-sm border border-gray-300 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-50/50"
                     />
                     <button
                       id="toggle-reg-confirm-password"
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-2.5 top-2 p-0.5 text-gray-400 hover:text-gray-600 cursor-pointer"
+                      className="absolute right-2.5 top-2.5 p-0.5 text-gray-400 hover:text-gray-600 cursor-pointer"
                       title={showConfirmPassword ? 'Hide Password' : 'Show Password'}
                     >
-                      {showConfirmPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
                 </div>
               </div>
 
-              {/* Active Plan Pricing Card */}
-              <div className="p-3 bg-gradient-to-r from-orange-50 to-amber-50 rounded-lg border border-orange-200/80 flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900">
-                    <Sparkles className="w-3.5 h-3.5 text-orange-600 shrink-0" />
-                    <span className="truncate">{finalPlanName}</span>
-                  </div>
-                  <p className="text-[11px] text-gray-500">
-                    1 Full Year Store Hosting, Unlimited Products & Instant WhatsApp Orders
-                  </p>
-                </div>
-                <div className="text-right shrink-0">
-                  <div className="font-mono font-black text-sm sm:text-base text-orange-600">
-                    {formatINR(finalPlanPrice)}
-                  </div>
-                  <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100/70 px-1.5 py-0.5 rounded">
-                    Official Rate
-                  </span>
-                </div>
+              {/* WhatsApp Notification Checkbox */}
+              <div className="flex items-center gap-2 pt-1">
+                <input
+                  id="send-whatsapp-credentials-toggle"
+                  type="checkbox"
+                  checked={sendWhatsAppOnCreate}
+                  onChange={(e) => setSendWhatsAppOnCreate(e.target.checked)}
+                  className="w-4 h-4 text-orange-600 rounded border-gray-300 focus:ring-orange-500 cursor-pointer"
+                />
+                <label htmlFor="send-whatsapp-credentials-toggle" className="text-xs text-slate-700 font-medium cursor-pointer select-none">
+                  Send Shop ID & Password on WhatsApp {mobileNumber ? `(+91 ${mobileNumber.replace(/[^0-9]/g, '')})` : ''}
+                </label>
               </div>
 
-              <div className="p-3 bg-gray-50 rounded-sm border border-gray-200 text-[11px] text-slate-900 leading-relaxed">
-                ⚡ <strong>Registration Workflow:</strong> Register → Auto Dynamic Shop ID → Vendor Dashboard → Fill details & Draft preview → Submit for Admin Review → Website Published!
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-2.5 pt-1">
+              {/* 8. Create Store Button */}
+              <div className="pt-2">
                 <button
-                  id="vendor-register-submit-btn"
-                  type="button"
+                  id="vendor-create-store-submit-btn"
+                  type="submit"
                   disabled={isSubmitting}
-                  onClick={(e) => handleVendorRegister(e, false)}
-                  className="flex-1 py-3 px-3 rounded-lg bg-orange-600 hover:bg-orange-700 text-white font-bold uppercase tracking-wider text-xs shadow-md shadow-orange-500/20 transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  className="w-full py-3.5 px-4 rounded-sm bg-orange-600 hover:bg-orange-700 text-white font-bold uppercase tracking-wider text-sm shadow-md shadow-orange-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                 >
-                  <Sparkles className="w-4 h-4 shrink-0" />
-                  <span>Create Account</span>
+                  <Store className="w-4 h-4 shrink-0" />
+                  <span>{isSubmitting ? 'Creating Store...' : 'Create Store'}</span>
                 </button>
+              </div>
 
+              <div className="text-center pt-1">
+                <span className="text-xs text-gray-500">Already have a store? </span>
                 <button
-                  id="vendor-register-whatsapp-btn"
                   type="button"
-                  disabled={isSubmitting}
-                  onClick={(e) => handleVendorRegister(e, true)}
-                  className="flex-1 py-3 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-600/20 transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  onClick={() => setActiveTab('LOGIN')}
+                  className="text-xs font-bold uppercase tracking-wider text-orange-600 hover:underline cursor-pointer"
                 >
-                  <MessageCircle className="w-4 h-4 shrink-0" />
-                  <span>💬 Send ID & Password on WhatsApp</span>
+                  Login Here
                 </button>
               </div>
             </form>
