@@ -322,15 +322,44 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
     }
   };
 
-  // Sync if shop changes
+  // Track last synced shop updatedAt to avoid wiping local unsaved media edits
+  const lastSyncedTimeRef = React.useRef<string>(shop.updatedAt || '');
+
+  // Sync if shop changes, but protect locally uploaded media from being wiped
   React.useEffect(() => {
-    if (shop.sectionsConfig) {
-      setConfig((prev) => ({
-        ...prev,
-        ...shop.sectionsConfig,
-      }));
+    if (!shop.sectionsConfig) return;
+    const incomingTime = new Date(shop.updatedAt || 0).getTime();
+    const lastTime = new Date(lastSyncedTimeRef.current || 0).getTime();
+
+    // If incoming shop is strictly newer than what was last synced, update config
+    if (incomingTime > lastTime) {
+      lastSyncedTimeRef.current = shop.updatedAt || '';
+      setConfig((prev) => {
+        const merged = { ...shop.sectionsConfig } as any;
+        // Preserve local about photo if incoming is empty/missing
+        if (prev.about?.imageUrl && (!merged.about || !merged.about.imageUrl)) {
+          merged.about = { ...(merged.about || {}), enabled: prev.about.enabled ?? true, imageUrl: prev.about.imageUrl };
+        }
+        // Preserve local gallery items if incoming is empty
+        if (prev.gallery?.items && prev.gallery.items.length > 0 && (!merged.gallery?.items || merged.gallery.items.length === 0)) {
+          merged.gallery = { ...(merged.gallery || {}), enabled: prev.gallery.enabled ?? true, items: prev.gallery.items };
+        }
+        // Preserve local offer banners if incoming is empty
+        if (prev.offers?.banners && prev.offers.banners.length > 0 && (!merged.offers?.banners || merged.offers.banners.length === 0)) {
+          merged.offers = { ...(merged.offers || {}), enabled: prev.offers.enabled ?? true, banners: prev.offers.banners };
+        }
+        // Preserve local portfolio items if incoming is empty
+        if (prev.portfolio?.items && prev.portfolio.items.length > 0 && (!merged.portfolio?.items || merged.portfolio.items.length === 0)) {
+          merged.portfolio = { ...(merged.portfolio || {}), enabled: prev.portfolio.enabled ?? true, items: prev.portfolio.items };
+        }
+        // Preserve local blog posts if incoming is empty
+        if (prev.blog?.posts && prev.blog.posts.length > 0 && (!merged.blog?.posts || merged.blog.posts.length === 0)) {
+          merged.blog = { ...(merged.blog || {}), enabled: prev.blog.enabled ?? true, posts: prev.blog.posts };
+        }
+        return merged as ShopSectionsConfig;
+      });
     }
-  }, [shop.sectionsConfig]);
+  }, [shop.sectionsConfig, shop.updatedAt]);
 
   // Sync initialExpandedSection when passed from sidebar
   React.useEffect(() => {
@@ -360,8 +389,11 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
   // Master Save Handler
   const handleSaveConfig = (newConfig: ShopSectionsConfig, successMsg = 'Website sections save ho gaye!') => {
     setIsSaving(true);
+    const resolvedAbout =
+      newConfig.about?.imageUrl !== undefined ? newConfig.about.imageUrl : (shop.aboutPhotoUrl || '');
     const updatedShop: Shop = {
       ...shop,
+      aboutPhotoUrl: resolvedAbout,
       sectionsConfig: newConfig,
       updatedAt: new Date().toISOString(),
     };
@@ -1497,7 +1529,7 @@ function renderSectionEditor(
                             const file = e.target.files?.[0];
                             if (!file) return;
                             try {
-                              const base64 = await fileToBase64(file, 1600, 800);
+                              const base64 = await fileToBase64(file, 1000, 500);
                               const currentList = [...(shop.desktopBanners || shop.banners || [])];
                               while (currentList.length <= idx) currentList.push('');
                               currentList[idx] = base64;
@@ -1505,11 +1537,14 @@ function renderSectionEditor(
                                 ...shop,
                                 desktopBanners: currentList,
                                 banners: currentList,
+                                updatedAt: new Date().toISOString(),
                               };
                               actions?.onUpdateShop?.(updated);
-                              showToast(`Desktop Banner #${idx + 1} updated!`);
+                              showToast(`Desktop Banner #${idx + 1} safalta se save ho gaya! 📸`);
                             } catch (err) {
                               showToast('Image upload failed');
+                            } finally {
+                              e.target.value = '';
                             }
                           }}
                         />
@@ -1529,6 +1564,7 @@ function renderSectionEditor(
                                 ...shop,
                                 desktopBanners: currentList,
                                 banners: currentList,
+                                updatedAt: new Date().toISOString(),
                               };
                               actions?.onUpdateShop?.(updated);
                               showToast(`Desktop Banner #${idx + 1} removed.`);
@@ -1671,18 +1707,21 @@ function renderSectionEditor(
                             const file = e.target.files?.[0];
                             if (!file) return;
                             try {
-                              const base64 = await fileToBase64(file, 900, 1200);
+                              const base64 = await fileToBase64(file, 600, 800);
                               const currentList = [...(shop.mobileBanners || [])];
                               while (currentList.length <= idx) currentList.push('');
                               currentList[idx] = base64;
                               const updated = {
                                 ...shop,
                                 mobileBanners: currentList,
+                                updatedAt: new Date().toISOString(),
                               };
                               actions?.onUpdateShop?.(updated);
-                              showToast(`Mobile Banner #${idx + 1} updated!`);
+                              showToast(`Mobile Banner #${idx + 1} safalta se save ho gaya! 📸`);
                             } catch (err) {
                               showToast('Image upload failed');
+                            } finally {
+                              e.target.value = '';
                             }
                           }}
                         />
@@ -1701,6 +1740,7 @@ function renderSectionEditor(
                               const updated = {
                                 ...shop,
                                 mobileBanners: currentList,
+                                updatedAt: new Date().toISOString(),
                               };
                               actions?.onUpdateShop?.(updated);
                               showToast(`Mobile Banner #${idx + 1} removed.`);
@@ -1885,15 +1925,19 @@ function renderSectionEditor(
 
             <div className="sm:col-span-2">
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                About Photo
+                About / Founder Photo
               </label>
               <div className="flex items-center gap-3">
-                {data.imageUrl && (
+                {(data.imageUrl || shop.aboutPhotoUrl) ? (
                   <img
-                    src={data.imageUrl}
-                    alt="About"
-                    className="w-16 h-16 object-cover rounded-lg border border-gray-300"
+                    src={data.imageUrl || shop.aboutPhotoUrl}
+                    alt="About / Founder"
+                    className="w-16 h-16 object-cover rounded-lg border border-gray-300 shadow-xs"
                   />
+                ) : (
+                  <div className="w-16 h-16 rounded-lg border border-dashed border-gray-300 flex flex-col items-center justify-center text-[10px] text-gray-400 bg-gray-50 text-center p-1 font-medium">
+                    No Photo
+                  </div>
                 )}
                 <label className="px-3.5 py-2 bg-white hover:bg-gray-50 border border-gray-300 rounded text-xs font-bold text-slate-800 flex items-center gap-1.5 cursor-pointer shadow-2xs">
                   <Upload className="w-3.5 h-3.5 text-orange-600" />
@@ -1904,18 +1948,52 @@ function renderSectionEditor(
                     className="hidden"
                     onChange={async (e) => {
                       const file = e.target.files?.[0];
-                      if (file) {
-                        try {
-                          const base64 = await fileToBase64(file, 800, 800);
-                          update({ imageUrl: base64 });
-                          showToast('About photo updated!');
-                        } catch (err) {
-                          showToast('Upload failed');
-                        }
+                      if (!file) return;
+                      try {
+                        const base64 = await fileToBase64(file, 600, 600);
+                        const updatedAbout = { ...data, imageUrl: base64 };
+                        const updatedConfig = { ...config, about: updatedAbout };
+                        setConfig(updatedConfig);
+
+                        // Save immediately to parent shop and cloud so it NEVER gets lost
+                        const updatedShop: Shop = {
+                          ...shop,
+                          aboutPhotoUrl: base64,
+                          sectionsConfig: updatedConfig,
+                          updatedAt: new Date().toISOString(),
+                        };
+                        actions?.onUpdateShop?.(updatedShop);
+                        showToast('Founder / About photo safalta se upload ho gayi! 📸');
+                      } catch (err) {
+                        console.error('Founder photo upload error:', err);
+                        showToast('Upload fail ho gaya. Kripya doosri image try karein.');
+                      } finally {
+                        e.target.value = '';
                       }
                     }}
                   />
                 </label>
+                {(data.imageUrl || shop.aboutPhotoUrl) && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const updatedAbout = { ...data, imageUrl: '' };
+                      const updatedConfig = { ...config, about: updatedAbout };
+                      setConfig(updatedConfig);
+                      const updatedShop: Shop = {
+                        ...shop,
+                        aboutPhotoUrl: '',
+                        sectionsConfig: updatedConfig,
+                        updatedAt: new Date().toISOString(),
+                      };
+                      actions?.onUpdateShop?.(updatedShop);
+                      showToast('Photo hata di gayi.');
+                    }}
+                    className="px-2.5 py-2 text-xs font-medium text-red-600 hover:bg-red-50 rounded border border-red-200 cursor-pointer"
+                  >
+                    Remove
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -2773,12 +2851,31 @@ function renderSectionEditor(
           return;
         }
         try {
-          const base64 = await fileToBase64(file);
+          const base64 = await fileToBase64(file, 600, 600);
           const updatedPhotos = [...currentList, base64].slice(0, 15);
           update({ items: updatedPhotos });
-          showToast('New photo added to gallery!');
+
+          const updatedConfig = {
+            ...config,
+            gallery: {
+              ...(config.gallery || { enabled: true }),
+              items: updatedPhotos,
+            },
+          } as any;
+          setConfig(updatedConfig);
+
+          const updatedShop: Shop = {
+            ...shop,
+            galleryImages: updatedPhotos,
+            sectionsConfig: updatedConfig,
+            updatedAt: new Date().toISOString(),
+          };
+          actions?.onUpdateShop?.(updatedShop);
+          showToast('New photo added to gallery and saved! 📸');
         } catch {
           showToast('Photo upload failed. Kripya doosri image try karein.');
+        } finally {
+          e.target.value = '';
         }
       };
 
@@ -2786,6 +2883,23 @@ function renderSectionEditor(
         const currentList = data.items && data.items.length > 0 ? data.items : galleryPhotos;
         const updatedPhotos = currentList.filter((_, i) => i !== idx);
         update({ items: updatedPhotos });
+
+        const updatedConfig = {
+          ...config,
+          gallery: {
+            ...(config.gallery || { enabled: true }),
+            items: updatedPhotos,
+          },
+        } as any;
+        setConfig(updatedConfig);
+
+        const updatedShop: Shop = {
+          ...shop,
+          galleryImages: updatedPhotos,
+          sectionsConfig: updatedConfig,
+          updatedAt: new Date().toISOString(),
+        };
+        actions?.onUpdateShop?.(updatedShop);
         showToast('Photo gallery se remove ho gayi.');
       };
 
@@ -2894,13 +3008,36 @@ function renderSectionEditor(
         const file = e.target.files?.[0];
         if (!file) return;
         try {
-          const base64 = await fileToBase64(file);
+          const base64 = await fileToBase64(file, 900, 450);
           const newBanners = [...data.banners];
-          newBanners[idx].imageUrl = base64;
+          newBanners[idx] = { ...newBanners[idx], imageUrl: base64 };
           update({ banners: newBanners });
-          showToast('Banner image upload ho gayi!');
+
+          const updatedConfig = {
+            ...config,
+            offers: {
+              ...(config.offers || {
+                enabled: true,
+                title: 'Special Offers & Deals',
+                subtitle: 'Exclusive discounts aur festival offers sirf hamare direct grahakon ke liye',
+                banners: [],
+              }),
+              banners: newBanners,
+            },
+          };
+          setConfig(updatedConfig);
+
+          const updatedShop: Shop = {
+            ...shop,
+            sectionsConfig: updatedConfig,
+            updatedAt: new Date().toISOString(),
+          };
+          actions?.onUpdateShop?.(updatedShop);
+          showToast('Banner image safalta se save ho gayi! 📸');
         } catch (err) {
           showToast('Image upload failed. Kripya doosri image try karein.');
+        } finally {
+          e.target.value = '';
         }
       };
 
@@ -3184,7 +3321,7 @@ function renderSectionEditor(
                     const file = e.target.files?.[0];
                     if (file) {
                       try {
-                        const base64 = await fileToBase64(file, 800, 800);
+                        const base64 = await fileToBase64(file, 600, 600);
                         const newItem = {
                           id: `port_${Date.now()}`,
                           title: file.name.replace(/\.[^/.]+$/, ''),
@@ -3192,10 +3329,29 @@ function renderSectionEditor(
                           imageUrl: base64,
                           description: 'Recent customer order / work showcase.',
                         };
-                        update({ items: [...data.items, newItem] });
-                        showToast('New photo added to gallery!');
+                        const updatedItems = [...data.items, newItem];
+                        update({ items: updatedItems });
+
+                        const updatedConfig = {
+                          ...config,
+                          portfolio: {
+                            ...(config.portfolio || { enabled: true }),
+                            items: updatedItems,
+                          },
+                        } as any;
+                        setConfig(updatedConfig);
+
+                        const updatedShop: Shop = {
+                          ...shop,
+                          sectionsConfig: updatedConfig,
+                          updatedAt: new Date().toISOString(),
+                        };
+                        actions?.onUpdateShop?.(updatedShop);
+                        showToast('New photo added to showcase and saved! 📸');
                       } catch (err) {
                         showToast('Upload failed');
+                      } finally {
+                        e.target.value = '';
                       }
                     }
                   }}
@@ -3211,7 +3367,25 @@ function renderSectionEditor(
                     <button
                       type="button"
                       onClick={() => {
-                        update({ items: data.items.filter((_, i) => i !== idx) });
+                        const updatedItems = data.items.filter((_, i) => i !== idx);
+                        update({ items: updatedItems });
+
+                        const updatedConfig = {
+                          ...config,
+                          portfolio: {
+                            ...(config.portfolio || { enabled: true }),
+                            items: updatedItems,
+                          },
+                        } as any;
+                        setConfig(updatedConfig);
+
+                        const updatedShop: Shop = {
+                          ...shop,
+                          sectionsConfig: updatedConfig,
+                          updatedAt: new Date().toISOString(),
+                        };
+                        actions?.onUpdateShop?.(updatedShop);
+                        showToast('Photo removed from showcase.');
                       }}
                       className="absolute top-1.5 right-1.5 p-1 bg-red-600 text-white rounded shadow-sm hover:bg-red-700"
                     >
@@ -3335,16 +3509,26 @@ function renderSectionEditor(
                         className="hidden"
                         onChange={async (e) => {
                           const file = e.target.files?.[0];
-                          if (file) {
-                            try {
-                              const base64 = await fileToBase64(file, 400, 400);
-                              const newMembers = [...data.members];
-                              newMembers[idx].imageUrl = base64;
-                              update({ members: newMembers });
-                              showToast('Member photo updated!');
-                            } catch (err) {
-                              showToast('Upload failed');
-                            }
+                          if (!file) return;
+                          try {
+                            const base64 = await fileToBase64(file, 400, 400);
+                            const newMembers = [...data.members];
+                            newMembers[idx].imageUrl = base64;
+                            const updatedTeam = { ...data, members: newMembers };
+                            const updatedConfig = { ...config, team: updatedTeam };
+                            setConfig(updatedConfig);
+
+                            const updatedShop: Shop = {
+                              ...shop,
+                              sectionsConfig: updatedConfig,
+                              updatedAt: new Date().toISOString(),
+                            };
+                            actions?.onUpdateShop?.(updatedShop);
+                            showToast('Member photo safalta se save ho gayi!');
+                          } catch (err) {
+                            showToast('Upload failed');
+                          } finally {
+                            e.target.value = '';
                           }
                         }}
                       />
@@ -3672,13 +3856,31 @@ function renderSectionEditor(
         const file = e.target.files?.[0];
         if (!file) return;
         try {
-          const base64 = await fileToBase64(file);
+          const base64 = await fileToBase64(file, 600, 400);
           const newPosts = [...data.posts];
-          newPosts[idx].imageUrl = base64;
+          newPosts[idx] = { ...newPosts[idx], imageUrl: base64 };
           update({ posts: newPosts });
-          showToast('Article image upload ho gayi!');
+
+          const updatedConfig = {
+            ...config,
+            blog: {
+              ...(config.blog || { enabled: true }),
+              posts: newPosts,
+            },
+          } as any;
+          setConfig(updatedConfig);
+
+          const updatedShop: Shop = {
+            ...shop,
+            sectionsConfig: updatedConfig,
+            updatedAt: new Date().toISOString(),
+          };
+          actions?.onUpdateShop?.(updatedShop);
+          showToast('Article image safalta se save ho gayi! 📸');
         } catch (err) {
           showToast('Image upload failed. Kripya doosri image try karein.');
+        } finally {
+          e.target.value = '';
         }
       };
 

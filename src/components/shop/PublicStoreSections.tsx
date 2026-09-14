@@ -444,13 +444,9 @@ export const HeroSectionRenderer: React.FC<{
             <div className="flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-1.5 bg-orange-100 text-orange-950 border border-orange-200 text-[11px] font-black uppercase tracking-wider px-3 py-1 rounded-full shadow-2xs">
                 <Sparkles className="w-3.5 h-3.5 text-orange-600" />
-                <span>{config.badge || '★ Verified Local Merchant 🇮🇳'}</span>
+                <span>{config.badge || 'Verified Local Merchant 🇮🇳'}</span>
               </span>
-              <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-950 border border-emerald-200 text-[11px] font-bold px-2.5 py-1 rounded-full shadow-2xs">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                <span>Verified Direct Store</span>
-              </span>
-            </div>
+                          </div>
 
             {/* Store Identification Bar */}
             <div className="flex items-center gap-3.5">
@@ -519,10 +515,6 @@ export const HeroSectionRenderer: React.FC<{
                 <span>100% Genuine Quality</span>
               </span>
               <span className="flex items-center gap-1.5 font-bold text-slate-900">
-                <Zap className="w-4 h-4 text-orange-600" />
-                <span>Direct 0% UPI Rates</span>
-              </span>
-              <span className="flex items-center gap-1.5 font-bold text-slate-900">
                 <Clock className="w-4 h-4 text-blue-600" />
                 <span>Express Local Delivery</span>
               </span>
@@ -537,7 +529,7 @@ export const HeroSectionRenderer: React.FC<{
               {/* Card Header */}
               <div className="flex items-center justify-between pb-3 border-b border-orange-100">
                 <span className="text-xs font-black uppercase tracking-wider text-slate-900">
-                  Store Status & Services
+                  Business & Status
                 </span>
                 <span className="text-[10px] font-bold text-orange-700 bg-orange-100 px-2 py-0.5 rounded-full">
                   Verified Merchant
@@ -583,7 +575,7 @@ export const HeroSectionRenderer: React.FC<{
                 onClick={handleCta}
                 className="w-full py-2.5 bg-orange-600 hover:bg-orange-700 text-white font-black uppercase tracking-wider text-xs rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer hover:scale-101"
               >
-                <span>Browse Products & Services</span>
+                <span>Explore More </span>
                 <ArrowRight className="w-3.5 h-3.5 text-white" />
               </button>
 
@@ -616,7 +608,7 @@ export const AboutSectionRenderer: React.FC<{
       description: config.description,
       sectionName: 'About Store & Proprietor',
       badge: config.yearsOfExperience || 'Store Trust',
-      imageUrl: config.imageUrl || shop.aboutPhotoUrl || shop.banners?.[0] || 'https://images.unsplash.com/photo-1556742049-0a67c5574f73?w=800',
+      imageUrl: shop.aboutPhotoUrl || config.imageUrl || shop.banners?.[0] || 'https://images.unsplash.com/photo-1556742049-0a67c5574f73?w=800',
       icon: <Award className="w-5 h-5 text-orange-600" />,
       actionText: 'Chat on WhatsApp',
       actionUrl: getWhatsAppDirectUrl(shop.whatsapp || shop.phone, `Namaste! I would like to inquire about ${shop.businessName}.`),
@@ -651,7 +643,7 @@ export const AboutSectionRenderer: React.FC<{
               title="Click to view details"
             >
               <img
-                src={config.imageUrl || shop.aboutPhotoUrl || shop.banners?.[0] || 'https://images.unsplash.com/photo-1556742049-0a67c5574f73?w=800'}
+                src={shop.aboutPhotoUrl || config.imageUrl || shop.banners?.[0] || 'https://images.unsplash.com/photo-1556742049-0a67c5574f73?w=800'}
                 alt={config.title}
                 className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-500"
               />
@@ -674,7 +666,7 @@ export const AboutSectionRenderer: React.FC<{
           {/* Right: Text & Details */}
           <div className="lg:col-span-7 space-y-4">
             <div className="inline-flex items-center gap-1.5 bg-blue-100 text-blue-800 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-sm">
-              <Award className="w-3.5 h-3.5" /> About Proprietor & Store
+              <Award className="w-3.5 h-3.5" /> About Us By Founder
             </div>
 
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black uppercase tracking-tight text-slate-900 font-['Outfit',sans-serif]">
@@ -715,17 +707,7 @@ export const AboutSectionRenderer: React.FC<{
               )}
             </div>
 
-            {/* Highlights bullet list */}
-            {config.highlights && config.highlights.length > 0 && (
-              <div className="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                {config.highlights.map((h, i) => (
-                  <div key={i} className="flex items-start gap-2 text-xs text-slate-800 font-medium">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                    <span>{h}</span>
-                  </div>
-                ))}
-              </div>
-            )}
+           
 
             {/* Contact quick call action */}
             <div className="pt-4 flex flex-wrap items-center gap-3">

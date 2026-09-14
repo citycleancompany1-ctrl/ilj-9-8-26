@@ -151,22 +151,66 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
   const [lastSavedTime, setLastSavedTime] = useState<string | null>(null);
 
   React.useEffect(() => {
-    if (shop && (shop.id !== currentShop?.id || shop.updatedAt !== currentShop?.updatedAt)) {
-      const syncedShop = ensureCustomCategoriesSynced(shop);
-      setCurrentShop((prev) => {
-        const incomingCats = syncedShop.customCategories || [];
-        const prevCats = prev.customCategories || [];
-        const mergedCats = [...incomingCats];
-        prevCats.forEach((pc) => {
-          if (!mergedCats.some((c) => c.name.toLowerCase() === pc.name.toLowerCase())) {
-            mergedCats.push(pc);
-          }
+    if (shop) {
+      const incomingTime = new Date(shop.updatedAt || 0).getTime();
+      const currentTime = new Date(currentShop?.updatedAt || 0).getTime();
+      // Only sync from parent shop prop if:
+      // 1. It is a completely different shop (e.g. login switch), OR
+      // 2. The incoming shop has a strictly newer timestamp than currentShop
+      const isDifferentShop = Boolean(shop.id && currentShop?.id && shop.id !== currentShop?.id);
+      if (isDifferentShop || incomingTime > currentTime) {
+        const syncedShop = ensureCustomCategoriesSynced(shop);
+        setCurrentShop((prev) => {
+          const incomingCats = syncedShop.customCategories || [];
+          const prevCats = prev.customCategories || [];
+          const mergedCats = [...incomingCats];
+          prevCats.forEach((pc) => {
+            if (!mergedCats.some((c) => c.name.toLowerCase() === pc.name.toLowerCase())) {
+              mergedCats.push(pc);
+            }
+          });
+
+          // Safeguard local media if incoming snapshot has empty values
+          const aboutPhoto =
+            syncedShop.aboutPhotoUrl ||
+            syncedShop.sectionsConfig?.about?.imageUrl ||
+            prev.aboutPhotoUrl ||
+            prev.sectionsConfig?.about?.imageUrl ||
+            '';
+          const banners =
+            syncedShop.banners && syncedShop.banners.length > 0
+              ? syncedShop.banners
+              : (prev.banners || []);
+          const desktopBanners =
+            syncedShop.desktopBanners && syncedShop.desktopBanners.length > 0
+              ? syncedShop.desktopBanners
+              : (prev.desktopBanners || banners);
+          const gallery =
+            syncedShop.galleryImages && syncedShop.galleryImages.length > 0
+              ? syncedShop.galleryImages
+              : (prev.galleryImages || []);
+          const logo = syncedShop.logoUrl || prev.logoUrl || '';
+
+          return {
+            ...syncedShop,
+            logoUrl: logo,
+            aboutPhotoUrl: aboutPhoto,
+            banners,
+            desktopBanners,
+            galleryImages: gallery,
+            customCategories: mergedCats,
+            sectionsConfig: {
+              ...(prev.sectionsConfig || {}),
+              ...(syncedShop.sectionsConfig || {}),
+              about: {
+                ...(prev.sectionsConfig?.about || {}),
+                ...(syncedShop.sectionsConfig?.about || {}),
+                imageUrl: aboutPhoto,
+              },
+            },
+          };
         });
-        return {
-          ...syncedShop,
-          customCategories: mergedCats,
-        };
-      });
+      }
     }
   }, [shop]);
 
@@ -487,7 +531,7 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
     if (!file) return;
 
     try {
-      const base64 = await fileToBase64(file);
+      const base64 = await fileToBase64(file, field === 'aboutPhotoUrl' ? 600 : 800, field === 'aboutPhotoUrl' ? 600 : 800);
       if (field === 'banner') {
         const updated = { ...currentShop, banners: [base64, ...currentShop.banners.slice(0, 2)] };
         setCurrentShop(updated);
@@ -502,6 +546,21 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
         setCurrentShop(updated);
         handleSaveAll(updated);
         showToast('Photo gallery mein naya photo add ho gaya!');
+      } else if (field === 'aboutPhotoUrl') {
+        const updated = {
+          ...currentShop,
+          aboutPhotoUrl: base64,
+          sectionsConfig: {
+            ...currentShop.sectionsConfig,
+            about: {
+              ...(currentShop.sectionsConfig?.about || {}),
+              imageUrl: base64,
+            },
+          },
+        };
+        setCurrentShop(updated);
+        handleSaveAll(updated);
+        showToast('Founder / About photo safalta se save ho gayi! 📸');
       } else {
         const updated = { ...currentShop, [field]: base64 };
         setCurrentShop(updated);
@@ -509,7 +568,9 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
       }
     } catch (err) {
       console.error('File upload error:', err);
-      alert('Kripya valid image file upload karein (PNG / JPG).');
+      alert('Kripya valid image file upload karein (PNG / JPG / WEBP).');
+    } finally {
+      e.target.value = '';
     }
   };
 
@@ -517,7 +578,7 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
     const file = e.target.files?.[0];
     if (!file) return;
     try {
-      const base64 = await fileToBase64(file);
+      const base64 = await fileToBase64(file, 1000, 500);
       const currentList = [...(currentShop.desktopBanners || currentShop.banners || [])];
       while (currentList.length <= index) currentList.push('');
       currentList[index] = base64;
@@ -532,6 +593,8 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
     } catch (err) {
       console.error(err);
       alert('Image upload error');
+    } finally {
+      e.target.value = '';
     }
   };
 
@@ -557,7 +620,7 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
     const file = e.target.files?.[0];
     if (!file) return;
     try {
-      const base64 = await fileToBase64(file);
+      const base64 = await fileToBase64(file, 600, 800);
       const currentList = [...(currentShop.mobileBanners || [])];
       while (currentList.length <= index) currentList.push('');
       currentList[index] = base64;
@@ -571,6 +634,8 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
     } catch (err) {
       console.error(err);
       alert('Image upload error');
+    } finally {
+      e.target.value = '';
     }
   };
 
@@ -4432,24 +4497,58 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
                   About Us / Owner Photo
                 </label>
                 <div className="flex flex-col sm:flex-row items-center gap-4">
-                  <div className="w-24 h-24 rounded-xl bg-gray-100 overflow-hidden border border-gray-300">
-                    <img
-                      src={currentShop.aboutPhotoUrl}
-                      alt="About Photo"
-                      className="w-full h-full object-cover"
-                    />
+                  <div className="w-24 h-24 rounded-xl bg-gray-100 overflow-hidden border border-gray-300 flex items-center justify-center">
+                    {(currentShop.aboutPhotoUrl || currentShop.sectionsConfig?.about?.imageUrl) ? (
+                      <img
+                        src={currentShop.aboutPhotoUrl || currentShop.sectionsConfig?.about?.imageUrl}
+                        alt="About Photo"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex flex-col items-center justify-center text-gray-400 text-center p-2">
+                        <User className="w-8 h-8 text-gray-300 mb-1" />
+                        <span className="text-[10px] font-medium leading-tight">No Photo</span>
+                      </div>
+                    )}
                   </div>
 
-                  <label className="cursor-pointer px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-slate-800 rounded-sm text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-colors">
-                    <Upload className="w-4 h-4 text-gray-600" />
-                    <span>Upload About Photo</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(e) => handleFileUpload(e, 'aboutPhotoUrl')}
-                    />
-                  </label>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <label className="cursor-pointer px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-slate-800 rounded-sm text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-colors">
+                      <Upload className="w-4 h-4 text-gray-600" />
+                      <span>Upload About Photo</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => handleFileUpload(e, 'aboutPhotoUrl')}
+                      />
+                    </label>
+
+                    {(currentShop.aboutPhotoUrl || currentShop.sectionsConfig?.about?.imageUrl) && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated = {
+                            ...currentShop,
+                            aboutPhotoUrl: '',
+                            sectionsConfig: {
+                              ...currentShop.sectionsConfig,
+                              about: {
+                                ...(currentShop.sectionsConfig?.about || {}),
+                                imageUrl: '',
+                              },
+                            },
+                          };
+                          setCurrentShop(updated);
+                          handleSaveAll(updated);
+                          showToast('About photo hata di gayi.');
+                        }}
+                        className="px-3 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 rounded border border-red-200 cursor-pointer"
+                      >
+                        Remove Photo
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
 

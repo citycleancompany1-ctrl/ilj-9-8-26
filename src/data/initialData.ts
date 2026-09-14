@@ -854,7 +854,20 @@ export function loadPlatformState(): PlatformState {
 export function savePlatformState(state: PlatformState): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  } catch (e) {
-    console.error('Failed to save local state:', e);
+  } catch (e: any) {
+    console.warn('Primary localStorage.setItem failed (likely quota limit). Attempting optimized storage...', e);
+    try {
+      // Create a trimmed version without huge backup snapshots or redundant logs
+      const trimmedState: PlatformState = {
+        ...state,
+        saasBackups: (state.saasBackups || []).slice(0, 2),
+        inquiries: (state.inquiries || []).slice(0, 50),
+        platformLeads: (state.platformLeads || []).slice(0, 50),
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmedState));
+      console.log('Optimized state saved to localStorage successfully.');
+    } catch (e2) {
+      console.error('Failed to save state even after trimming:', e2);
+    }
   }
 }

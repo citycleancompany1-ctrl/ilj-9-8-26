@@ -133,30 +133,49 @@ const GLOBAL_CONFIG_DOC = 'global_settings';
 /**
  * Save a single shop to Firestore (called when vendor or admin edits a shop)
  */
-export async function saveShopToFirestore(shop: Shop): Promise<void> {
-  if (!shop || !shop.shopId) return;
+export async function saveShopToFirestore(shop: Shop): Promise<{ success: boolean; error?: string }> {
+  if (!shop || !shop.shopId) return { success: false, error: 'Shop ID missing' };
   if (isQuotaExhaustedState) {
     // Quota reached: don't attempt network call to avoid backoff delays and console error spam
-    return;
+    return { success: false, error: 'Cloud quota reached' };
   }
   try {
     const docRef = doc(db, SHOPS_COLLECTION, shop.shopId);
-    const sanitized = JSON.parse(JSON.stringify(shop));
-    await setDoc(
-      docRef,
-      {
-        ...sanitized,
-        updatedAt: new Date().toISOString(),
-      },
-      { merge: true }
-    );
-    console.log(`[Firestore] Shop ${shop.shopId} synced to cloud successfully.`);
-  } catch (error) {
+    const sanitized = JSON.parse(JSON.stringify(shop)) as Record<string, any>;
+
+    // Optimize duplicate banner payloads: if desktopBanners and banners are identical,
+    // ensure we don't double the document size in Firestore
+    if (
+      Array.isArray(sanitized.desktopBanners) &&
+      Array.isArray(sanitized.banners) &&
+      sanitized.desktopBanners.length > 0 &&
+      JSON.stringify(sanitized.desktopBanners) === JSON.stringify(sanitized.banners)
+    ) {
+      // Keep banners pointing to desktopBanners without duplicate allocation
+      sanitized.banners = sanitized.desktopBanners;
+    }
+
+    const payload = {
+      ...sanitized,
+      updatedAt: shop.updatedAt || new Date().toISOString(),
+    };
+
+    const payloadSize = JSON.stringify(payload).length;
+    if (payloadSize > 950_000) {
+      console.warn(`[Firestore Warning] Shop ${shop.shopId} document size is ${Math.round(payloadSize / 1024)}KB, approaching 1MB limit.`);
+    }
+
+    await setDoc(docRef, payload, { merge: true });
+    console.log(`[Firestore] Shop ${shop.shopId} synced to cloud successfully (${Math.round(payloadSize / 1024)}KB).`);
+    return { success: true };
+  } catch (error: any) {
     if (isQuotaExhaustionError(error)) {
       markQuotaExhausted(`saveShop:${shop.shopId}`);
-      return;
+      return { success: false, error: 'Daily quota limit exceeded' };
     }
-    console.warn(`[Firestore] Notice while saving shop ${shop.shopId}:`, error);
+    const errMsg = error?.message || String(error);
+    console.error(`[Firestore Error] Failed saving shop ${shop.shopId}:`, errMsg);
+    return { success: false, error: errMsg };
   }
 }
 

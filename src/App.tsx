@@ -86,11 +86,110 @@ export default function App() {
     // 1. Seed cloud database if first time
     seedFirestoreIfEmpty(platformState);
 
-    // 2. Real-time subscription to cloud shops
+    // 2. Real-time subscription to cloud shops with smart conflict resolution
     const unsubShops = subscribeToShops((cloudShops) => {
       if (cloudShops && cloudShops.length > 0) {
         setPlatformState((prev) => {
-          const updatedState = { ...prev, shops: cloudShops };
+          const currentShops = [...prev.shops];
+          const mergedShops = [...currentShops];
+
+          cloudShops.forEach((cloudShop) => {
+            const existingIndex = mergedShops.findIndex(
+              (s) =>
+                (s.shopId && cloudShop.shopId && s.shopId.toLowerCase() === cloudShop.shopId.toLowerCase()) ||
+                (s.id && cloudShop.id && s.id.toLowerCase() === cloudShop.id.toLowerCase())
+            );
+
+            if (existingIndex >= 0) {
+              const localShop = mergedShops[existingIndex];
+              const localTime = new Date(localShop.updatedAt || 0).getTime();
+              const cloudTime = new Date(cloudShop.updatedAt || 0).getTime();
+
+              // If local shop has equal or newer modifications than cloud snapshot, keep local edits!
+              if (localTime >= cloudTime) {
+                return;
+              }
+
+              // Take authoritative cloud shop data, but preserve any local media if cloud data has empty media
+              const cloudAboutPhoto =
+                cloudShop.aboutPhotoUrl !== undefined && cloudShop.aboutPhotoUrl !== ''
+                  ? cloudShop.aboutPhotoUrl
+                  : (cloudShop.sectionsConfig?.about?.imageUrl || localShop.aboutPhotoUrl || localShop.sectionsConfig?.about?.imageUrl || '');
+
+              const resolvedBanners =
+                cloudShop.banners && cloudShop.banners.length > 0
+                  ? cloudShop.banners
+                  : (localShop.banners || []);
+
+              const resolvedDesktopBanners =
+                cloudShop.desktopBanners && cloudShop.desktopBanners.length > 0
+                  ? cloudShop.desktopBanners
+                  : (localShop.desktopBanners || resolvedBanners);
+
+              const resolvedMobileBanners =
+                cloudShop.mobileBanners && cloudShop.mobileBanners.length > 0
+                  ? cloudShop.mobileBanners
+                  : (localShop.mobileBanners || []);
+
+              const resolvedLogo =
+                cloudShop.logoUrl || localShop.logoUrl || '';
+
+              const resolvedGallery =
+                cloudShop.galleryImages && cloudShop.galleryImages.length > 0
+                  ? cloudShop.galleryImages
+                  : (localShop.galleryImages || []);
+
+              const localSec = (localShop.sectionsConfig || {}) as Record<string, any>;
+              const cloudSec = (cloudShop.sectionsConfig || {}) as Record<string, any>;
+
+              const resolvedPortfolio =
+                (cloudSec.portfolio?.items && cloudSec.portfolio.items.length > 0)
+                  ? cloudSec.portfolio
+                  : (localSec.portfolio || cloudSec.portfolio);
+
+              const resolvedBlog =
+                (cloudSec.blog?.posts && cloudSec.blog.posts.length > 0)
+                  ? cloudSec.blog
+                  : (localSec.blog || cloudSec.blog);
+
+              const resolvedGalleryConfig =
+                (cloudSec.gallery?.items && cloudSec.gallery.items.length > 0)
+                  ? cloudSec.gallery
+                  : (localSec.gallery || cloudSec.gallery);
+
+              const resolvedOffers =
+                (cloudSec.offers?.banners && cloudSec.offers.banners.length > 0)
+                  ? cloudSec.offers
+                  : (localSec.offers || cloudSec.offers);
+
+              mergedShops[existingIndex] = {
+                ...cloudShop,
+                logoUrl: resolvedLogo,
+                banners: resolvedBanners,
+                desktopBanners: resolvedDesktopBanners,
+                mobileBanners: resolvedMobileBanners,
+                galleryImages: resolvedGallery,
+                aboutPhotoUrl: cloudAboutPhoto,
+                sectionsConfig: {
+                  ...localSec,
+                  ...cloudSec,
+                  about: {
+                    ...(localSec.about || {}),
+                    ...(cloudSec.about || {}),
+                    imageUrl: cloudAboutPhoto,
+                  },
+                  ...(resolvedPortfolio ? { portfolio: resolvedPortfolio } : {}),
+                  ...(resolvedBlog ? { blog: resolvedBlog } : {}),
+                  ...(resolvedGalleryConfig ? { gallery: resolvedGalleryConfig } : {}),
+                  ...(resolvedOffers ? { offers: resolvedOffers } : {}),
+                } as any,
+              };
+            } else {
+              mergedShops.push(cloudShop);
+            }
+          });
+
+          const updatedState = { ...prev, shops: mergedShops };
           savePlatformState(updatedState);
           return updatedState;
         });
@@ -403,12 +502,33 @@ export default function App() {
   const handleVendorUpdateShop = async (updatedShop: Shop) => {
     if (!updatedShop || !updatedShop.shopId) return;
 
+    const nowIso = new Date().toISOString();
+    const resolvedAboutPhoto =
+      updatedShop.aboutPhotoUrl !== undefined && updatedShop.aboutPhotoUrl !== ''
+        ? updatedShop.aboutPhotoUrl
+        : (updatedShop.sectionsConfig?.about?.imageUrl || '');
+
+    const preparedShop: Shop = {
+      ...updatedShop,
+      updatedAt: nowIso, // Always assign freshly minted timestamp so local edits take immediate precedence
+      aboutPhotoUrl: resolvedAboutPhoto,
+      sectionsConfig: updatedShop.sectionsConfig
+        ? ({
+            ...updatedShop.sectionsConfig,
+            about: {
+              ...(updatedShop.sectionsConfig.about || {}),
+              imageUrl: resolvedAboutPhoto,
+            },
+          } as any)
+        : updatedShop.sectionsConfig,
+    };
+
     // 1. Immediately update local React state & localStorage so this device & front store reflect changes instantly
     setPlatformState((prev) => {
       const updatedShops = prev.shops.map((s) =>
-        (s.id && s.id.toLowerCase() === updatedShop.id?.toLowerCase()) ||
-        (s.shopId && s.shopId.toLowerCase() === updatedShop.shopId?.toLowerCase())
-          ? updatedShop
+        (s.id && s.id.toLowerCase() === preparedShop.id?.toLowerCase()) ||
+        (s.shopId && s.shopId.toLowerCase() === preparedShop.shopId?.toLowerCase())
+          ? preparedShop
           : s
       );
       const updatedState = { ...prev, shops: updatedShops };
@@ -418,7 +538,7 @@ export default function App() {
 
     // 2. Persist this specific shop to Firestore cloud
     try {
-      await saveShopToFirestore(updatedShop);
+      await saveShopToFirestore(preparedShop);
     } catch (err) {
       console.warn('[Firestore] Notice while saving updated shop to cloud:', err);
     }
@@ -468,6 +588,18 @@ export default function App() {
     fetchShopFromFirestore(activeShopId).then((fetchedShop) => {
       if (fetchedShop) {
         setPlatformState((prev) => {
+          const existingShop = prev.shops.find(
+            (s) =>
+              (s.shopId && s.shopId.toLowerCase() === fetchedShop.shopId.toLowerCase()) ||
+              (s.id && s.id.toLowerCase() === fetchedShop.id?.toLowerCase())
+          );
+          if (existingShop) {
+            const localTime = new Date(existingShop.updatedAt || 0).getTime();
+            const cloudTime = new Date(fetchedShop.updatedAt || 0).getTime();
+            if (localTime >= cloudTime) {
+              return prev; // Retain fresh local edits and media
+            }
+          }
           const exists = prev.shops.some((s) => s.shopId === fetchedShop.shopId);
           const updatedShops = exists
             ? prev.shops.map((s) => (s.shopId === fetchedShop.shopId ? fetchedShop : s))
@@ -483,6 +615,18 @@ export default function App() {
     const unsubSingle = subscribeToShop(activeShopId, (liveShop) => {
       if (liveShop && liveShop.shopId) {
         setPlatformState((prev) => {
+          const existingShop = prev.shops.find(
+            (s) =>
+              (s.shopId && s.shopId.toLowerCase() === liveShop.shopId.toLowerCase()) ||
+              (s.id && s.id.toLowerCase() === liveShop.id?.toLowerCase())
+          );
+          if (existingShop) {
+            const localTime = new Date(existingShop.updatedAt || 0).getTime();
+            const cloudTime = new Date(liveShop.updatedAt || 0).getTime();
+            if (localTime >= cloudTime) {
+              return prev; // Retain fresh local edits and media
+            }
+          }
           const exists = prev.shops.some((s) => s.shopId === liveShop.shopId);
           const updatedShops = exists
             ? prev.shops.map((s) => (s.shopId === liveShop.shopId ? liveShop : s))

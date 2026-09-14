@@ -56,9 +56,15 @@ export const WebsiteCustomizationManager: React.FC<WebsiteCustomizationManagerPr
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
 
-  // Sync if parent shop changes
+  // Sync if parent shop changes (only if different shop or incoming is strictly newer)
   useEffect(() => {
-    setLocalShop(shop);
+    if (shop) {
+      const incomingTime = new Date(shop.updatedAt || 0).getTime();
+      const localTime = new Date(localShop.updatedAt || 0).getTime();
+      if (shop.id !== localShop.id || incomingTime > localTime) {
+        setLocalShop(shop);
+      }
+    }
   }, [shop]);
 
   useEffect(() => {
@@ -100,6 +106,7 @@ export const WebsiteCustomizationManager: React.FC<WebsiteCustomizationManagerPr
     const updated = {
       ...localShop,
       [field]: value,
+      updatedAt: new Date().toISOString(),
     };
     setLocalShop(updated);
     setHasChanges(true);
@@ -111,11 +118,13 @@ export const WebsiteCustomizationManager: React.FC<WebsiteCustomizationManagerPr
     const file = e.target.files?.[0];
     if (!file) return;
     try {
-      const base64 = await fileToBase64(file);
+      const base64 = await fileToBase64(file, 400, 400);
       updateField('logoUrl', base64);
-      showToast('Store Logo update ho gaya!');
+      showToast('Store Logo update aur save ho gaya! 📸');
     } catch {
       alert('Logo upload mein samasya aayi.');
+    } finally {
+      e.target.value = '';
     }
   };
 
@@ -124,20 +133,24 @@ export const WebsiteCustomizationManager: React.FC<WebsiteCustomizationManagerPr
     const file = e.target.files?.[0];
     if (!file) return;
     try {
-      const base64 = await fileToBase64(file);
+      const base64 = await fileToBase64(file, 1000, 500);
       const current = [...(localShop.desktopBanners || localShop.banners || [])];
+      while (current.length <= index) current.push('');
       current[index] = base64;
       const updated = {
         ...localShop,
         desktopBanners: current,
         banners: current,
+        updatedAt: new Date().toISOString(),
       };
       setLocalShop(updated);
       setHasChanges(true);
       onUpdateShop(updated);
-      showToast(`Desktop Banner #${index + 1} select ho gaya!`);
+      showToast(`Desktop Banner #${index + 1} safalta se save ho gaya! 📸`);
     } catch {
       alert('Banner upload error');
+    } finally {
+      e.target.value = '';
     }
   };
 
@@ -146,19 +159,23 @@ export const WebsiteCustomizationManager: React.FC<WebsiteCustomizationManagerPr
     const file = e.target.files?.[0];
     if (!file) return;
     try {
-      const base64 = await fileToBase64(file);
+      const base64 = await fileToBase64(file, 600, 800);
       const current = [...(localShop.mobileBanners || [])];
+      while (current.length <= index) current.push('');
       current[index] = base64;
       const updated = {
         ...localShop,
         mobileBanners: current,
+        updatedAt: new Date().toISOString(),
       };
       setLocalShop(updated);
       setHasChanges(true);
       onUpdateShop(updated);
-      showToast(`Mobile Banner #${index + 1} select ho gaya!`);
+      showToast(`Mobile Banner #${index + 1} safalta se save ho gaya! 📸`);
     } catch {
       alert('Banner upload error');
+    } finally {
+      e.target.value = '';
     }
   };
 
@@ -169,6 +186,7 @@ export const WebsiteCustomizationManager: React.FC<WebsiteCustomizationManagerPr
       ...localShop,
       desktopBanners: current,
       banners: current,
+      updatedAt: new Date().toISOString(),
     };
     setLocalShop(updated);
     setHasChanges(true);
@@ -182,6 +200,7 @@ export const WebsiteCustomizationManager: React.FC<WebsiteCustomizationManagerPr
     const updated = {
       ...localShop,
       mobileBanners: current,
+      updatedAt: new Date().toISOString(),
     };
     setLocalShop(updated);
     setHasChanges(true);

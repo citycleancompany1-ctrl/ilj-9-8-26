@@ -98,50 +98,79 @@ export function getWhatsAppCartMessageUrl(
 
 /**
  * Reads a File object and converts it to a Base64 data URL with automatic compression/resizing
- * Optimized to keep image size ~30-70KB for fast cross-device Firestore synchronization
+ * Optimized to keep image size ~25-60KB for fast cross-device Firestore synchronization
  */
 export function fileToBase64(file: File, maxWidth = 800, maxHeight = 800): Promise<string> {
   return new Promise((resolve, reject) => {
-    if (!file.type.startsWith('image/')) {
-      reject(new Error('File is not an image'));
+    // Robust image check: check MIME type OR file extension (handles mobile pickers with empty MIME)
+    const isLikelyImage =
+      (file.type && file.type.startsWith('image/')) ||
+      /\.(jpe?g|png|webp|gif|bmp|svg|heic|heif|avif)$/i.test(file.name || '');
+
+    if (!isLikelyImage && file.type) {
+      reject(new Error('Kripya valid photo file upload karein (PNG / JPG / WEBP).'));
       return;
     }
 
     const reader = new FileReader();
-    reader.readAsDataURL(file);
     reader.onload = (event) => {
+      const dataUrl = event.target?.result as string;
+      if (!dataUrl) {
+        reject(new Error('Photo read karne mein truti hui.'));
+        return;
+      }
+
+      // If it is SVG, return directly as it's already vector and small
+      if (file.type === 'image/svg+xml' || (file.name && file.name.toLowerCase().endsWith('.svg'))) {
+        resolve(dataUrl);
+        return;
+      }
+
       const img = new Image();
-      img.src = event.target?.result as string;
       img.onload = () => {
-        const canvas = document.createElement('canvas');
-        let width = img.width;
-        let height = img.height;
+        try {
+          const canvas = document.createElement('canvas');
+          let width = img.naturalWidth || img.width || 600;
+          let height = img.naturalHeight || img.height || 600;
 
-        if (width > maxWidth || height > maxHeight) {
-          if (width > height) {
-            height = Math.round((height * maxWidth) / width);
-            width = maxWidth;
-          } else {
-            width = Math.round((width * maxHeight) / height);
-            height = maxHeight;
+          if (width > maxWidth || height > maxHeight) {
+            if (width > height) {
+              height = Math.round((height * maxWidth) / width);
+              width = maxWidth;
+            } else {
+              width = Math.round((width * maxHeight) / height);
+              height = maxHeight;
+            }
           }
-        }
 
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          ctx.drawImage(img, 0, 0, width, height);
-          // Compress to JPEG 0.72 quality for optimal size (<60KB) & fast cloud sync
-          const compressed = canvas.toDataURL('image/jpeg', 0.72);
-          resolve(compressed);
-        } else {
-          resolve(img.src);
+          canvas.width = Math.max(1, width);
+          canvas.height = Math.max(1, height);
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            // Fill white background first so transparent PNGs don't become black boxes in JPEG
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            // Compress to JPEG 0.72 quality for optimal size (<60KB) & fast cloud sync
+            const compressed = canvas.toDataURL('image/jpeg', 0.72);
+            resolve(compressed);
+          } else {
+            resolve(dataUrl);
+          }
+        } catch (e) {
+          console.warn('[fileToBase64] Canvas compression fallback:', e);
+          resolve(dataUrl);
         }
       };
-      img.onerror = (err) => reject(err);
+      img.onerror = () => {
+        // Fallback to dataUrl if image tag onload failed
+        resolve(dataUrl);
+      };
+      // Assign src AFTER setting onload and onerror handlers to prevent missing the event
+      img.src = dataUrl;
     };
     reader.onerror = (error) => reject(error);
+    reader.readAsDataURL(file);
   });
 }
 
