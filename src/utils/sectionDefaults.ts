@@ -3,15 +3,15 @@ import { getShopTerminology } from './categoryTerminology';
 
 /**
  * Default configuration for bottom-right floating action buttons
- * (WhatsApp, Call, Multi-Language, Google Location)
+ * (WhatsApp and Call)
  */
 export function getDefaultFloatingButtons(existing?: Partial<FloatingButtonsConfig>): FloatingButtonsConfig {
   return {
     enabled: existing?.enabled ?? true,
     whatsapp: existing?.whatsapp ?? true,
     call: existing?.call ?? true,
-    language: existing?.language ?? true,
-    googleLocation: existing?.googleLocation ?? true,
+    language: existing?.language ?? false,
+    googleLocation: existing?.googleLocation ?? false,
   };
 }
 
