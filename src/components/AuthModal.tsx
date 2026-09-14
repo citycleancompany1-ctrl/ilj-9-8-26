@@ -109,7 +109,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [subCategory, setSubCategory] = useState(() => getSubCategoriesForMain(BUSINESS_CATEGORIES[0].name)[0] || '');
   const [regPassword, setRegPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [sendWhatsAppOnCreate, setSendWhatsAppOnCreate] = useState(true);
 
   if (!isOpen) return null;
 
@@ -224,7 +223,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       return;
     }
 
-    const shouldSendWhatsApp = sendWhatsApp !== undefined ? sendWhatsApp : sendWhatsAppOnCreate;
+    const shouldSendWhatsApp = Boolean(sendWhatsApp);
     setIsSubmitting(true);
     try {
       // Generate unique Shop ID and salted hash
@@ -710,30 +709,28 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 </div>
               </div>
 
-              {/* WhatsApp Notification Checkbox */}
-              <div className="flex items-center gap-2 pt-1">
-                <input
-                  id="send-whatsapp-credentials-toggle"
-                  type="checkbox"
-                  checked={sendWhatsAppOnCreate}
-                  onChange={(e) => setSendWhatsAppOnCreate(e.target.checked)}
-                  className="w-4 h-4 text-orange-600 rounded border-gray-300 focus:ring-orange-500 cursor-pointer"
-                />
-                <label htmlFor="send-whatsapp-credentials-toggle" className="text-xs text-slate-700 font-medium cursor-pointer select-none">
-                  Send Shop ID & Password on WhatsApp {mobileNumber ? `(+91 ${mobileNumber.replace(/[^0-9]/g, '')})` : ''}
-                </label>
-              </div>
-
-              {/* 8. Create Store Button */}
-              <div className="pt-2">
+              {/* Action Buttons: 1) Create Store, 2) Send ID & Password on WhatsApp */}
+              <div className="flex flex-col sm:flex-row gap-2.5 pt-2">
                 <button
                   id="vendor-create-store-submit-btn"
-                  type="submit"
+                  type="button"
                   disabled={isSubmitting}
-                  className="w-full py-3.5 px-4 rounded-sm bg-orange-600 hover:bg-orange-700 text-white font-bold uppercase tracking-wider text-sm shadow-md shadow-orange-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                  onClick={(e) => handleVendorRegister(e, false)}
+                  className="flex-1 py-3 px-3 rounded-sm bg-orange-600 hover:bg-orange-700 text-white font-bold uppercase tracking-wider text-xs shadow-md shadow-orange-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                 >
                   <Store className="w-4 h-4 shrink-0" />
-                  <span>{isSubmitting ? 'Creating Store...' : 'Create Store'}</span>
+                  <span>{isSubmitting ? 'Creating Store...' : 'Create store'}</span>
+                </button>
+
+                <button
+                  id="vendor-register-whatsapp-btn"
+                  type="button"
+                  disabled={isSubmitting}
+                  onClick={(e) => handleVendorRegister(e, true)}
+                  className="flex-1 py-3 px-3 rounded-sm bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-600/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                >
+                  <MessageCircle className="w-4 h-4 shrink-0" />
+                  <span>Send ID & Password on WhatsApp</span>
                 </button>
               </div>
 
