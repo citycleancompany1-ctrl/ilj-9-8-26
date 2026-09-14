@@ -1471,49 +1471,6 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
         />
       )}
 
-      {/* 16.5 VENDOR TRUST BADGES STRIP (CUSTOMIZABLE) */}
-      {(!sectionsConfig || sectionsConfig.footer?.enabled !== false) && (
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 sm:mt-16">
-          <div className="bg-white rounded-2xl sm:rounded-3xl border border-gray-200/80 p-5 sm:p-7 shadow-xs">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 divide-y sm:divide-y-0 sm:divide-x divide-gray-100">
-              {(shop.trustBadges && shop.trustBadges.length > 0 ? shop.trustBadges : [
-                { id: 'tb1', title: '100% Genuine Direct Store', subtitle: 'Original items directly from registered shop owner', icon: 'ShieldCheck' },
-                { id: 'tb2', title: 'Direct Store Rate', subtitle: 'Zero middleman commission or hidden fees', icon: 'CheckCircle2' },
-                { id: 'tb3', title: 'Fast WhatsApp Seva', subtitle: 'Instant chat, order updates & delivery coordination', icon: 'MessageCircle' },
-                { id: 'tb4', title: 'Secure Direct UPI', subtitle: 'Pay directly to merchant QR or cash on delivery', icon: 'Sparkles' },
-              ]).map((badge, idx) => (
-                <div key={badge.id || `tb-${idx}`} className={`flex items-start gap-3.5 ${idx > 0 ? 'pt-3 sm:pt-0 sm:pl-4' : ''}`}>
-                  <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-2xs border"
-                    style={{
-                      backgroundColor: `${resolvedBrandColor}15`,
-                      borderColor: `${resolvedBrandColor}30`,
-                      color: resolvedBrandColor,
-                    }}
-                  >
-                    {idx === 0 && <ShieldCheck className="w-5 h-5" />}
-                    {idx === 1 && <CheckCircle2 className="w-5 h-5" />}
-                    {idx === 2 && <MessageCircle className="w-5 h-5" />}
-                    {idx === 3 && <Sparkles className="w-5 h-5" />}
-                    {idx > 3 && <ShieldCheck className="w-5 h-5" />}
-                  </div>
-                  <div className="min-w-0">
-                    <h4 className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-tight">
-                      {badge.title}
-                    </h4>
-                    {badge.subtitle && (
-                      <p className="text-[11px] text-slate-500 leading-snug mt-0.5">
-                        {badge.subtitle}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
       {/* 17. STORE FOOTER WITH VENDOR PAYMENT QR (LIGHT THEME) */}
       {(!sectionsConfig || sectionsConfig.footer.enabled) && (
       <footer className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 sm:mt-20 mb-0 pb-0">
@@ -1585,16 +1542,6 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
               <li>
                 <button type="button" onClick={() => setShowQrModal(true)} className="hover:text-orange-600 transition-colors cursor-pointer text-left">
                   0% Direct UPI QR Modal
-                </button>
-              </li>
-              <li>
-                <button
-                  type="button"
-                  onClick={() => setShowTermsModal(true)}
-                  className="hover:text-orange-600 transition-colors cursor-pointer text-left flex items-center gap-1.5"
-                >
-                  <ShieldCheck className="w-3.5 h-3.5 text-orange-600 shrink-0" />
-                  <span>Terms & Conditions (T&C)</span>
                 </button>
               </li>
             </ul>

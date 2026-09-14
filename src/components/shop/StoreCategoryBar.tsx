@@ -117,8 +117,8 @@ export const StoreCategoryBar: React.FC<StoreCategoryBarProps> = ({
           onScroll={checkScroll}
           className={
             isCarousel
-              ? 'flex items-start gap-2 sm:gap-3 lg:gap-4 overflow-x-auto scroll-smooth scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] py-1 px-0.5 snap-x'
-              : 'grid grid-cols-5 sm:grid-cols-8 lg:grid-cols-10 gap-2 sm:gap-3 py-1'
+              ? 'flex items-start justify-start gap-2 sm:gap-3 lg:gap-4 overflow-x-auto scroll-smooth scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] py-1 px-0.5 snap-x'
+              : 'grid grid-cols-5 sm:grid-cols-8 lg:grid-cols-10 gap-2 sm:gap-3 py-1 justify-start'
           }
         >
           {categories.map((item) => {

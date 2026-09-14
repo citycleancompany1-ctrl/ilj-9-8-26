@@ -1025,39 +1025,6 @@ export const WebsiteCustomizationManager: React.FC<WebsiteCustomizationManagerPr
               </div>
             )}
           </div>
-
-          {/* Banner Title & Subtitle Override */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-xs space-y-4">
-            <h3 className="text-sm font-black uppercase tracking-wider text-slate-900">
-              Banner Heading & Subtitle Overlays
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                  Hero Headline / Banner Title
-                </label>
-                <input
-                  type="text"
-                  value={localShop.bannerTitle || ''}
-                  onChange={(e) => updateField('bannerTitle', e.target.value)}
-                  placeholder="e.g. Welcome to Our Official Digital Store"
-                  className="w-full text-xs font-medium bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 focus:bg-white focus:border-orange-500 focus:outline-hidden"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                  Hero Subtitle / Promo Tagline
-                </label>
-                <input
-                  type="text"
-                  value={localShop.bannerSubtitle || ''}
-                  onChange={(e) => updateField('bannerSubtitle', e.target.value)}
-                  placeholder="e.g. Pure Quality • Direct Merchant Guarantee • Instant WhatsApp Order"
-                  className="w-full text-xs font-medium bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 focus:bg-white focus:border-orange-500 focus:outline-hidden"
-                />
-              </div>
-            </div>
-          </div>
         </div>
       )}
 

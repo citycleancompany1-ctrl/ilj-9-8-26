@@ -4088,31 +4088,6 @@ export const VendorDashboard: React.FC<VendorDashboardProps> = ({
 
           {(openSection === 'MEDIA_BANNERS' || activeNav === 'gallery') && (
             <div className="p-5 space-y-5 border-t border-gray-100 animate-in fade-in duration-200">
-              
-              {/* Banner Text settings */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Banner Title</label>
-                  <input
-                    type="text"
-                    value={currentShop.bannerTitle || ''}
-                    onChange={(e) => setCurrentShop({ ...currentShop, bannerTitle: e.target.value })}
-                    placeholder="e.g. Shahi Rajasthani Collection"
-                    className="w-full px-3.5 py-2 rounded-sm border border-gray-300 text-xs focus:ring-2 focus:ring-orange-500 bg-gray-50/50"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Banner Subtitle</label>
-                  <input
-                    type="text"
-                    value={currentShop.bannerSubtitle || ''}
-                    onChange={(e) => setCurrentShop({ ...currentShop, bannerSubtitle: e.target.value })}
-                    placeholder="e.g. Free delivery on all WhatsApp orders"
-                    className="w-full px-3.5 py-2 rounded-sm border border-gray-300 text-xs focus:ring-2 focus:ring-orange-500 bg-gray-50/50"
-                  />
-                </div>
-              </div>
-
               {/* 1. Desktop Banners Carousel (Max 4 Banners) */}
               <div className="space-y-3 pt-2">
                 <div className="flex items-center justify-between">

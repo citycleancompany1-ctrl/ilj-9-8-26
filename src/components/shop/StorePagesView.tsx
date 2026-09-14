@@ -143,7 +143,7 @@ export const ProductsPageView: React.FC<ProductsPageProps> = ({
         
         {/* Page Banner Header */}
         <div className="bg-gradient-to-r from-orange-600 via-orange-500 to-amber-600 rounded-3xl p-6 sm:p-8 text-white shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="space-y-1.5 max-w-xl">
+          <div className="space-y-1.5 max-w-2xl">
             <span className="inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-md px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider">
               <ShoppingBag className="w-3.5 h-3.5" /> Direct Store Catalogue
             </span>
@@ -153,13 +153,6 @@ export const ProductsPageView: React.FC<ProductsPageProps> = ({
             <p className="text-xs sm:text-sm text-orange-50/90 leading-relaxed">
               Explore authentic merchandise directly from {shop.businessName}. Order online or directly connect on WhatsApp for instant doorstep delivery.
             </p>
-          </div>
-
-          <div className="flex items-center gap-2 shrink-0 bg-white/10 backdrop-blur-md p-3 rounded-2xl border border-white/20">
-            <div className="text-right">
-              <div className="text-2xl font-black">{filteredProducts.length}</div>
-              <div className="text-[10px] uppercase tracking-wider text-orange-100 font-bold">Items Listed</div>
-            </div>
           </div>
         </div>
 
@@ -362,7 +355,7 @@ export const ServicesPageView: React.FC<ServicesPageProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
         {/* Banner */}
         <div className="bg-gradient-to-r from-teal-600 via-emerald-600 to-emerald-700 rounded-3xl p-6 sm:p-8 text-white shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="space-y-1.5 max-w-xl">
+          <div className="space-y-1.5 max-w-2xl">
             <span className="inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-md px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider">
               <Sparkles className="w-3.5 h-3.5" /> Professional Store Services
             </span>
@@ -372,13 +365,6 @@ export const ServicesPageView: React.FC<ServicesPageProps> = ({
             <p className="text-xs sm:text-sm text-emerald-50/90 leading-relaxed">
               Book expert services directly from {shop.businessName}. Get upfront pricing, transparent quotes, and verified execution.
             </p>
-          </div>
-
-          <div className="flex items-center gap-2 shrink-0 bg-white/10 backdrop-blur-md p-3 rounded-2xl border border-white/20">
-            <div className="text-right">
-              <div className="text-2xl font-black">{filteredServices.length}</div>
-              <div className="text-[10px] uppercase tracking-wider text-emerald-100 font-bold">Services Available</div>
-            </div>
           </div>
         </div>
 
@@ -495,7 +481,7 @@ export const CoursesPageView: React.FC<CoursesPageProps> = ({
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
         <div className="bg-gradient-to-r from-indigo-700 via-indigo-600 to-purple-700 rounded-3xl p-6 sm:p-8 text-white shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="space-y-1.5 max-w-xl">
+          <div className="space-y-1.5 max-w-2xl">
             <span className="inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-md px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider">
               <GraduationCap className="w-3.5 h-3.5" /> Certified Educational Courses
             </span>
@@ -505,13 +491,6 @@ export const CoursesPageView: React.FC<CoursesPageProps> = ({
             <p className="text-xs sm:text-sm text-indigo-50/90 leading-relaxed">
               Join upcoming batches, practical training workshops, and educational programs conducted by {shop.businessName}.
             </p>
-          </div>
-
-          <div className="flex items-center gap-2 shrink-0 bg-white/10 backdrop-blur-md p-3 rounded-2xl border border-white/20">
-            <div className="text-right">
-              <div className="text-2xl font-black">{courses.length}</div>
-              <div className="text-[10px] uppercase tracking-wider text-indigo-100 font-bold">Batches Open</div>
-            </div>
           </div>
         </div>
 

@@ -790,24 +790,9 @@ export const StoreItemsCarouselSection: React.FC<StoreItemsCarouselSectionProps>
           </div>
         </div>
       ) : filteredItems.length === 1 ? (
-        /* 1 Item: Single centered card */
-        <div className="w-full max-w-sm mx-auto h-[230px] sm:h-[255px]">
-          <SharedItemCard
-            item={filteredItems[0]}
-            isService={isService}
-            isCourse={isCourse}
-            itemType={itemType}
-            shop={shop}
-            cart={cart}
-            onAddToCart={onAddToCart}
-            onRemoveFromCart={onRemoveFromCart}
-            onSelectItem={onSelectItem}
-          />
-        </div>
-      ) : filteredItems.length === 2 ? (
-        /* 2 Items: 2-column layout (Left + Right), both full visible, no horizontal scroll */
-        <div className="grid grid-cols-2 gap-2.5 sm:gap-4 w-full">
-          <div className="h-[230px] sm:h-[255px]">
+        /* 1 Item: Single card starting from the left */
+        <div className="flex items-start justify-start w-full">
+          <div className="w-[calc((100%-20px)/2.2)] min-w-[145px] max-w-[280px] sm:w-[calc((100%-36px)/3.22)] lg:w-[calc((100%-60px)/4.22)] h-[230px] sm:h-[255px]">
             <SharedItemCard
               item={filteredItems[0]}
               isService={isService}
@@ -820,7 +805,24 @@ export const StoreItemsCarouselSection: React.FC<StoreItemsCarouselSectionProps>
               onSelectItem={onSelectItem}
             />
           </div>
-          <div className="h-[230px] sm:h-[255px]">
+        </div>
+      ) : filteredItems.length === 2 ? (
+        /* 2 Items: Starting from left, consistent card width across devices */
+        <div className="flex items-start justify-start gap-2.5 sm:gap-3.5 lg:gap-4 w-full">
+          <div className="w-[calc((100%-20px)/2)] sm:w-[calc((100%-36px)/3.22)] lg:w-[calc((100%-60px)/4.22)] min-w-[145px] max-w-[280px] h-[230px] sm:h-[255px]">
+            <SharedItemCard
+              item={filteredItems[0]}
+              isService={isService}
+              isCourse={isCourse}
+              itemType={itemType}
+              shop={shop}
+              cart={cart}
+              onAddToCart={onAddToCart}
+              onRemoveFromCart={onRemoveFromCart}
+              onSelectItem={onSelectItem}
+            />
+          </div>
+          <div className="w-[calc((100%-20px)/2)] sm:w-[calc((100%-36px)/3.22)] lg:w-[calc((100%-60px)/4.22)] min-w-[145px] max-w-[280px] h-[230px] sm:h-[255px]">
             <SharedItemCard
               item={filteredItems[1]}
               isService={isService}
@@ -840,7 +842,7 @@ export const StoreItemsCarouselSection: React.FC<StoreItemsCarouselSectionProps>
           <div
             ref={scrollRef}
             onScroll={handleScroll}
-            className="flex gap-2.5 sm:gap-3.5 lg:gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-2 pt-1 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none]"
+            className="flex items-start justify-start gap-2.5 sm:gap-3.5 lg:gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-2 pt-1 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none]"
           >
             {filteredItems.map((item) => (
               <div
@@ -888,8 +890,8 @@ export const StoreItemsCarouselSection: React.FC<StoreItemsCarouselSectionProps>
           </div>
         </div>
       ) : filteredItems.length === 4 ? (
-        /* 4 Items: 2 × 2 Grid — upar 2 items, niche 2 items. Sabhi full visible */
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4 w-full">
+        /* 4 Items: 2 × 2 Grid on mobile, 4 columns on sm+ — starting from left */
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4 w-full justify-start">
           {filteredItems.map((item) => (
             <div key={item.id} className="h-[230px] sm:h-[255px]">
               <SharedItemCard
@@ -940,7 +942,7 @@ export const StoreItemsCarouselSection: React.FC<StoreItemsCarouselSectionProps>
           <div
             ref={scrollRef}
             onScroll={handleScroll}
-            className="flex gap-2.5 sm:gap-3.5 lg:gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-2 pt-1 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none]"
+            className="flex items-start justify-start gap-2.5 sm:gap-3.5 lg:gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-2 pt-1 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none]"
           >
             {twoRowCols.map((col, colIdx) => (
               <div
