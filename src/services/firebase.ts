@@ -85,6 +85,17 @@ export function subscribeToQuotaStatus(listener: (exhausted: boolean) => void): 
   };
 }
 
+export function resetQuotaExhausted(): void {
+  isQuotaExhaustedState = false;
+  try {
+    sessionStorage.removeItem('ilj_firestore_quota_exhausted');
+  } catch {}
+  quotaListeners.forEach((fn) => {
+    try { fn(false); } catch {}
+  });
+  console.log('[Firestore] Quota circuit breaker reset.');
+}
+
 export function markQuotaExhausted(contextNotice?: string): void {
   if (!isQuotaExhaustedState) {
     isQuotaExhaustedState = true;
@@ -166,7 +177,8 @@ export async function saveShopToFirestore(shop: Shop): Promise<{ success: boolea
       console.warn(`[Firestore Warning] Shop ${shop.shopId} document size is ${Math.round(payloadSize / 1024)}KB, approaching 1MB limit.`);
     }
 
-    await setDoc(docRef, payload, { merge: true });
+    // Clean overwrite without { merge: true } so deleted products/banners/sections don't linger
+    await setDoc(docRef, payload);
     console.log(`[Firestore] Shop ${shop.shopId} synced to cloud successfully (${Math.round(payloadSize / 1024)}KB).`);
 
     // Instant Event-Driven Broadcast & CDN Invalidation
@@ -546,3 +558,29 @@ export function subscribeToPlatformConfig(onUpdate: (config: Partial<PlatformSta
     return () => {};
   }
 }
+
+/**
+ * Directly fetch all shops from Firestore collection (bypasses stale local cache)
+ */
+export async function fetchAllShopsFromFirestore(): Promise<Shop[]> {
+  try {
+    const shopsColl = collection(db, SHOPS_COLLECTION);
+    const snap = await getDocs(shopsColl);
+    const loadedShops: Shop[] = [];
+    snap.forEach((docSnap) => {
+      const data = docSnap.data() as Shop;
+      if (data && data.shopId) {
+        loadedShops.push(data);
+      }
+    });
+    return loadedShops;
+  } catch (error) {
+    if (isQuotaExhaustionError(error)) {
+      markQuotaExhausted('fetchAllShopsFromFirestore');
+      return [];
+    }
+    console.warn('[Firestore] Error fetching all shops:', error);
+    return [];
+  }
+}
+

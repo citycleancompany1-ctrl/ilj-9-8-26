@@ -33,6 +33,7 @@ import {
   savePlatformConfigToFirestore,
   saveShopToFirestore,
   fetchShopFromFirestore,
+  fetchAllShopsFromFirestore,
   fetchShopByCustomDomain,
   isCloudQuotaExhausted,
   subscribeToQuotaStatus
@@ -90,7 +91,7 @@ export default function App() {
     // 1. Seed cloud database if first time
     seedFirestoreIfEmpty(platformState);
 
-    // 2. Real-time subscription to cloud shops with smart conflict resolution
+    // 2. Real-time subscription to cloud shops (Cloud snapshot is the authoritative source of truth)
     const unsubShops = subscribeToShops((cloudShops) => {
       if (cloudShops && cloudShops.length > 0) {
         setPlatformState((prev) => {
@@ -104,92 +105,12 @@ export default function App() {
                 (s.id && cloudShop.id && s.id.toLowerCase() === cloudShop.id.toLowerCase())
             );
 
+            const safeCloudShop = ensureShopSafetyDefaults(cloudShop);
+
             if (existingIndex >= 0) {
-              const localShop = mergedShops[existingIndex];
-              const localTime = new Date(localShop.updatedAt || 0).getTime();
-              const cloudTime = new Date(cloudShop.updatedAt || 0).getTime();
-
-              // If local shop has equal or newer modifications than cloud snapshot, keep local edits!
-              if (localTime >= cloudTime) {
-                return;
-              }
-
-              // Take authoritative cloud shop data, but preserve any local media if cloud data has empty media
-              const cloudAboutPhoto =
-                cloudShop.aboutPhotoUrl !== undefined && cloudShop.aboutPhotoUrl !== ''
-                  ? cloudShop.aboutPhotoUrl
-                  : (cloudShop.sectionsConfig?.about?.imageUrl || localShop.aboutPhotoUrl || localShop.sectionsConfig?.about?.imageUrl || '');
-
-              const resolvedBanners =
-                cloudShop.banners && cloudShop.banners.length > 0
-                  ? cloudShop.banners
-                  : (localShop.banners || []);
-
-              const resolvedDesktopBanners =
-                cloudShop.desktopBanners && cloudShop.desktopBanners.length > 0
-                  ? cloudShop.desktopBanners
-                  : (localShop.desktopBanners || resolvedBanners);
-
-              const resolvedMobileBanners =
-                cloudShop.mobileBanners && cloudShop.mobileBanners.length > 0
-                  ? cloudShop.mobileBanners
-                  : (localShop.mobileBanners || []);
-
-              const resolvedLogo =
-                cloudShop.logoUrl || localShop.logoUrl || '';
-
-              const resolvedGallery =
-                cloudShop.galleryImages && cloudShop.galleryImages.length > 0
-                  ? cloudShop.galleryImages
-                  : (localShop.galleryImages || []);
-
-              const localSec = (localShop.sectionsConfig || {}) as Record<string, any>;
-              const cloudSec = (cloudShop.sectionsConfig || {}) as Record<string, any>;
-
-              const resolvedPortfolio =
-                (cloudSec.portfolio?.items && cloudSec.portfolio.items.length > 0)
-                  ? cloudSec.portfolio
-                  : (localSec.portfolio || cloudSec.portfolio);
-
-              const resolvedBlog =
-                (cloudSec.blog?.posts && cloudSec.blog.posts.length > 0)
-                  ? cloudSec.blog
-                  : (localSec.blog || cloudSec.blog);
-
-              const resolvedGalleryConfig =
-                (cloudSec.gallery?.items && cloudSec.gallery.items.length > 0)
-                  ? cloudSec.gallery
-                  : (localSec.gallery || cloudSec.gallery);
-
-              const resolvedOffers =
-                (cloudSec.offers?.banners && cloudSec.offers.banners.length > 0)
-                  ? cloudSec.offers
-                  : (localSec.offers || cloudSec.offers);
-
-              mergedShops[existingIndex] = {
-                ...cloudShop,
-                logoUrl: resolvedLogo,
-                banners: resolvedBanners,
-                desktopBanners: resolvedDesktopBanners,
-                mobileBanners: resolvedMobileBanners,
-                galleryImages: resolvedGallery,
-                aboutPhotoUrl: cloudAboutPhoto,
-                sectionsConfig: {
-                  ...localSec,
-                  ...cloudSec,
-                  about: {
-                    ...(localSec.about || {}),
-                    ...(cloudSec.about || {}),
-                    imageUrl: cloudAboutPhoto,
-                  },
-                  ...(resolvedPortfolio ? { portfolio: resolvedPortfolio } : {}),
-                  ...(resolvedBlog ? { blog: resolvedBlog } : {}),
-                  ...(resolvedGalleryConfig ? { gallery: resolvedGalleryConfig } : {}),
-                  ...(resolvedOffers ? { offers: resolvedOffers } : {}),
-                } as any,
-              };
+              mergedShops[existingIndex] = safeCloudShop;
             } else {
-              mergedShops.push(cloudShop);
+              mergedShops.push(safeCloudShop);
             }
           });
 
@@ -217,31 +138,102 @@ export default function App() {
 
     // 4. Instant Event-Driven WebSocket / SSE & Multi-Tab Synchronization
     const unsubRealtime = subscribeToRealtimeEvents((event) => {
-      if (event.type === 'VENDOR_UPDATED' && event.shopId) {
-        fetchShopFromFirestore(event.shopId).then((freshShop) => {
-          if (freshShop) {
-            setPlatformState((prev) => {
-              const idx = prev.shops.findIndex(
-                (s) => s.shopId?.toLowerCase() === freshShop.shopId?.toLowerCase()
-              );
-              if (idx >= 0) {
-                const updated = [...prev.shops];
-                updated[idx] = freshShop;
-                const newState = { ...prev, shops: updated };
+      if (
+        event.type === 'VENDOR_UPDATED' ||
+        event.type === 'SHOP_UPDATE' ||
+        event.type === 'CDN_CACHE_INVALIDATED'
+      ) {
+        if (event.shopId && event.shopId !== 'ALL') {
+          fetchShopFromFirestore(event.shopId).then((freshShop) => {
+            if (freshShop) {
+              const safeFresh = ensureShopSafetyDefaults(freshShop);
+              setPlatformState((prev) => {
+                const idx = prev.shops.findIndex(
+                  (s) =>
+                    (s.shopId && s.shopId.toLowerCase() === safeFresh.shopId.toLowerCase()) ||
+                    (s.id && s.id.toLowerCase() === safeFresh.id?.toLowerCase())
+                );
+                let updatedShops: Shop[];
+                if (idx >= 0) {
+                  updatedShops = [...prev.shops];
+                  updatedShops[idx] = safeFresh;
+                } else {
+                  updatedShops = [safeFresh, ...prev.shops];
+                }
+                const newState = { ...prev, shops: updatedShops };
                 savePlatformState(newState);
                 return newState;
+              });
+            }
+          }).catch(() => {});
+        } else {
+          // Re-fetch all shops on global CDN cache invalidation
+          fetchAllShopsFromFirestore().then((allCloudShops) => {
+            if (allCloudShops && allCloudShops.length > 0) {
+              setPlatformState((prev) => {
+                const updated = {
+                  ...prev,
+                  shops: allCloudShops.map((s) => ensureShopSafetyDefaults(s)),
+                };
+                savePlatformState(updated);
+                return updated;
+              });
+            }
+          }).catch(() => {});
+        }
+      }
+    });
+
+    // 5. Global Custom DOM Event for manual Cache Clear & Sync
+    const handleCustomCacheCleared = (e: Event) => {
+      const customEvt = e as CustomEvent;
+      const targetShopId = customEvt?.detail?.shopId;
+      if (targetShopId && targetShopId !== 'ALL') {
+        fetchShopFromFirestore(targetShopId).then((freshShop) => {
+          if (freshShop) {
+            const safeFresh = ensureShopSafetyDefaults(freshShop);
+            setPlatformState((prev) => {
+              const idx = prev.shops.findIndex(
+                (s) =>
+                  (s.shopId && s.shopId.toLowerCase() === safeFresh.shopId.toLowerCase()) ||
+                  (s.id && s.id.toLowerCase() === safeFresh.id?.toLowerCase())
+              );
+              let updatedShops: Shop[];
+              if (idx >= 0) {
+                updatedShops = [...prev.shops];
+                updatedShops[idx] = safeFresh;
+              } else {
+                updatedShops = [safeFresh, ...prev.shops];
               }
-              return prev;
+              const newState = { ...prev, shops: updatedShops };
+              savePlatformState(newState);
+              return newState;
+            });
+          }
+        }).catch(() => {});
+      } else {
+        fetchAllShopsFromFirestore().then((allCloudShops) => {
+          if (allCloudShops && allCloudShops.length > 0) {
+            setPlatformState((prev) => {
+              const updated = {
+                ...prev,
+                shops: allCloudShops.map((s) => ensureShopSafetyDefaults(s)),
+              };
+              savePlatformState(updated);
+              return updated;
             });
           }
         }).catch(() => {});
       }
-    });
+    };
+
+    window.addEventListener('indianlalaji:cache-cleared', handleCustomCacheCleared);
 
     return () => {
       unsubShops();
       unsubConfig();
       unsubRealtime();
+      window.removeEventListener('indianlalaji:cache-cleared', handleCustomCacheCleared);
     };
   }, []);
 
@@ -658,12 +650,6 @@ export default function App() {
 
             let updatedShops: Shop[];
             if (existingIdx >= 0) {
-              const currentLocal = prev.shops[existingIdx];
-              const localTime = new Date(currentLocal.updatedAt || 0).getTime();
-              const cloudTime = new Date(safeShop.updatedAt || 0).getTime();
-              if (localTime >= cloudTime) {
-                return prev; // Retain fresh local edits and media
-              }
               updatedShops = [...prev.shops];
               updatedShops[existingIdx] = safeShop;
             } else {
@@ -691,12 +677,6 @@ export default function App() {
           );
           let updatedShops: Shop[];
           if (existingIdx >= 0) {
-            const currentLocal = prev.shops[existingIdx];
-            const localTime = new Date(currentLocal.updatedAt || 0).getTime();
-            const cloudTime = new Date(safeShop.updatedAt || 0).getTime();
-            if (localTime >= cloudTime) {
-              return prev; // Retain fresh local edits and media
-            }
             updatedShops = [...prev.shops];
             updatedShops[existingIdx] = safeShop;
           } else {
