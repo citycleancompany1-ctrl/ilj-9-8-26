@@ -14,6 +14,7 @@ import {
   where,
 } from 'firebase/firestore';
 import { Shop, PlatformState } from '../types';
+import { publishRealtimeEvent, triggerCdnInvalidation } from './realtimeEvents';
 import firebaseConfigRaw from '../../firebase-applet-config.json';
 
 // Initialize Firebase App
@@ -167,6 +168,21 @@ export async function saveShopToFirestore(shop: Shop): Promise<{ success: boolea
 
     await setDoc(docRef, payload, { merge: true });
     console.log(`[Firestore] Shop ${shop.shopId} synced to cloud successfully (${Math.round(payloadSize / 1024)}KB).`);
+
+    // Instant Event-Driven Broadcast & CDN Invalidation
+    publishRealtimeEvent({
+      type: 'VENDOR_UPDATED',
+      shopId: shop.shopId,
+      action: 'SAVE',
+      data: { shopId: shop.shopId, businessName: shop.businessName, updatedAt: payload.updatedAt },
+    }).catch(() => {});
+
+    triggerCdnInvalidation({
+      shopId: shop.shopId,
+      domain: shop.customDomain,
+      paths: ['/', `/shop/${shop.shopId}`],
+    }).catch(() => {});
+
     return { success: true };
   } catch (error: any) {
     if (isQuotaExhaustionError(error)) {
@@ -189,6 +205,18 @@ export async function deleteShopFromFirestore(shopId: string): Promise<void> {
     const docRef = doc(db, SHOPS_COLLECTION, shopId);
     await deleteDoc(docRef);
     console.log(`[Firestore] Shop ${shopId} deleted from cloud.`);
+
+    // Instant Event-Driven Broadcast & CDN Invalidation
+    publishRealtimeEvent({
+      type: 'VENDOR_DELETED',
+      shopId: shopId,
+      action: 'DELETE',
+    }).catch(() => {});
+
+    triggerCdnInvalidation({
+      shopId: shopId,
+      paths: ['/', `/shop/${shopId}`],
+    }).catch(() => {});
   } catch (error) {
     if (isQuotaExhaustionError(error)) {
       markQuotaExhausted(`deleteShop:${shopId}`);

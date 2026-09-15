@@ -24,6 +24,7 @@ import { generateShopId, getOneYearExpiryDate, generateInvoiceNumber, formatINR 
 import { hashPassword, verifyPassword } from '../utils/security';
 import { saveShopToFirestore, fetchShopFromFirestore } from '../services/firebase';
 import { getRememberedShopId } from '../services/authSession';
+import { seedStoreWithDefaults } from '../utils/defaultContentSeeder';
 import { Shop, SubscriptionInvoice, PricingPackage } from '../types';
 
 interface AuthModalProps {
@@ -235,7 +236,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       const loginUrl = `${currentOrigin}/?action=login&shopId=${newShopId}`;
       const storeEmail = `${cleanPhone}@store.indianlalaji.com`;
 
-      const newShop: Shop = {
+      const baseShop: Partial<Shop> = {
         id: `shop_${Date.now()}`,
         shopId: newShopId,
         vendorId: `vend_${Date.now()}`,
@@ -244,7 +245,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         vendorPassword: rawPass,
         passwordHash: secureHash,
         businessName: businessName.trim(),
-        tagline: `Welcome to ${businessName.trim()} — Official Online Store`,
         category: subCategory ? `${businessCategory} - ${subCategory}` : businessCategory,
         mainCategory: businessCategory,
         subCategory: subCategory,
@@ -266,19 +266,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         whatsapp: cleanPhone,
         email: storeEmail,
         workingHours: '9:00 AM - 9:00 PM',
-        logoUrl: 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=300&auto=format&fit=crop&q=80',
-        banners: [
-          'https://images.unsplash.com/photo-1542838132-92c53300491e?w=1200&auto=format&fit=crop&q=80',
-        ],
-        bannerTitle: `${businessName.trim()} Online Store`,
-        bannerSubtitle: 'Your trusted store is now digital. Browse products and place orders directly on WhatsApp!',
-        aboutPhotoUrl: 'https://images.unsplash.com/photo-1556740738-b6a63e27c4df?w=600&auto=format&fit=crop&q=80',
-        aboutStory: `Welcome to ${businessName.trim()}. We offer premium quality products and trusted customer service.`,
-        establishedYear: '2024',
-        galleryImages: [],
         paymentQrUrl: `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=upi://pay?pa=${cleanPhone}@upi&pn=${encodeURIComponent(businessName)}&cu=INR`,
         upiId: `${cleanPhone}@upi`,
-        colorTheme: 'saffron',
         fontStyle: 'sans',
         buttonStyle: 'rounded',
         ecommerceEnabled: true,
@@ -314,21 +303,23 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           })(),
         ],
         videos: [],
-        products: [
-          {
-            id: `p_${Date.now()}_1`,
-            name: 'Featured Special Item / Service',
-            type: 'PRODUCT',
-            price: 499,
-            originalPrice: 799,
-            category: 'General',
-            description: 'Best selling high quality product. Direct order on WhatsApp!',
-            imageUrl: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=500&auto=format&fit=crop&q=80',
-            inStock: true,
-          },
-        ],
-        reviews: [],
       };
+
+      // Apply category-aware default content seeding (relevant banners, logo, about story, products, services, features, FAQs, reviews)
+      const newShop = seedStoreWithDefaults(
+        {
+          businessName: businessName.trim(),
+          vendorName: ownerName.trim(),
+          category: businessCategory,
+          mainCategory: businessCategory,
+          subCategory: subCategory,
+          city: 'Local Market',
+          state: 'Uttar Pradesh',
+          phone: cleanPhone,
+          email: storeEmail,
+        },
+        baseShop
+      ) as Shop;
 
       // Save directly to Firestore cloud database
       await saveShopToFirestore(newShop);

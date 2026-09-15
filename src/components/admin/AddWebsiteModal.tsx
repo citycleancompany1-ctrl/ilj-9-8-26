@@ -20,7 +20,7 @@ import { getSubCategoriesForMain } from '../../data/categoryTaxonomy';
 import { generateShopId, getOneYearExpiryDate, getWhatsAppDirectUrl } from '../../utils/mediaUpload';
 import { generateSecurePassword, hashPassword } from '../../utils/security';
 import { saveShopToFirestore } from '../../services/firebase';
-import { getDefaultSectionsConfig } from '../../utils/sectionDefaults';
+import { seedStoreWithDefaults } from '../../utils/defaultContentSeeder';
 
 interface AddWebsiteModalProps {
   state: PlatformState;
@@ -99,7 +99,7 @@ export const AddWebsiteModal: React.FC<AddWebsiteModalProps> = ({
 
       const resolvedEmail = vendorEmail.trim() || `${phone.trim()}@indianlalaji.com`;
 
-      const newShop: Shop = {
+      const baseShop: Partial<Shop> = {
         id: `shop_${Date.now()}`,
         shopId: newShopId,
         vendorId: `vend_${Date.now()}`,
@@ -118,8 +118,6 @@ export const AddWebsiteModal: React.FC<AddWebsiteModalProps> = ({
         city: city.trim() || 'Varanasi',
         state: stateName,
         pincode: '221001',
-        tagline: `${businessName.trim()} - Best in ${category}`,
-        aboutStory: `Namaste! Welcome to ${businessName.trim()}. We offer premium quality ${category.toLowerCase()} items at best prices. Order directly on WhatsApp!`,
         planName: defaultPlanName,
         planPrice: planPrice,
         activeDate: todayStr,
@@ -128,37 +126,36 @@ export const AddWebsiteModal: React.FC<AddWebsiteModalProps> = ({
         templateId: 'tpl_premium_retail',
         isFeaturedInShowcase: false,
         viewsCount: 0,
-        logoUrl: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=200',
-        banners: ['https://images.unsplash.com/photo-1542838132-92c53300491e?w=1200'],
-        aboutPhotoUrl: 'https://images.unsplash.com/photo-1556742049-0a67c5574f73?w=800',
-        establishedYear: '2020',
-        galleryImages: [],
         paymentQrUrl: 'https://images.unsplash.com/photo-1595079672139-547104b2320e?w=400',
         upiId: upiId.trim() || `${phone.trim()}@paytm`,
-        colorTheme: 'saffron',
         fontStyle: 'sans',
         buttonStyle: 'rounded',
         ecommerceEnabled: true,
         serviceBookingEnabled: true,
         videos: [],
-        products: [],
-        reviews: [],
         customDomain: cleanDomain || undefined,
         connectedWebsiteUrl: cleanDomain ? `https://${cleanDomain}` : undefined,
         domainConnectStatus: cleanDomain ? 'CONNECTED' : 'NOT_CONNECTED',
         invoices: [initialInvoice],
-        sectionsConfig: getDefaultSectionsConfig({
-          businessName: businessName.trim(),
-          vendorName: vendorName.trim(),
-          category,
-          city: city.trim(),
-          phone: phone.trim(),
-          email: resolvedEmail,
-          address: address.trim(),
-        }),
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
+
+      const newShop = seedStoreWithDefaults(
+        {
+          businessName: businessName.trim(),
+          vendorName: vendorName.trim(),
+          category,
+          mainCategory: category,
+          subCategory,
+          city: city.trim() || 'Varanasi',
+          state: stateName,
+          phone: phone.trim(),
+          email: resolvedEmail,
+          address: address.trim(),
+        },
+        baseShop
+      ) as Shop;
 
       saveShopToFirestore(newShop);
       onAddShop(newShop);

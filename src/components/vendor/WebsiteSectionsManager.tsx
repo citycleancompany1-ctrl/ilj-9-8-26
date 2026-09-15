@@ -79,6 +79,7 @@ import {
   VideoItem
 } from '../../types';
 import { getDefaultSectionsConfig } from '../../utils/sectionDefaults';
+import { seedStoreWithDefaults } from '../../utils/defaultContentSeeder';
 import { getShopTerminology } from '../../utils/categoryTerminology';
 import { fileToBase64, getYouTubeEmbedUrl } from '../../utils/mediaUpload';
 import { getAvailableCategoriesForShop, getCategoryImageByName } from '../../utils/categoryUtils';
@@ -435,11 +436,26 @@ export const WebsiteSectionsManager: React.FC<WebsiteSectionsManagerProps> = ({
 
   // Reset to smart defaults
   const handleResetAllToDefaults = () => {
-    if (window.confirm('Kya aap sabhi sections ko smart recommended defaults par reset karna chahte hain?')) {
-      const defaults = getDefaultSectionsConfig(shop);
+    if (window.confirm(`Kya aap sabhi 19 sections ko apni category (${shop.category}) ke recommended default content par reset karna chahte hain?`)) {
+      const seeded = seedStoreWithDefaults(
+        {
+          businessName: shop.businessName,
+          vendorName: shop.vendorName,
+          category: shop.category,
+          mainCategory: shop.mainCategory,
+          subCategory: shop.subCategory,
+          city: shop.city,
+          state: shop.state,
+          phone: shop.phone,
+          email: shop.email,
+          address: shop.address,
+        },
+        shop
+      );
+      const defaults = seeded.sectionsConfig || getDefaultSectionsConfig(shop);
       setConfig(defaults);
       if (onAnyChange) onAnyChange();
-      handleSaveConfig(defaults, 'Sabhi 18 sections defaults par reset ho gaye!');
+      handleSaveConfig(defaults, `Sabhi 19 sections category (${shop.category}) ke anusaar reset ho gaye!`);
     }
   };
 

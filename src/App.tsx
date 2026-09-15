@@ -42,6 +42,7 @@ import {
   isPlatformSystemHost, 
   normalizeDomain 
 } from './utils/customDomainMatcher';
+import { subscribeToRealtimeEvents } from './services/realtimeEvents';
 import { 
   loadUserSession, 
   saveUserSession, 
@@ -214,9 +215,33 @@ export default function App() {
       }
     });
 
+    // 4. Instant Event-Driven WebSocket / SSE & Multi-Tab Synchronization
+    const unsubRealtime = subscribeToRealtimeEvents((event) => {
+      if (event.type === 'VENDOR_UPDATED' && event.shopId) {
+        fetchShopFromFirestore(event.shopId).then((freshShop) => {
+          if (freshShop) {
+            setPlatformState((prev) => {
+              const idx = prev.shops.findIndex(
+                (s) => s.shopId?.toLowerCase() === freshShop.shopId?.toLowerCase()
+              );
+              if (idx >= 0) {
+                const updated = [...prev.shops];
+                updated[idx] = freshShop;
+                const newState = { ...prev, shops: updated };
+                savePlatformState(newState);
+                return newState;
+              }
+              return prev;
+            });
+          }
+        }).catch(() => {});
+      }
+    });
+
     return () => {
       unsubShops();
       unsubConfig();
+      unsubRealtime();
     };
   }, []);
 

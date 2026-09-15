@@ -33,6 +33,8 @@ import { fileToBase64 } from '../../utils/mediaUpload';
 import { FloatingButtonsSettingsCard } from '../shared/FloatingButtonsSettingsCard';
 import { getShopTerminology } from '../../utils/categoryTerminology';
 import { getDefaultSectionsConfig } from '../../utils/sectionDefaults';
+import { applyCategorySeedToShop } from '../../utils/defaultContentSeeder';
+import { saveShopToFirestore } from '../../services/firebase';
 
 export type CustomizationTab = 'themes' | 'header' | 'banners' | 'floating' | 'footer' | 'visibility';
 
@@ -55,6 +57,8 @@ export const WebsiteCustomizationManager: React.FC<WebsiteCustomizationManagerPr
   const [localShop, setLocalShop] = useState<Shop>(shop);
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const [showSeedDefaultsModal, setShowSeedDefaultsModal] = useState(false);
+  const [isSeeding, setIsSeeding] = useState(false);
 
   // Sync if parent shop changes (only if different shop or incoming is strictly newer)
   useEffect(() => {
@@ -194,6 +198,31 @@ export const WebsiteCustomizationManager: React.FC<WebsiteCustomizationManagerPr
     showToast(`Desktop Banner #${index + 1} hata diya gaya.`);
   };
 
+  const handleSeedDefaults = async (mode: 'all' | 'media_only' | 'catalog_only') => {
+    setIsSeeding(true);
+    try {
+      const options = {
+        includeProducts: mode === 'all' || mode === 'catalog_only',
+        includeBanners: mode === 'all' || mode === 'media_only',
+        includeAbout: mode === 'all' || mode === 'media_only',
+        includeSections: mode === 'all',
+      };
+
+      const updated = applyCategorySeedToShop(localShop, options);
+      setLocalShop(updated);
+      setHasChanges(false);
+      onUpdateShop(updated);
+      await saveShopToFirestore(updated);
+      setShowSeedDefaultsModal(false);
+      showToast(`Category "${localShop.category}" ke anusaar default content load ho gaya! 🎉`);
+    } catch (err) {
+      console.error('Seed defaults error:', err);
+      showToast('Default content apply karne mein error aayi.');
+    } finally {
+      setIsSeeding(false);
+    }
+  };
+
   const handleRemoveMobileBanner = (index: number) => {
     const current = [...(localShop.mobileBanners || [])];
     current.splice(index, 1);
@@ -271,6 +300,16 @@ export const WebsiteCustomizationManager: React.FC<WebsiteCustomizationManagerPr
 
           {/* Action buttons */}
           <div className="flex flex-wrap items-center gap-3 shrink-0">
+            <button
+              type="button"
+              onClick={() => setShowSeedDefaultsModal(true)}
+              className="px-4 py-2.5 rounded-xl bg-indigo-950/80 hover:bg-indigo-900 text-indigo-200 border border-indigo-500/40 text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer shadow-sm hover:border-amber-400/60"
+              title="Apply Category Default Content (Banners, Text & Products)"
+            >
+              <Sparkles className="w-4 h-4 text-amber-300" />
+              <span>Category Defaults</span>
+            </button>
+
             {onPreviewShop && (
               <button
                 type="button"
@@ -1286,6 +1325,109 @@ export const WebsiteCustomizationManager: React.FC<WebsiteCustomizationManagerPr
                 </div>
               );
             })}
+          </div>
+        </div>
+      )}
+
+      {/* CATEGORY DEFAULT CONTENT SEEDER MODAL */}
+      {showSeedDefaultsModal && (
+        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-2xl border border-gray-100 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-start justify-between gap-4 mb-5">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-orange-500 to-amber-500 text-white flex items-center justify-center shadow-md shadow-orange-500/30">
+                  <Sparkles className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-slate-900 font-['Outfit',sans-serif]">
+                    Auto-Seed Category Defaults
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Category: <span className="font-bold text-orange-600">{localShop.category || 'General'}</span>
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowSeedDefaultsModal(false)}
+                className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100 transition-all cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="bg-orange-50/60 rounded-2xl p-4 border border-orange-100/80 mb-6 text-xs text-slate-700 leading-relaxed">
+              <p className="font-bold text-orange-950 mb-1">
+                ✨ यह सिस्टम आपकी कैटेगरी के हिसाब से क्या लोड करेगा?
+              </p>
+              <ul className="space-y-1 list-disc list-inside text-slate-600 text-[11px]">
+                <li>हाई-क्वालिटी डेस्कटॉप और मोबाइल बैनर्स व लोगो</li>
+                <li>कैटेगरी के अनुसार ओरिजिनल टैगलाइन और 'About Us' स्टोरी</li>
+                <li>सैंपल प्रोडक्ट्स / सर्विसेज और डिस्काउंट ऑफर्स</li>
+                <li>रियल कस्टमर टेस्टिमोनियल्स, रेटिंग्स और ट्रस्ट बैजेस</li>
+                <li>कैटेगरी से जुड़े अक्सर पूछे जाने वाले सवाल (FAQs)</li>
+              </ul>
+              <p className="mt-2 text-[10px] text-slate-500 italic">
+                * नोट: इसे लोड करने के बाद आप किसी भी इमेज, टेक्स्ट या प्रोडक्ट को कभी भी एडिट या डिलीट कर सकते हैं।
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <button
+                type="button"
+                disabled={isSeeding}
+                onClick={() => handleSeedDefaults('all')}
+                className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white font-bold text-xs uppercase tracking-wider flex items-center justify-between shadow-md shadow-orange-600/20 transition-all cursor-pointer disabled:opacity-50"
+              >
+                <div className="text-left">
+                  <div className="font-black">Load Everything (सब कुछ लोड करें)</div>
+                  <div className="text-[10px] text-orange-100 normal-case font-normal">
+                    Banners, Story, Sample Products, Services, FAQs & Badges
+                  </div>
+                </div>
+                <Sparkles className="w-5 h-5 text-amber-200" />
+              </button>
+
+              <button
+                type="button"
+                disabled={isSeeding}
+                onClick={() => handleSeedDefaults('media_only')}
+                className="w-full py-3 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs uppercase tracking-wider flex items-center justify-between transition-all cursor-pointer disabled:opacity-50"
+              >
+                <div className="text-left">
+                  <div className="font-bold">Banners & Branding Only (सिर्फ बैनर व स्टोरी)</div>
+                  <div className="text-[10px] text-slate-500 normal-case font-normal">
+                    Mere existing products safe rahenge, sirf design aur banner update honge
+                  </div>
+                </div>
+                <ImageIcon className="w-4 h-4 text-slate-500" />
+              </button>
+
+              <button
+                type="button"
+                disabled={isSeeding}
+                onClick={() => handleSeedDefaults('catalog_only')}
+                className="w-full py-3 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs uppercase tracking-wider flex items-center justify-between transition-all cursor-pointer disabled:opacity-50"
+              >
+                <div className="text-left">
+                  <div className="font-bold">Catalog Items Only (सिर्फ सैंपल प्रोडक्ट्स)</div>
+                  <div className="text-[10px] text-slate-500 normal-case font-normal">
+                    Banners safe rahenge, category ke anusaar 3-4 sample products add honge
+                  </div>
+                </div>
+                <Plus className="w-4 h-4 text-slate-500" />
+              </button>
+            </div>
+
+            <div className="mt-6 flex items-center justify-end">
+              <button
+                type="button"
+                onClick={() => setShowSeedDefaultsModal(false)}
+                className="px-5 py-2 rounded-xl text-xs font-bold text-gray-500 hover:text-gray-800 hover:bg-gray-100 transition-all cursor-pointer"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       )}
