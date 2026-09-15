@@ -1196,8 +1196,23 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
           shop={shop}
           categories={storeCategories}
           onSelectCategory={(catName) => {
-            if (catName !== 'ALL') {
+            const lower = catName.trim().toLowerCase();
+            if (lower === 'all products' || lower === 'all') {
               navigateToPage('products');
+            } else if (lower === 'all services') {
+              navigateToPage('services');
+            } else if (lower === 'all courses') {
+              navigateToPage('courses');
+            } else {
+              const matchService = catalogServices.some(s => (s.category || '').trim().toLowerCase() === lower);
+              const matchCourse = catalogCourses.some(c => (c.category || '').trim().toLowerCase() === lower);
+              if (matchService) {
+                navigateToPage('services');
+              } else if (matchCourse) {
+                navigateToPage('courses');
+              } else {
+                navigateToPage('products');
+              }
             }
           }}
           onViewAll={() => navigateToPage('products')}

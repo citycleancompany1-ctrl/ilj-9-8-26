@@ -31,7 +31,11 @@ import {
 import { Shop, ProductItem, CartItem, ShopSectionsConfig } from '../../types';
 import { formatINR, getWhatsAppDirectUrl } from '../../utils/mediaUpload';
 import { StoreCategoryBar, CategoryBarItem } from './StoreCategoryBar';
-import { extractStoreCategories } from '../../utils/categoryUtils';
+import {
+  extractStoreCategories,
+  matchesCategoryFilter,
+  isParentCategory,
+} from '../../utils/categoryUtils';
 import { getShopTerminology } from '../../utils/categoryTerminology';
 import { SharedItemCard } from './StoreItemsCarouselSection';
 import {
@@ -106,7 +110,7 @@ export const ProductsPageView: React.FC<ProductsPageProps> = ({
     return products
       .filter((item) => {
         // Category filter
-        if (selectedCategory && selectedCategory !== 'ALL' && item.category !== selectedCategory) {
+        if (!matchesCategoryFilter(item.category, selectedCategory, item.type || 'PRODUCT')) {
           return false;
         }
         // In-stock filter
@@ -161,13 +165,13 @@ export const ProductsPageView: React.FC<ProductsPageProps> = ({
           <div className="bg-white rounded-2xl border border-gray-200/90 p-3 shadow-xs">
             <div className="text-[11px] font-black uppercase tracking-wider text-slate-500 px-2 mb-2 flex items-center justify-between">
               <span>Select Category:</span>
-              {selectedCategory !== 'ALL' && (
+              {selectedCategory !== 'ALL' && !isParentCategory(selectedCategory) && (
                 <button
                   type="button"
                   onClick={() => setSelectedCategory('ALL')}
                   className="text-orange-600 hover:text-orange-700 font-bold cursor-pointer"
                 >
-                  Reset to All
+                  Reset to All Products
                 </button>
               )}
             </div>
@@ -330,7 +334,7 @@ export const ServicesPageView: React.FC<ServicesPageProps> = ({
 
   const filteredServices = useMemo(() => {
     return services.filter((item) => {
-      if (selectedCategory && selectedCategory !== 'ALL' && item.category !== selectedCategory) {
+      if (!matchesCategoryFilter(item.category, selectedCategory, 'SERVICE')) {
         return false;
       }
       if (searchQuery.trim()) {
@@ -373,13 +377,13 @@ export const ServicesPageView: React.FC<ServicesPageProps> = ({
           <div className="bg-white rounded-2xl border border-gray-200/90 p-3 shadow-xs">
             <div className="text-[11px] font-black uppercase tracking-wider text-slate-500 px-2 mb-2 flex items-center justify-between">
               <span>Filter by Service Speciality:</span>
-              {selectedCategory !== 'ALL' && (
+              {selectedCategory !== 'ALL' && !isParentCategory(selectedCategory) && (
                 <button
                   type="button"
                   onClick={() => setSelectedCategory('ALL')}
                   className="text-emerald-600 hover:text-emerald-700 font-bold cursor-pointer"
                 >
-                  Reset to All
+                  Reset to All Services
                 </button>
               )}
             </div>
@@ -387,6 +391,7 @@ export const ServicesPageView: React.FC<ServicesPageProps> = ({
               categories={categories}
               selectedCategory={selectedCategory}
               onSelectCategory={setSelectedCategory}
+              accentColor="emerald"
             />
           </div>
         )}
@@ -471,6 +476,29 @@ export const CoursesPageView: React.FC<CoursesPageProps> = ({
   onSelectItem,
   onNavigateHome,
 }) => {
+  const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+
+  const categories: CategoryBarItem[] = useMemo(() => {
+    return extractStoreCategories(courses, shop.customCategories, 'COURSE');
+  }, [courses, shop.customCategories]);
+
+  const filteredCourses = useMemo(() => {
+    return courses.filter((item) => {
+      if (!matchesCategoryFilter(item.category, selectedCategory, 'COURSE')) {
+        return false;
+      }
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        const nameMatch = item.name.toLowerCase().includes(q);
+        const descMatch = (item.description || '').toLowerCase().includes(q);
+        const catMatch = (item.category || '').toLowerCase().includes(q);
+        if (!nameMatch && !descMatch && !catMatch) return false;
+      }
+      return true;
+    });
+  }, [courses, selectedCategory, searchQuery]);
+
   return (
     <div className="min-h-[70vh] pb-16">
       <PageBreadcrumb
@@ -494,8 +522,76 @@ export const CoursesPageView: React.FC<CoursesPageProps> = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-          {courses.map((course) => (
+        {/* Categories Bar */}
+        {categories.length > 0 && (
+          <div className="bg-white rounded-2xl border border-gray-200/90 p-3 shadow-xs">
+            <div className="text-[11px] font-black uppercase tracking-wider text-slate-500 px-2 mb-2 flex items-center justify-between">
+              <span>Filter by Course Stream:</span>
+              {selectedCategory !== 'ALL' && !isParentCategory(selectedCategory) && (
+                <button
+                  type="button"
+                  onClick={() => setSelectedCategory('ALL')}
+                  className="text-indigo-600 hover:text-indigo-700 font-bold cursor-pointer"
+                >
+                  Reset to All Courses
+                </button>
+              )}
+            </div>
+            <StoreCategoryBar
+              categories={categories}
+              selectedCategory={selectedCategory}
+              onSelectCategory={setSelectedCategory}
+              accentColor="indigo"
+            />
+          </div>
+        )}
+
+        {/* Search */}
+        <div className="bg-white rounded-2xl border border-gray-200/90 p-4 shadow-xs">
+          <div className="relative w-full">
+            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search course title, syllabus or category..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-8 py-2 rounded-xl border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50/60 focus:bg-white transition-all"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {filteredCourses.length === 0 ? (
+          <div className="bg-white rounded-3xl border border-gray-200/90 p-12 text-center space-y-3 shadow-xs">
+            <div className="w-12 h-12 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto">
+              <GraduationCap className="w-6 h-6" />
+            </div>
+            <h3 className="text-base font-bold text-slate-800">No courses match your filter</h3>
+            <p className="text-xs text-gray-500 max-w-sm mx-auto">
+              Try choosing a different course category or resetting the search filter to view all programs.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedCategory('ALL');
+                setSearchQuery('');
+              }}
+              className="px-4 py-2 bg-indigo-600 text-white text-xs font-bold rounded-xl cursor-pointer hover:bg-indigo-700 transition shadow-xs"
+            >
+              Reset to All Courses
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            {filteredCourses.map((course) => (
             <div
               key={course.id}
               className="bg-white rounded-3xl border border-gray-200/90 overflow-hidden shadow-xs hover:shadow-md transition-shadow flex flex-col justify-between"
@@ -544,7 +640,8 @@ export const CoursesPageView: React.FC<CoursesPageProps> = ({
             </div>
           ))}
         </div>
-      </div>
+      )}
+    </div>
     </div>
   );
 };

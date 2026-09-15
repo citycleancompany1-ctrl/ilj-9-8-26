@@ -616,6 +616,99 @@ export const VendorCategoryManager: React.FC<VendorCategoryManagerProps> = ({
         </div>
       )}
 
+      {/* System-Generated Parent Categories Showcase (Always Position 1st) */}
+      <div className="bg-gradient-to-r from-orange-50/80 via-amber-50/50 to-orange-50/80 rounded-2xl border border-orange-200 p-4 space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <span className="w-6 h-6 rounded-full bg-orange-600 text-white flex items-center justify-center text-[10px] font-black shadow-2xs">
+              1st
+            </span>
+            <div>
+              <h4 className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-tight">
+                System-Generated Parent Categories (Position 1st)
+              </h4>
+              <p className="text-[11px] text-slate-600">
+                Yeh master categories aapki sabhi categories ki 1st position me automatically display hoti hain.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+          {/* All Products */}
+          {(filterType === 'ALL' || filterType === 'PRODUCT') && (
+            <div className="bg-white rounded-xl border border-orange-200 p-2.5 flex items-center gap-3 shadow-2xs">
+              <div className="relative w-12 h-12 rounded-full border-2 border-orange-500 overflow-hidden shrink-0 shadow-2xs">
+                <img
+                  src="https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=240&q=80"
+                  alt="All Products"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="bg-orange-100 text-orange-800 text-[9px] font-black px-1.5 py-0.5 rounded uppercase">
+                    Position 1st
+                  </span>
+                </div>
+                <h5 className="text-xs font-black text-slate-900 truncate mt-0.5">All Products</h5>
+                <p className="text-[10px] text-gray-500">
+                  {(shop.products || []).filter((p) => p.type !== 'SERVICE' && p.type !== 'COURSE').length} Products Linked
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* All Courses */}
+          {(filterType === 'ALL' || filterType === 'COURSE') && (
+            <div className="bg-white rounded-xl border border-indigo-200 p-2.5 flex items-center gap-3 shadow-2xs">
+              <div className="relative w-12 h-12 rounded-full border-2 border-indigo-500 overflow-hidden shrink-0 shadow-2xs">
+                <img
+                  src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=240&q=80"
+                  alt="All Courses"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="bg-indigo-100 text-indigo-800 text-[9px] font-black px-1.5 py-0.5 rounded uppercase">
+                    Position 1st
+                  </span>
+                </div>
+                <h5 className="text-xs font-black text-slate-900 truncate mt-0.5">All Courses</h5>
+                <p className="text-[10px] text-gray-500">
+                  {(shop.products || []).filter((p) => p.type === 'COURSE').length} Courses Linked
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* All Services */}
+          {(filterType === 'ALL' || filterType === 'SERVICE') && (
+            <div className="bg-white rounded-xl border border-emerald-200 p-2.5 flex items-center gap-3 shadow-2xs">
+              <div className="relative w-12 h-12 rounded-full border-2 border-emerald-500 overflow-hidden shrink-0 shadow-2xs">
+                <img
+                  src="https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=240&q=80"
+                  alt="All Services"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="bg-emerald-100 text-emerald-800 text-[9px] font-black px-1.5 py-0.5 rounded uppercase">
+                    Position 1st
+                  </span>
+                </div>
+                <h5 className="text-xs font-black text-slate-900 truncate mt-0.5">All Services</h5>
+                <p className="text-[10px] text-gray-500">
+                  {(shop.products || []).filter((p) => p.type === 'SERVICE').length} Services Linked
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Categories Grid / Cards List */}
       {filteredCategories.length === 0 ? (
         <div className="bg-white p-8 rounded-2xl border border-dashed border-gray-300 text-center space-y-3">

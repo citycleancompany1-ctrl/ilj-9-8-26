@@ -87,24 +87,167 @@ export function getCategoryImageByName(categoryName: string, fallbackUrl?: strin
   return fallbackUrl || 'https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=240&q=80';
 }
 
+export const SYSTEM_PARENT_CATEGORIES = {
+  PRODUCT: {
+    id: 'cat-parent-all-products',
+    name: 'All Products',
+    imageUrl: 'https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=240&q=80',
+    type: 'PRODUCT' as ProductType,
+  },
+  COURSE: {
+    id: 'cat-parent-all-courses',
+    name: 'All Courses',
+    imageUrl: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=240&q=80',
+    type: 'COURSE' as ProductType,
+  },
+  SERVICE: {
+    id: 'cat-parent-all-services',
+    name: 'All Services',
+    imageUrl: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=240&q=80',
+    type: 'SERVICE' as ProductType,
+  },
+} as const;
+
+/**
+ * Checks if a category name refers to a System-Generated Parent Category
+ */
+export function isParentCategory(name?: string): boolean {
+  if (!name) return false;
+  const n = name.trim().toLowerCase();
+  return (
+    n === 'all' ||
+    n === 'all products' ||
+    n === 'all courses' ||
+    n === 'all services' ||
+    n === 'all items' ||
+    n === 'all-products' ||
+    n === 'all-courses' ||
+    n === 'all-services'
+  );
+}
+
+/**
+ * Filter matcher that respects System-Generated Parent Categories ("All Products", "All Courses", "All Services")
+ */
+export function matchesCategoryFilter(
+  itemCategory: string | undefined,
+  selectedCategory: string,
+  itemType?: ProductType
+): boolean {
+  if (!selectedCategory || isParentCategory(selectedCategory)) {
+    const sel = (selectedCategory || '').trim().toLowerCase();
+    if (sel === 'all products') {
+      return itemType !== 'SERVICE' && itemType !== 'COURSE';
+    }
+    if (sel === 'all courses') {
+      return itemType === 'COURSE';
+    }
+    if (sel === 'all services') {
+      return itemType === 'SERVICE';
+    }
+    return true;
+  }
+  return (itemCategory || '').trim().toLowerCase() === selectedCategory.trim().toLowerCase();
+}
+
 /**
  * Extracts unique categories from a list of products/services/courses,
  * counts items in each category, and resolves a representative image.
- * Gives first priority to vendor-defined categories in shop.customCategories.
+ * System-Generated Parent Categories ("All Products", "All Courses", "All Services")
+ * are GUARANTEED to be at POSITION 1st!
  */
 export function extractStoreCategories(
   items: ProductItem[],
   customCategories?: ShopCategory[] | Record<string, string>,
   itemType?: ProductType
 ): CategoryBarItem[] {
-  const result: CategoryBarItem[] = [];
   const processedNames = new Set<string>();
 
+  // Mark all parent category names as processed so custom/item categories don't duplicate them
+  processedNames.add('all');
+  processedNames.add('all products');
+  processedNames.add('all courses');
+  processedNames.add('all services');
+  processedNames.add('all items');
+
+  // Build System-Generated Parent Categories that will sit in POSITION 1st
+  const parentCategories: CategoryBarItem[] = [];
+
+  if (itemType === 'PRODUCT') {
+    const productCount = items.filter((it) => it.type !== 'SERVICE' && it.type !== 'COURSE').length;
+    parentCategories.push({
+      id: SYSTEM_PARENT_CATEGORIES.PRODUCT.id,
+      name: SYSTEM_PARENT_CATEGORIES.PRODUCT.name,
+      imageUrl: SYSTEM_PARENT_CATEGORIES.PRODUCT.imageUrl,
+      count: productCount || items.length,
+      isSystemParent: true,
+    });
+  } else if (itemType === 'COURSE') {
+    const courseCount = items.filter((it) => it.type === 'COURSE').length;
+    parentCategories.push({
+      id: SYSTEM_PARENT_CATEGORIES.COURSE.id,
+      name: SYSTEM_PARENT_CATEGORIES.COURSE.name,
+      imageUrl: SYSTEM_PARENT_CATEGORIES.COURSE.imageUrl,
+      count: courseCount || items.length,
+      isSystemParent: true,
+    });
+  } else if (itemType === 'SERVICE') {
+    const serviceCount = items.filter((it) => it.type === 'SERVICE').length;
+    parentCategories.push({
+      id: SYSTEM_PARENT_CATEGORIES.SERVICE.id,
+      name: SYSTEM_PARENT_CATEGORIES.SERVICE.name,
+      imageUrl: SYSTEM_PARENT_CATEGORIES.SERVICE.imageUrl,
+      count: serviceCount || items.length,
+      isSystemParent: true,
+    });
+  } else {
+    // Mixed / All Types Store Showcase (Position 1st will have parent categories)
+    const productCount = items.filter((it) => it.type !== 'SERVICE' && it.type !== 'COURSE').length;
+    const courseCount = items.filter((it) => it.type === 'COURSE').length;
+    const serviceCount = items.filter((it) => it.type === 'SERVICE').length;
+
+    // 1st: All Products
+    if (productCount > 0 || items.length === 0) {
+      parentCategories.push({
+        id: SYSTEM_PARENT_CATEGORIES.PRODUCT.id,
+        name: SYSTEM_PARENT_CATEGORIES.PRODUCT.name,
+        imageUrl: SYSTEM_PARENT_CATEGORIES.PRODUCT.imageUrl,
+        count: productCount || items.length,
+        isSystemParent: true,
+      });
+    }
+
+    // 1st group: All Courses
+    if (courseCount > 0) {
+      parentCategories.push({
+        id: SYSTEM_PARENT_CATEGORIES.COURSE.id,
+        name: SYSTEM_PARENT_CATEGORIES.COURSE.name,
+        imageUrl: SYSTEM_PARENT_CATEGORIES.COURSE.imageUrl,
+        count: courseCount,
+        isSystemParent: true,
+      });
+    }
+
+    // 1st group: All Services
+    if (serviceCount > 0) {
+      parentCategories.push({
+        id: SYSTEM_PARENT_CATEGORIES.SERVICE.id,
+        name: SYSTEM_PARENT_CATEGORIES.SERVICE.name,
+        imageUrl: SYSTEM_PARENT_CATEGORIES.SERVICE.imageUrl,
+        count: serviceCount,
+        isSystemParent: true,
+      });
+    }
+  }
+
   // 1. If customCategories is an array of ShopCategory objects (vendor-created categories)
+  const subCategories: CategoryBarItem[] = [];
+
   if (Array.isArray(customCategories) && customCategories.length > 0) {
     // Filter vendor categories matching current itemType (or 'ALL' / undefined)
     const matchingCustomCats = customCategories.filter((cat) => {
       if (!cat.name) return false;
+      if (isParentCategory(cat.name)) return false;
       if (!cat.type || cat.type === 'ALL') return true;
       if (!itemType) return true;
       return cat.type === itemType;
@@ -130,7 +273,7 @@ export function extractStoreCategories(
         img = matchingItem?.imageUrl || getCategoryImageByName(cat.name);
       }
 
-      result.push({
+      subCategories.push({
         id: cat.id || `cat-${lowerName.replace(/[^a-z0-9]/g, '-')}`,
         name: cat.name.trim(),
         imageUrl: img,
@@ -156,29 +299,23 @@ export function extractStoreCategories(
 
   items.forEach((item) => {
     const rawCategory = item.category?.trim();
-    const catName =
-      rawCategory ||
-      (item.type === 'COURSE'
-        ? 'Courses & Training'
-        : item.type === 'SERVICE'
-        ? 'Services'
-        : 'General Products');
+    if (!rawCategory || isParentCategory(rawCategory)) return;
 
-    const lower = catName.toLowerCase();
+    const lower = rawCategory.toLowerCase();
     if (processedNames.has(lower)) {
-      // Already handled by customCategories
+      // Already handled
       return;
     }
 
-    if (!dynamicCategoryMap.has(catName)) {
-      dynamicCategoryMap.set(catName, {
-        name: catName,
+    if (!dynamicCategoryMap.has(rawCategory)) {
+      dynamicCategoryMap.set(rawCategory, {
+        name: rawCategory,
         items: [],
         firstImageUrl: item.imageUrl,
       });
     }
 
-    const entry = dynamicCategoryMap.get(catName)!;
+    const entry = dynamicCategoryMap.get(rawCategory)!;
     entry.items.push(item);
     if (!entry.firstImageUrl && item.imageUrl) {
       entry.firstImageUrl = item.imageUrl;
@@ -197,7 +334,7 @@ export function extractStoreCategories(
       finalImageUrl = getCategoryImageByName(catName);
     }
 
-    result.push({
+    subCategories.push({
       id: `cat-${lowerName.replace(/[^a-z0-9]/g, '-')}`,
       name: catName,
       imageUrl: finalImageUrl,
@@ -205,7 +342,8 @@ export function extractStoreCategories(
     });
   });
 
-  return result;
+  // SYSTEM-GENERATED PARENT CATEGORIES ARE PLACED AT POSITION 1st!
+  return [...parentCategories, ...subCategories];
 }
 
 export const DEFAULT_PRODUCT_CATEGORIES: string[] = [
@@ -263,12 +401,29 @@ export function getAvailableCategoriesForShop(
   shopCustomCategories: ShopCategory[] = [],
   shopProducts: ProductItem[] = [],
   type: ProductType = 'PRODUCT'
-): { id: string; name: string; imageUrl: string; isCustom: boolean }[] {
-  const result: { id: string; name: string; imageUrl: string; isCustom: boolean }[] = [];
+): { id: string; name: string; imageUrl: string; isCustom: boolean; isSystemParent?: boolean }[] {
+  const result: { id: string; name: string; imageUrl: string; isCustom: boolean; isSystemParent?: boolean }[] = [];
   const seen = new Set<string>();
+
+  // Place System-Generated Parent Category at 1st position
+  const parentInfo = SYSTEM_PARENT_CATEGORIES[type] || SYSTEM_PARENT_CATEGORIES.PRODUCT;
+  seen.add(parentInfo.name.toLowerCase());
+  seen.add('all');
+  seen.add('all products');
+  seen.add('all courses');
+  seen.add('all services');
+
+  result.push({
+    id: parentInfo.id,
+    name: parentInfo.name,
+    imageUrl: parentInfo.imageUrl,
+    isCustom: false,
+    isSystemParent: true,
+  });
 
   // 1. Vendor's custom categories for this type (or ALL)
   (shopCustomCategories || []).forEach((cat) => {
+    if (!cat.name || isParentCategory(cat.name)) return;
     if (!cat.type || cat.type === 'ALL' || cat.type === type) {
       const lower = cat.name.trim().toLowerCase();
       if (!seen.has(lower) && cat.name.trim()) {
@@ -285,7 +440,7 @@ export function getAvailableCategoriesForShop(
 
   // 2. Existing items of this type in shop products (ensures no existing item's category is lost)
   (shopProducts || []).forEach((item) => {
-    if (item.type === type && item.category && item.category.trim()) {
+    if (item.type === type && item.category && item.category.trim() && !isParentCategory(item.category)) {
       const catName = item.category.trim();
       const lower = catName.toLowerCase();
       if (!seen.has(lower)) {

@@ -20,7 +20,7 @@ import {
 import { ProductItem, Shop, CartItem, ProductType } from '../../types';
 import { formatINR, getWhatsAppDirectUrl } from '../../utils/mediaUpload';
 import { StoreCategoryBar, CategoryBarItem } from './StoreCategoryBar';
-import { extractStoreCategories } from '../../utils/categoryUtils';
+import { extractStoreCategories, isParentCategory } from '../../utils/categoryUtils';
 
 export interface StoreItemsCarouselSectionProps {
   id: string; // 'products', 'services', or 'courses'
@@ -398,7 +398,7 @@ export const StoreItemsCarouselSection: React.FC<StoreItemsCarouselSectionProps>
     let list = items;
 
     // 1. Filter by category
-    if (activeCategory && activeCategory !== 'ALL') {
+    if (activeCategory && !isParentCategory(activeCategory)) {
       list = list.filter((p) => {
         const cat = (
           p.category || (isCourse ? 'Courses & Training' : isService ? 'Services' : 'General Products')

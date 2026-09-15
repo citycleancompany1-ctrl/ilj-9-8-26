@@ -6,6 +6,7 @@ export interface CategoryBarItem {
   name: string;
   imageUrl: string;
   count: number;
+  isSystemParent?: boolean;
 }
 
 interface StoreCategoryBarProps {
@@ -121,15 +122,29 @@ export const StoreCategoryBar: React.FC<StoreCategoryBarProps> = ({
               : 'grid grid-cols-5 sm:grid-cols-8 lg:grid-cols-10 gap-2 sm:gap-3 py-1 justify-start'
           }
         >
-          {categories.map((item) => {
+          {categories.map((item, index) => {
+            const isParent =
+              item.isSystemParent ||
+              item.name.toLowerCase() === 'all products' ||
+              item.name.toLowerCase() === 'all courses' ||
+              item.name.toLowerCase() === 'all services' ||
+              item.name.toLowerCase() === 'all';
+
             const isSelected =
-              selectedCategory.trim().toLowerCase() === item.name.trim().toLowerCase();
+              selectedCategory.trim().toLowerCase() === item.name.trim().toLowerCase() ||
+              ((selectedCategory.trim() === '' || selectedCategory.trim().toLowerCase() === 'all') && (index === 0 || (isParent && index === 0)));
 
             return (
               <button
                 key={item.id || item.name}
                 type="button"
-                onClick={() => onSelectCategory(isSelected ? 'ALL' : item.name)}
+                onClick={() => {
+                  if (isParent) {
+                    onSelectCategory(item.name);
+                  } else {
+                    onSelectCategory(isSelected ? 'ALL' : item.name);
+                  }
+                }}
                 className={`flex flex-col items-center justify-start group cursor-pointer text-center select-none transition-all active:scale-95 ${
                   isCarousel
                     ? 'shrink-0 snap-start w-[calc((100%-40px)/5.22)] min-w-[calc((100%-40px)/5.22)] sm:w-[76px] sm:min-w-[76px] lg:w-[84px] lg:min-w-[84px]'
