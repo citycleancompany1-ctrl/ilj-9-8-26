@@ -157,7 +157,7 @@ export const AddWebsiteModal: React.FC<AddWebsiteModalProps> = ({
         baseShop
       ) as Shop;
 
-      saveShopToFirestore(newShop);
+      await saveShopToFirestore(newShop);
       onAddShop(newShop);
       showToast(`Website "${newShop.businessName}" created successfully with ID: ${newShop.shopId}!`);
       onClose();

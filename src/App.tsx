@@ -91,30 +91,32 @@ export default function App() {
     // 1. Seed cloud database if first time
     seedFirestoreIfEmpty(platformState);
 
-    // 2. Real-time subscription to cloud shops (Cloud snapshot is the authoritative source of truth)
+    // 2. Real-time subscription to cloud shops (Cloud snapshot is the authoritative source of truth across all devices)
     const unsubShops = subscribeToShops((cloudShops) => {
-      if (cloudShops && cloudShops.length > 0) {
+      if (cloudShops) {
         setPlatformState((prev) => {
-          const currentShops = [...prev.shops];
-          const mergedShops = [...currentShops];
+          const safeCloudShops = cloudShops.map((s) => ensureShopSafetyDefaults(s));
 
-          cloudShops.forEach((cloudShop) => {
-            const existingIndex = mergedShops.findIndex(
-              (s) =>
-                (s.shopId && cloudShop.shopId && s.shopId.toLowerCase() === cloudShop.shopId.toLowerCase()) ||
-                (s.id && cloudShop.id && s.id.toLowerCase() === cloudShop.id.toLowerCase())
+          // Also check: if any shop was created locally on this device (e.g. while offline or just now),
+          // and has not yet appeared in cloudShops, keep it and sync it up to Firestore!
+          const pendingLocalShops: Shop[] = [];
+          prev.shops.forEach((localShop) => {
+            const existsInCloud = safeCloudShops.some(
+              (cs) =>
+                (cs.shopId && localShop.shopId && cs.shopId.toLowerCase() === localShop.shopId.toLowerCase()) ||
+                (cs.id && localShop.id && cs.id.toLowerCase() === localShop.id.toLowerCase())
             );
-
-            const safeCloudShop = ensureShopSafetyDefaults(cloudShop);
-
-            if (existingIndex >= 0) {
-              mergedShops[existingIndex] = safeCloudShop;
-            } else {
-              mergedShops.push(safeCloudShop);
+            if (!existsInCloud) {
+              const hasContent = Boolean(localShop.shopId && (localShop.businessName || (localShop.products && localShop.products.length > 0)));
+              if (hasContent) {
+                pendingLocalShops.push(localShop);
+                saveShopToFirestore(localShop).catch(() => {});
+              }
             }
           });
 
-          const updatedState = { ...prev, shops: mergedShops };
+          const unifiedShops = [...safeCloudShops, ...pendingLocalShops];
+          const updatedState = { ...prev, shops: unifiedShops };
           savePlatformState(updatedState);
           return updatedState;
         });
@@ -138,6 +140,20 @@ export default function App() {
 
     // 4. Instant Event-Driven WebSocket / SSE & Multi-Tab Synchronization
     const unsubRealtime = subscribeToRealtimeEvents((event) => {
+      if (event.type === 'VENDOR_DELETED' && event.shopId) {
+        setPlatformState((prev) => {
+          const updatedShops = prev.shops.filter(
+            (s) =>
+              s.shopId?.toLowerCase() !== event.shopId?.toLowerCase() &&
+              s.id?.toLowerCase() !== event.shopId?.toLowerCase()
+          );
+          const newState = { ...prev, shops: updatedShops };
+          savePlatformState(newState);
+          return newState;
+        });
+        return;
+      }
+
       if (
         event.type === 'VENDOR_UPDATED' ||
         event.type === 'SHOP_UPDATE' ||
@@ -898,6 +914,7 @@ export default function App() {
         activePlanPrice={platformState.pricingPackages?.[0]?.price ?? 1499}
         activePlanName={platformState.pricingPackages?.[0]?.name ?? '1-Year Official LalaJi Store Plan'}
         onRegisterShop={(newShop) => {
+          saveShopToFirestore(newShop).catch(() => {});
           handleUpdateState({
             ...platformState,
             shops: [newShop, ...platformState.shops],
