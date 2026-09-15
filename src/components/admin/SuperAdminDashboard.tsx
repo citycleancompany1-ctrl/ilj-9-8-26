@@ -47,7 +47,7 @@ import { fileToBase64, formatINR, generateShopId, getWhatsAppDirectUrl, getYouTu
 import { BUSINESS_CATEGORIES } from '../../data/initialData';
 import { getSubCategoriesForMain, findMainCategoryBySubCategory } from '../../data/categoryTaxonomy';
 import { generateSecurePassword, hashPassword } from '../../utils/security';
-import { deleteShopFromFirestore, savePlatformConfigToFirestore, saveShopToFirestore } from '../../services/firebase';
+import { deleteShopFromFirestore, savePlatformConfigToFirestore, saveShopToFirestore, recordDeletedShopId } from '../../services/firebase';
 import { VideoPlayerCard } from '../common/VideoPlayerCard';
 import { SubscriptionInvoiceModal } from '../modals/SubscriptionInvoiceModal';
 import { AdminBillingManager } from './AdminBillingManager';
@@ -247,17 +247,39 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
   };
 
   // Reliable deletion handler (executes after modal confirm)
-  const handleConfirmDeleteShop = () => {
+  const handleConfirmDeleteShop = async () => {
     if (!shopToDelete) return;
     const targetShop = shopToDelete;
-    deleteShopFromFirestore(targetShop.shopId);
-    if (targetShop.id && targetShop.id !== targetShop.shopId) {
-      deleteShopFromFirestore(targetShop.id);
+    const targetShopId = targetShop.shopId;
+    const altId = targetShop.id;
+
+    // 1. Immediately record in persistent deleted tombstone blacklist
+    recordDeletedShopId(targetShopId);
+    if (altId && altId !== targetShopId) {
+      recordDeletedShopId(altId);
     }
-    const updatedShops = state.shops.filter((s) => s.shopId !== targetShop.shopId && s.id !== targetShop.id);
+
+    // 2. Immediately update dashboard local state and trigger parent state update
+    const updatedShops = state.shops.filter(
+      (s) =>
+        s.shopId !== targetShopId &&
+        s.id !== targetShopId &&
+        (!altId || (s.shopId !== altId && s.id !== altId))
+    );
     onUpdateState({ ...state, shops: updatedShops });
     setShopToDelete(null);
-    showToast(`Dukaan (${targetShop.businessName} - ${targetShop.shopId}) delete ho chuki hai!`);
+
+    // 3. Delete from Firestore & server
+    try {
+      await deleteShopFromFirestore(targetShopId);
+      if (altId && altId !== targetShopId) {
+        await deleteShopFromFirestore(altId);
+      }
+    } catch (err) {
+      console.warn('[Admin Dashboard] Notice deleting shop:', err);
+    }
+
+    showToast(`Dukaan (${targetShop.businessName} - ${targetShopId}) permanently delete ho chuki hai!`);
   };
 
   // Global Popup Toggle Handler

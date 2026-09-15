@@ -49,6 +49,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { Shop, ProductItem, CartItem, AdvertisementPopup, ShopInquiry } from '../../types';
+import { fetchShopFromFirestore } from '../../services/firebase';
 import { formatINR, getWhatsAppCartMessageUrl, getWhatsAppDirectUrl, getYouTubeEmbedUrl } from '../../utils/mediaUpload';
 import { CheckoutInvoiceModal } from './CheckoutInvoiceModal';
 import { ShopShareModal } from '../modals/ShopShareModal';
@@ -108,7 +109,7 @@ interface PublicShopPageProps {
 }
 
 export const PublicShopPage: React.FC<PublicShopPageProps> = ({
-  shop,
+  shop: propShop,
   shopId,
   isLoading = false,
   popups,
@@ -119,6 +120,33 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
   onSubmitInquiry,
   isVendorOrAdminPreview = false,
 }) => {
+  // Direct Cloud Fetch Fallback (solves direct URL paste on new devices / direct link opening)
+  const [directShop, setDirectShop] = useState<Shop | null>(null);
+  const [isDirectLoading, setIsDirectLoading] = useState<boolean>(false);
+  const [directFetchAttempted, setDirectFetchAttempted] = useState<boolean>(false);
+
+  // Resolved authoritative shop
+  const shop = propShop || directShop;
+
+  useEffect(() => {
+    if (!propShop && shopId && !directFetchAttempted) {
+      setIsDirectLoading(true);
+      fetchShopFromFirestore(shopId)
+        .then((fetched) => {
+          if (fetched) {
+            setDirectShop(fetched);
+          }
+          setDirectFetchAttempted(true);
+        })
+        .catch(() => {
+          setDirectFetchAttempted(true);
+        })
+        .finally(() => {
+          setIsDirectLoading(false);
+        });
+    }
+  }, [propShop, shopId, directFetchAttempted]);
+
   // Cart & UI state
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -173,17 +201,38 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
   const [isAppInstalled, setIsAppInstalled] = useState(false);
   const [pwaInstalledToast, setPwaInstalledToast] = useState(false);
 
-  // Multi-page vendor website active page state
+  // Multi-page vendor website active page state: supports path, query (?page=), and hash (#page)
   const getInitialPage = (): ShopWebsitePage => {
     try {
+      const validPages: ShopWebsitePage[] = ['home', 'products', 'services', 'courses', 'about', 'gallery', 'contact'];
+
+      // 1. Check query parameter (?page=... or ?tab=... or ?view=... or ?p=...)
       const params = new URLSearchParams(window.location.search);
-      const p = params.get('page')?.toLowerCase();
-      if (p && ['home', 'products', 'services', 'courses', 'about', 'gallery', 'contact'].includes(p)) {
-        return p as ShopWebsitePage;
+      const q = (params.get('page') || params.get('tab') || params.get('view') || params.get('p'))?.toLowerCase();
+      if (q && validPages.includes(q as ShopWebsitePage)) {
+        return q as ShopWebsitePage;
       }
-      const hash = window.location.hash.replace('#', '').toLowerCase();
-      if (hash && ['home', 'products', 'services', 'courses', 'about', 'gallery', 'contact'].includes(hash)) {
-        return hash as ShopWebsitePage;
+
+      // 2. Check hash route (#products or #/about or #contact)
+      const rawHash = window.location.hash.replace(/^#\/?/, '').toLowerCase().split('?')[0];
+      if (rawHash && validPages.includes(rawHash as ShopWebsitePage)) {
+        return rawHash as ShopWebsitePage;
+      }
+
+      // 3. Check pathname: /shop/:shopId/:subPage (e.g. /shop/SHP01234454/products or /shop/SHP01234454/about)
+      const pathname = window.location.pathname || '';
+      const shopSubPageMatch = pathname.match(/^\/shop\/[^\/]+\/([a-zA-Z0-9_-]+)/i);
+      if (shopSubPageMatch) {
+        const sub = shopSubPageMatch[1].toLowerCase();
+        if (validPages.includes(sub as ShopWebsitePage)) {
+          return sub as ShopWebsitePage;
+        }
+      }
+
+      // 4. Check custom domain or direct slug: /products, /services, /courses, /about, /gallery, /contact
+      const singleSlug = pathname.replace(/^\//, '').split('/')[0]?.toLowerCase();
+      if (singleSlug && validPages.includes(singleSlug as ShopWebsitePage)) {
+        return singleSlug as ShopWebsitePage;
       }
     } catch {
       // fallback
@@ -199,8 +248,28 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
     window.scrollTo({ top: 0, behavior: 'smooth' });
     try {
       const url = new URL(window.location.href);
-      url.searchParams.set('page', newPage);
-      window.history.pushState({ page: newPage }, '', url.toString());
+      const isCustomDomain = shop && Boolean(shop.customDomain && window.location.hostname === shop.customDomain);
+
+      if (isCustomDomain) {
+        // Clean URL on custom domain: /products, /about, /
+        const newPath = newPage === 'home' ? '/' : `/${newPage}`;
+        url.searchParams.delete('page');
+        window.history.pushState({ page: newPage }, '', newPath + (url.search || ''));
+      } else if (url.pathname.startsWith('/shop/')) {
+        // Path-based URL on platform domain: /shop/SHP.../about
+        const sid = shop?.shopId || shopId || '';
+        const newPath = newPage === 'home' ? `/shop/${sid}` : `/shop/${sid}/${newPage}`;
+        url.searchParams.delete('page');
+        window.history.pushState({ page: newPage }, '', newPath + (url.search || ''));
+      } else {
+        // Query-param URL: /?shop=SHP...&page=about
+        if (newPage === 'home') {
+          url.searchParams.delete('page');
+        } else {
+          url.searchParams.set('page', newPage);
+        }
+        window.history.pushState({ page: newPage }, '', url.toString());
+      }
     } catch {
       // fallback
     }
@@ -284,7 +353,9 @@ export const PublicShopPage: React.FC<PublicShopPageProps> = ({
   }, [shop, isAccessible, globalPopupEnabled, popups]);
 
   // Loading state while fetching shop from cloud database
-  if (isLoading && !shop) {
+  const isShopConnecting = !shop && (isLoading || isDirectLoading || (!directFetchAttempted && Boolean(shopId)));
+
+  if (isShopConnecting) {
     return (
       <div className="min-h-[85vh] flex items-center justify-center p-4 bg-[#FCF9F5]">
         <div className="max-w-md w-full bg-white rounded-3xl p-8 border border-orange-200/80 shadow-xl text-center space-y-5">

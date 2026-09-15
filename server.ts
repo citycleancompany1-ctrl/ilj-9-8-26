@@ -10,6 +10,31 @@ const HOST = '0.0.0.0';
 // Global Cache Invalidation & Realtime State
 let cdnVersionTimestamp = Date.now();
 const sseClients = new Set<Response>();
+const deletedShopsSet = new Set<string>();
+
+// Persistence for deleted shops on disk
+const DELETED_SHOPS_FILE = path.join(process.cwd(), 'deleted_shops.json');
+try {
+  if (fs.existsSync(DELETED_SHOPS_FILE)) {
+    const raw = fs.readFileSync(DELETED_SHOPS_FILE, 'utf-8');
+    const arr = JSON.parse(raw);
+    if (Array.isArray(arr)) {
+      arr.forEach((id: string) => {
+        if (id && typeof id === 'string') deletedShopsSet.add(id.toLowerCase());
+      });
+    }
+  }
+} catch (e) {
+  console.warn('[Server] Notice reading deleted shops file:', e);
+}
+
+function persistDeletedShops() {
+  try {
+    fs.writeFileSync(DELETED_SHOPS_FILE, JSON.stringify(Array.from(deletedShopsSet)), 'utf-8');
+  } catch (e) {
+    console.warn('[Server] Notice saving deleted shops file:', e);
+  }
+}
 
 // Parse incoming JSON requests
 app.use(express.json({ limit: '2mb' }));
@@ -108,6 +133,45 @@ app.get('/api/events/status', (req: Request, res: Response) => {
     activeSubscribers: sseClients.size,
     cdnVersion: cdnVersionTimestamp,
     serverTime: new Date().toISOString(),
+  });
+});
+
+// Record Shop Deletion across Platform
+app.post('/api/shops/delete', (req: Request, res: Response) => {
+  const { shopId } = req.body || {};
+  if (!shopId) {
+    return res.status(400).json({ success: false, error: 'shopId is required' });
+  }
+
+  const cleanId = String(shopId).trim().toLowerCase();
+  deletedShopsSet.add(cleanId);
+  persistDeletedShops();
+
+  cdnVersionTimestamp = Date.now();
+
+  // Broadcast VENDOR_DELETED across all SSE connections
+  broadcastEvent('VENDOR_DELETED', {
+    shopId: cleanId,
+    action: 'DELETE',
+    timestamp: cdnVersionTimestamp,
+  });
+
+  console.log(`[Server] Shop ${cleanId} permanently recorded in deleted shops blacklist.`);
+
+  res.json({
+    success: true,
+    deletedShopId: cleanId,
+    totalDeleted: deletedShopsSet.size,
+    cdnVersion: cdnVersionTimestamp,
+  });
+});
+
+// Retrieve Deleted Shop IDs list
+app.get('/api/shops/deleted', (req: Request, res: Response) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+  res.json({
+    success: true,
+    deletedShopIds: Array.from(deletedShopsSet),
   });
 });
 

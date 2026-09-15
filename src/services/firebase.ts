@@ -125,12 +125,111 @@ testConnection();
 const SHOPS_COLLECTION = 'shops';
 const PLATFORM_CONFIG_COLLECTION = 'platform_config';
 const GLOBAL_CONFIG_DOC = 'global_settings';
+const DELETED_SHOPS_COLLECTION = 'deleted_shops';
+
+// ============================================================================
+// DELETED SHOPS TOMBSTONE TRACKING (Prevents Deleted Shops from Resurrecting)
+// ============================================================================
+const DELETED_SHOPS_STORAGE_KEY = 'INDIANLALAJI_DELETED_SHOPS_V2';
+const deletedShopIdsCache = new Set<string>();
+
+// Read initial deleted shop IDs from localStorage
+if (typeof window !== 'undefined') {
+  try {
+    const raw = localStorage.getItem(DELETED_SHOPS_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        parsed.forEach((id: string) => {
+          if (id && typeof id === 'string') deletedShopIdsCache.add(id.trim().toLowerCase());
+        });
+      }
+    }
+  } catch {}
+
+  // Also query server for deleted shops list on initialization
+  try {
+    fetch('/api/shops/deleted')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data && Array.isArray(data.deletedShopIds)) {
+          data.deletedShopIds.forEach((id: string) => {
+            if (id && typeof id === 'string') {
+              deletedShopIdsCache.add(id.trim().toLowerCase());
+            }
+          });
+          try {
+            localStorage.setItem(DELETED_SHOPS_STORAGE_KEY, JSON.stringify(Array.from(deletedShopIdsCache)));
+          } catch {}
+        }
+      })
+      .catch(() => {});
+  } catch {}
+}
+
+/**
+ * Returns a Set of all deleted shop IDs (all in lowercase)
+ */
+export function getDeletedShopIds(): Set<string> {
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = localStorage.getItem(DELETED_SHOPS_STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          parsed.forEach((id: string) => {
+            if (id && typeof id === 'string') deletedShopIdsCache.add(id.trim().toLowerCase());
+          });
+        }
+      }
+    } catch {}
+  }
+  return new Set(deletedShopIdsCache);
+}
+
+/**
+ * Permanently registers a shop ID as deleted so it can never be resurrected
+ */
+export function recordDeletedShopId(shopId: string): void {
+  if (!shopId) return;
+  const cleanId = shopId.trim().toLowerCase();
+  deletedShopIdsCache.add(cleanId);
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem(DELETED_SHOPS_STORAGE_KEY, JSON.stringify(Array.from(deletedShopIdsCache)));
+    } catch {}
+  }
+
+  // Notify server endpoint
+  try {
+    fetch('/api/shops/delete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ shopId: cleanId }),
+    }).catch(() => {});
+  } catch {}
+}
+
+/**
+ * Check if a shop is marked as deleted
+ */
+export function isShopDeleted(shopId?: string | null): boolean {
+  if (!shopId) return false;
+  const cleanId = shopId.trim().toLowerCase();
+  return deletedShopIdsCache.has(cleanId) || getDeletedShopIds().has(cleanId);
+}
 
 /**
  * Save a single shop to Firestore (called when vendor or admin edits a shop)
  */
 export async function saveShopToFirestore(shop: Shop): Promise<{ success: boolean; error?: string }> {
   if (!shop || !shop.shopId) return { success: false, error: 'Shop ID missing' };
+  
+  // Guard: NEVER save or resurrect a deleted shop
+  if (isShopDeleted(shop.shopId) || (shop.id && isShopDeleted(shop.id))) {
+    console.warn(`[Firestore] Blocked save for deleted shop: ${shop.shopId}`);
+    return { success: false, error: 'Shop is marked as deleted and cannot be saved.' };
+  }
   try {
     const docRef = doc(db, SHOPS_COLLECTION, shop.shopId);
     const sanitized = JSON.parse(JSON.stringify(shop)) as Record<string, any>;
@@ -192,27 +291,48 @@ export async function saveShopToFirestore(shop: Shop): Promise<{ success: boolea
  */
 export async function deleteShopFromFirestore(shopId: string): Promise<void> {
   if (!shopId) return;
+  const cleanId = shopId.trim().toLowerCase();
+  
+  // 1. Immediately record in persistent tombstone blacklist
+  recordDeletedShopId(cleanId);
+
   try {
     const docRef = doc(db, SHOPS_COLLECTION, shopId);
     await deleteDoc(docRef);
     console.log(`[Firestore] Shop ${shopId} deleted from cloud.`);
 
-    // Instant Event-Driven Broadcast & CDN Invalidation
+    // 2. Write tombstone document to deleted_shops collection
+    try {
+      const tombstoneRef = doc(db, DELETED_SHOPS_COLLECTION, cleanId);
+      await setDoc(tombstoneRef, {
+        shopId: cleanId,
+        deletedAt: new Date().toISOString(),
+      }, { merge: true });
+    } catch {}
+
+    // 3. Instant Event-Driven Broadcast & CDN Invalidation
     publishRealtimeEvent({
       type: 'VENDOR_DELETED',
-      shopId: shopId,
+      shopId: cleanId,
       action: 'DELETE',
     }).catch(() => {});
 
     triggerCdnInvalidation({
-      shopId: shopId,
-      paths: ['/', `/shop/${shopId}`],
+      shopId: cleanId,
+      paths: ['/', `/shop/${cleanId}`],
     }).catch(() => {});
   } catch (error) {
     if (isQuotaExhaustionError(error)) {
       markQuotaExhausted(`deleteShop:${shopId}`);
     }
     console.warn(`[Firestore] Notice deleting shop ${shopId}:`, error);
+
+    // Ensure realtime broadcast happens even if direct delete had a transient notice
+    publishRealtimeEvent({
+      type: 'VENDOR_DELETED',
+      shopId: cleanId,
+      action: 'DELETE',
+    }).catch(() => {});
   }
 }
 
@@ -222,7 +342,7 @@ export async function deleteShopFromFirestore(shopId: string): Promise<void> {
 export async function fetchShopFromFirestore(shopId: string): Promise<Shop | null> {
   if (!shopId) return null;
   const cleanId = shopId.trim();
-  if (!cleanId) return null;
+  if (!cleanId || isShopDeleted(cleanId)) return null;
 
   try {
     // 1. Direct document lookup with given ID
@@ -468,7 +588,7 @@ export function subscribeToShops(onUpdate: (shops: Shop[]) => void): () => void 
         const loadedShops: Shop[] = [];
         snapshot.forEach((docSnap) => {
           const data = docSnap.data() as Shop;
-          if (data && data.shopId) {
+          if (data && data.shopId && !isShopDeleted(data.shopId) && (!data.id || !isShopDeleted(data.id))) {
             loadedShops.push(data);
           }
         });
@@ -539,7 +659,7 @@ export async function fetchAllShopsFromFirestore(): Promise<Shop[]> {
     const loadedShops: Shop[] = [];
     snap.forEach((docSnap) => {
       const data = docSnap.data() as Shop;
-      if (data && data.shopId) {
+      if (data && data.shopId && !isShopDeleted(data.shopId) && (!data.id || !isShopDeleted(data.id))) {
         loadedShops.push(data);
       }
     });

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { AuthModal } from './components/AuthModal';
@@ -36,7 +36,10 @@ import {
   fetchAllShopsFromFirestore,
   fetchShopByCustomDomain,
   isCloudQuotaExhausted,
-  subscribeToQuotaStatus
+  subscribeToQuotaStatus,
+  isShopDeleted,
+  getDeletedShopIds,
+  recordDeletedShopId
 } from './services/firebase';
 import { 
   findShopByCustomDomain, 
@@ -56,17 +59,97 @@ import { updateShopSeoMeta, resetPlatformSeoMeta } from './utils/seo';
 import { initGoogleTranslate } from './utils/googleTranslate';
 import { ensureShopSafetyDefaults } from './utils/moduleRegistry';
 
+// Calculate initial route synchronously on page load so deep-linked pages open immediately without 404
+function computeInitialRoute(initialShops: Shop[]) {
+  if (typeof window === 'undefined') {
+    return { view: 'home', shopId: null as string | null, isLoading: false };
+  }
+  const searchParams = new URLSearchParams(window.location.search);
+  const path = window.location.pathname || '';
+  const hash = window.location.hash || '';
+
+  // Check login action (?action=login or ?login=...)
+  const actionParam = searchParams.get('action');
+  const loginParam = searchParams.get('login');
+  const isLoginAction = actionParam === 'login' || loginParam !== null || hash.includes('login');
+
+  // Check shop param: ?shop=SHP... or ?shopId=SHP... or ?id=SHP...
+  const rawShopParam = searchParams.get('shop') || (!isLoginAction ? searchParams.get('shopId') : null) || searchParams.get('id');
+  let targetShopId: string | null = rawShopParam ? rawShopParam.trim() : null;
+
+  // Check hash: #/shop/SHP... or #shop=SHP...
+  if (!targetShopId) {
+    const matchHashShop = hash.match(/#\/?shop[=\/]([a-zA-Z0-9_-]+)/i) || hash.match(/#([a-zA-Z0-9_-]{5,})/i);
+    if (matchHashShop) {
+      targetShopId = matchHashShop[1].trim();
+    }
+  }
+
+  // Check pathname: /shop/:shopId or /shop/:shopId/:subPage
+  if (!targetShopId) {
+    const matchShop = path.match(/^\/shop\/([a-zA-Z0-9_-]+)/i);
+    if (matchShop) {
+      targetShopId = matchShop[1].trim();
+    }
+  }
+
+  // Check custom domain (e.g. trustedweb.online)
+  const host = window.location.hostname;
+  if (!targetShopId && !isPlatformSystemHost(host) && !isLoginAction) {
+    const matchCustom = findShopByCustomDomain(initialShops, host);
+    if (matchCustom) {
+      targetShopId = matchCustom.shopId;
+    } else {
+      // It's a custom domain, but shop needs to be fetched from cloud
+      return { view: 'shop', shopId: null, isLoading: true };
+    }
+  }
+
+  if (targetShopId) {
+    if (isShopDeleted(targetShopId)) {
+      return { view: 'home', shopId: null, isLoading: false };
+    }
+    const exists = initialShops.some(
+      (s) =>
+        (s.shopId && s.shopId.toLowerCase() === targetShopId!.toLowerCase()) ||
+        (s.id && s.id.toLowerCase() === targetShopId!.toLowerCase())
+    );
+    return {
+      view: 'shop',
+      shopId: targetShopId,
+      isLoading: !exists,
+    };
+  }
+
+  const cleanPath = path.replace(/^\//, '').split('/')[0] || 'home';
+  if (['home', 'stores', 'how-it-works', 'pricing', 'contact', 'disclaimer'].includes(cleanPath)) {
+    return { view: cleanPath, shopId: null, isLoading: false };
+  }
+
+  return { view: 'home', shopId: null, isLoading: false };
+}
+
 export default function App() {
-  // Global platform state from localStorage with Firestore real-time sync
-  const [platformState, setPlatformState] = useState<PlatformState>(() => loadPlatformState());
+  // Global platform state from localStorage with Firestore real-time sync, purged of deleted tombstones
+  const [platformState, setPlatformState] = useState<PlatformState>(() => {
+    const loaded = loadPlatformState();
+    const deletedSet = getDeletedShopIds();
+    const cleanShops = (loaded.shops || []).filter(
+      (s) => !deletedSet.has(s.shopId?.toLowerCase() || '') && (!s.id || !deletedSet.has(s.id.toLowerCase()))
+    );
+    return { ...loaded, shops: cleanShops };
+  });
 
   // Load existing persistent session (if logged in before page refresh)
   const initialSession = loadUserSession();
 
+  // Compute initial route synchronously
+  const initialRoute = useMemo(() => computeInitialRoute(platformState.shops), []);
+
   // Current view state
-  const [currentView, setCurrentView] = useState<string>('home');
-  const [activeShopId, setActiveShopId] = useState<string | null>(null);
-  const [isShopLoading, setIsShopLoading] = useState<boolean>(false);
+  const [currentView, setCurrentView] = useState<string>(initialRoute.view);
+  const [activeShopId, setActiveShopId] = useState<string | null>(initialRoute.shopId);
+  const [isShopLoading, setIsShopLoading] = useState<boolean>(initialRoute.isLoading);
 
   // Authentication session state
   const [currentRole, setCurrentRole] = useState<'VISITOR' | 'VENDOR' | 'ADMIN'>(initialSession.role);
@@ -95,16 +178,28 @@ export default function App() {
     const unsubShops = subscribeToShops((cloudShops) => {
       if (cloudShops) {
         setPlatformState((prev) => {
-          const safeCloudShops = cloudShops.map((s) => ensureShopSafetyDefaults(s));
+          const deletedSet = getDeletedShopIds();
+          const safeCloudShops = cloudShops
+            .filter(
+              (s) =>
+                !deletedSet.has(s.shopId?.toLowerCase() || '') &&
+                (!s.id || !deletedSet.has(s.id.toLowerCase()))
+            )
+            .map((s) => ensureShopSafetyDefaults(s));
 
           // Also check: if any shop was created locally on this device (e.g. while offline or just now),
-          // and has not yet appeared in cloudShops, keep it and sync it up to Firestore!
+          // and has not yet appeared in cloudShops, keep it and sync it up to Firestore ONLY if NOT deleted!
           const pendingLocalShops: Shop[] = [];
           prev.shops.forEach((localShop) => {
+            const sid = localShop.shopId?.toLowerCase() || '';
+            const aid = localShop.id?.toLowerCase() || '';
+            if (deletedSet.has(sid) || (aid && deletedSet.has(aid))) {
+              return; // NEVER re-save deleted shops!
+            }
             const existsInCloud = safeCloudShops.some(
               (cs) =>
-                (cs.shopId && localShop.shopId && cs.shopId.toLowerCase() === localShop.shopId.toLowerCase()) ||
-                (cs.id && localShop.id && cs.id.toLowerCase() === localShop.id.toLowerCase())
+                (cs.shopId && localShop.shopId && cs.shopId.toLowerCase() === sid) ||
+                (cs.id && localShop.id && cs.id.toLowerCase() === aid)
             );
             if (!existsInCloud) {
               const hasContent = Boolean(localShop.shopId && (localShop.businessName || (localShop.products && localShop.products.length > 0)));
@@ -141,6 +236,7 @@ export default function App() {
     // 4. Instant Event-Driven WebSocket / SSE & Multi-Tab Synchronization
     const unsubRealtime = subscribeToRealtimeEvents((event) => {
       if (event.type === 'VENDOR_DELETED' && event.shopId) {
+        recordDeletedShopId(event.shopId);
         setPlatformState((prev) => {
           const updatedShops = prev.shops.filter(
             (s) =>
@@ -295,34 +391,65 @@ export default function App() {
       const shopParam = rawShopParam ? rawShopParam.trim() : null;
       const cleanPath = (path || '').replace(/^\//, '') || 'home';
 
-      // Check URL search param first (?shop=SHP... or ?shopId=SHP...)
-      if (shopParam && !isLoginAction) {
-        setCurrentView('shop');
-        setActiveShopId(shopParam);
-        // Normalize URL if opened with dirty path like /vendor-dashboard?shop=... or /stores?shop=...
-        if (cleanPath !== 'home' && cleanPath !== '' && cleanPath !== 'shop') {
-          const pageParam = searchParams.get('page');
-          const cleanUrl = `/?shop=${encodeURIComponent(shopParam)}${pageParam ? `&page=${encodeURIComponent(pageParam)}` : ''}`;
-          window.history.replaceState({}, '', cleanUrl);
+      // Helper to activate shop view and load shop from cloud if not yet cached
+      const triggerShopView = (sid: string) => {
+        if (isShopDeleted(sid)) {
+          setCurrentView('home');
+          setActiveShopId(null);
+          setIsShopLoading(false);
+          return;
         }
-        return;
-      }
-
-      // Check hash route (#/shop/SHP... or #shop=SHP...)
-      const matchHashShop = hash.match(/#\/?shop[=\/]([a-zA-Z0-9_-]+)/i) || hash.match(/#([a-zA-Z0-9_-]{5,})/i);
-      if (matchHashShop) {
-        const cleanSid = matchHashShop[1].trim();
         setCurrentView('shop');
-        setActiveShopId(cleanSid);
-        return;
-      }
+        setActiveShopId(sid);
+        const exists = (platformState.shops || []).some(
+          (s) =>
+            (s.shopId && s.shopId.toLowerCase() === sid.toLowerCase()) ||
+            (s.id && s.id.toLowerCase() === sid.toLowerCase())
+        );
+        if (!exists) {
+          setIsShopLoading(true);
+          fetchShopFromFirestore(sid)
+            .then((fetched) => {
+              if (fetched && !isShopDeleted(fetched.shopId)) {
+                const safe = ensureShopSafetyDefaults(fetched);
+                setPlatformState((prev) => {
+                  const hasIt = prev.shops.some(
+                    (s) => s.shopId?.toLowerCase() === safe.shopId?.toLowerCase()
+                  );
+                  if (!hasIt) {
+                    const newState = { ...prev, shops: [safe, ...prev.shops] };
+                    savePlatformState(newState);
+                    return newState;
+                  }
+                  return prev;
+                });
+              }
+            })
+            .finally(() => {
+              setIsShopLoading(false);
+            });
+        }
+      };
 
-      // Check pathname (/shop/SHP...)
+      // 1. Check pathname: /shop/:shopId or /shop/:shopId/:subPage
       const matchShop = path.match(/^\/shop\/([a-zA-Z0-9_-]+)/i);
       if (matchShop) {
         const cleanSid = matchShop[1].trim();
-        setCurrentView('shop');
-        setActiveShopId(cleanSid);
+        triggerShopView(cleanSid);
+        return;
+      }
+
+      // 2. Check URL search param (?shop=SHP... or ?shopId=SHP...)
+      if (shopParam && !isLoginAction) {
+        triggerShopView(shopParam);
+        return;
+      }
+
+      // 3. Check hash route (#/shop/SHP... or #shop=SHP...)
+      const matchHashShop = hash.match(/#\/?shop[=\/]([a-zA-Z0-9_-]+)/i) || hash.match(/#([a-zA-Z0-9_-]{5,})/i);
+      if (matchHashShop) {
+        const cleanSid = matchHashShop[1].trim();
+        triggerShopView(cleanSid);
         return;
       }
 
@@ -374,27 +501,33 @@ export default function App() {
         // 1. Check in local loaded state
         const matchingShop = findShopByCustomDomain(platformState.shops || [], currentHost);
         if (matchingShop) {
-          setCurrentView('shop');
-          setActiveShopId(matchingShop.shopId);
+          triggerShopView(matchingShop.shopId);
           return;
         }
 
         // 2. Direct asynchronous cloud lookup from Firestore for new/first-time visitors
-        fetchShopByCustomDomain(currentHost).then((cloudShop) => {
-          if (cloudShop && cloudShop.shopId) {
-            setPlatformState((prev) => {
-              const exists = prev.shops.some((s) => s.shopId === cloudShop.shopId);
-              const updatedShops = exists
-                ? prev.shops.map((s) => (s.shopId === cloudShop.shopId ? cloudShop : s))
-                : [cloudShop, ...prev.shops];
-              const nextState = { ...prev, shops: updatedShops };
-              savePlatformState(nextState);
-              return nextState;
-            });
-            setCurrentView('shop');
-            setActiveShopId(cloudShop.shopId);
-          }
-        });
+        setIsShopLoading(true);
+        setCurrentView('shop');
+        fetchShopByCustomDomain(currentHost)
+          .then((cloudShop) => {
+            if (cloudShop && cloudShop.shopId && !isShopDeleted(cloudShop.shopId)) {
+              const safe = ensureShopSafetyDefaults(cloudShop);
+              setPlatformState((prev) => {
+                const exists = prev.shops.some((s) => s.shopId === safe.shopId);
+                const updatedShops = exists
+                  ? prev.shops.map((s) => (s.shopId === safe.shopId ? safe : s))
+                  : [safe, ...prev.shops];
+                const nextState = { ...prev, shops: updatedShops };
+                savePlatformState(nextState);
+                return nextState;
+              });
+              setActiveShopId(safe.shopId);
+            }
+          })
+          .finally(() => {
+            setIsShopLoading(false);
+          });
+        return;
       }
 
       if (['home', 'stores', 'how-it-works', 'pricing', 'contact', 'disclaimer'].includes(cleanPath)) {

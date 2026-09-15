@@ -28,7 +28,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { Shop, PlatformState, VendorDomainRequest } from '../../types';
-import { saveShopToFirestore, deleteShopFromFirestore } from '../../services/firebase';
+import { saveShopToFirestore, deleteShopFromFirestore, recordDeletedShopId } from '../../services/firebase';
 import { getWhatsAppDirectUrl } from '../../utils/mediaUpload';
 
 interface AdminDomainManagementProps {
@@ -397,13 +397,24 @@ export const AdminDomainManagement: React.FC<AdminDomainManagementProps> = ({
       saveShopToFirestore(updatedShop);
       showToast(`🗑️ Domain unlinked from ${shop.businessName}. Store default platform URL active.`);
     } else if (type === 'DELETE_STORE') {
-      deleteShopFromFirestore(shop.shopId);
-      if (shop.id && shop.id !== shop.shopId) {
-        deleteShopFromFirestore(shop.id);
+      const targetShopId = shop.shopId;
+      const altId = shop.id;
+      recordDeletedShopId(targetShopId);
+      if (altId && altId !== targetShopId) {
+        recordDeletedShopId(altId);
       }
-      const updatedShops = state.shops.filter((s) => s.shopId !== shop.shopId && s.id !== shop.id);
+      const updatedShops = state.shops.filter(
+        (s) =>
+          s.shopId !== targetShopId &&
+          s.id !== targetShopId &&
+          (!altId || (s.shopId !== altId && s.id !== altId))
+      );
       onUpdateState({ ...state, shops: updatedShops });
-      showToast(`🗑️ Store (${shop.businessName} - ${shop.shopId}) permanently delete ho chuki hai!`);
+      deleteShopFromFirestore(targetShopId).catch(() => {});
+      if (altId && altId !== targetShopId) {
+        deleteShopFromFirestore(altId).catch(() => {});
+      }
+      showToast(`🗑️ Store (${shop.businessName} - ${targetShopId}) permanently delete ho chuki hai!`);
     }
 
     setConfirmAction(null);
